@@ -8,7 +8,7 @@ const program = new Command();
 program
   .name('heroshot')
   .description('Define your screenshots once, update them forever with one command')
-  .version('0.0.1');
+  .version('0.0.2-alpha.1');
 
 program
   .command('setup', { isDefault: true })

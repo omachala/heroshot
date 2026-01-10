@@ -1,12 +1,12 @@
 {
   "name": "heroshot",
-  "version": "0.0.1",
+  "version": "0.0.2-alpha.1",
   "description": "Define your screenshots once, update them forever with one command",
   "type": "module",
   "author": "Ondrej Machala",
   "license": "AGPL-3.0-or-later",
   "bin": {
-    "heroshot": "./dist/cli.js"
+    "heroshot": "dist/cli.js"
   },
   "packageManager": "pnpm@9.15.0",
   "scripts": {
