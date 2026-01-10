@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "description": "Define your screenshots once, update them forever with one command",
   "type": "module",
+  "author": "Ondrej Machala",
+  "license": "AGPL-3.0-or-later",
   "bin": {
     "heroshot": "./dist/cli.js"
   },
@@ -38,8 +40,6 @@
     "documentation",
     "playwright"
   ],
-  "author": "Ondrej Machala",
-  "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@eslint/js": "^9.16.0",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
