@@ -49,10 +49,8 @@ export function getSelector(element: Element): string {
     }
 
     // Add nth-of-type if there are siblings with same tag
-    // eslint-disable-next-line prefer-destructuring -- Cannot destructure: used in loop reassignment causing circular reference
     const parent: HTMLElement | null = current.parentElement;
     if (parent) {
-      // eslint-disable-next-line prefer-destructuring -- Cannot destructure: causes TypeScript circular reference error
       const currentTagName: string = current.tagName;
       const siblings: Element[] = [];
       for (const child of parent.children) {

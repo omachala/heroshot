@@ -7,7 +7,7 @@ describe('initToolbar', () => {
 
   beforeEach(() => {
     document.body.innerHTML = '';
-    globalThis.__heroshotToolbarInit = false;
+    globalThis.__heroshot = undefined;
     cleanup = null;
     // Store original and create mock for elementFromPoint
     originalElementFromPoint = document.elementFromPoint;
@@ -18,7 +18,7 @@ describe('initToolbar', () => {
     if (cleanup) {
       cleanup();
     }
-    globalThis.__heroshotToolbarInit = false;
+    globalThis.__heroshot = undefined;
     document.elementFromPoint = originalElementFromPoint;
   });
 
@@ -29,7 +29,7 @@ describe('initToolbar', () => {
 
   it('should set __heroshotToolbarInit flag', () => {
     cleanup = initToolbar();
-    expect(globalThis.__heroshotToolbarInit).toBe(true);
+    expect(globalThis.__heroshot?.initialized).toBe(true);
   });
 
   it('should prevent double initialization', () => {
@@ -74,7 +74,7 @@ describe('initToolbar', () => {
       cleanup?.();
       cleanup = null;
 
-      expect(globalThis.__heroshotToolbarInit).toBe(false);
+      expect(globalThis.__heroshot?.initialized).toBe(false);
     });
 
     it('should allow re-initialization after cleanup', () => {
@@ -177,7 +177,7 @@ describe('initToolbar', () => {
       cleanup = initToolbar();
       const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
       const mockCallback = vi.fn();
-      globalThis.onElementPicked = mockCallback;
+      globalThis.__heroshot = { initialized: true, screenshots: [], onScreenshotAdded: mockCallback }; globalThis.__heroshot.onScreenshotAdded = mockCallback;
 
       // Create a test element
       const testElement = document.createElement('div');
@@ -206,17 +206,19 @@ describe('initToolbar', () => {
       });
       document.dispatchEvent(clickEvent);
 
-      expect(mockCallback).toHaveBeenCalledWith({
-        url: globalThis.location.href,
-        selector: '#test-element',
-      });
+      expect(mockCallback).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: globalThis.location.href,
+          selector: '#test-element',
+        })
+      );
     });
 
     it('should not select toolbar elements', () => {
       cleanup = initToolbar();
       const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
       const mockCallback = vi.fn();
-      globalThis.onElementPicked = mockCallback;
+      globalThis.__heroshot = { initialized: true, screenshots: [], onScreenshotAdded: mockCallback }; globalThis.__heroshot.onScreenshotAdded = mockCallback;
 
       button?.click();
 
@@ -237,7 +239,7 @@ describe('initToolbar', () => {
     it('should deactivate picker after selection', () => {
       cleanup = initToolbar();
       const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
-      globalThis.onElementPicked = vi.fn();
+      globalThis.__heroshot = { initialized: true, screenshots: [], onScreenshotAdded: vi.fn() };
 
       const testElement = document.createElement('div');
       testElement.id = 'test-element';

@@ -7,9 +7,11 @@ import promisePlugin from 'eslint-plugin-promise';
 import regexp from 'eslint-plugin-regexp';
 import security from 'eslint-plugin-security';
 import sonarjs from 'eslint-plugin-sonarjs';
+import svelte from 'eslint-plugin-svelte';
 import unicorn from 'eslint-plugin-unicorn';
 import unusedImports from 'eslint-plugin-unused-imports';
 import prettierConfig from 'eslint-config-prettier';
+import svelteParser from 'svelte-eslint-parser';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
@@ -266,6 +268,48 @@ export default tseslint.config(
         project: './toolbar/tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+    rules: {
+      // Disable prefer-destructuring - false positives with renamed destructuring
+      'prefer-destructuring': 'off',
+    },
+  },
+  // Svelte files configuration
+  ...svelte.configs['flat/recommended'],
+  {
+    files: ['toolbar/**/*.svelte'],
+    languageOptions: {
+      parser: svelteParser,
+      parserOptions: {
+        parser: tseslint.parser,
+        project: './toolbar/tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+        extraFileExtensions: ['.svelte'],
+      },
+      globals: {
+        document: 'readonly',
+        globalThis: 'readonly',
+      },
+    },
+    rules: {
+      // Svelte specific rules
+      'svelte/no-at-html-tags': 'error',
+      'svelte/require-each-key': 'error',
+      'svelte/valid-each-key': 'error',
+      // Disable rules that conflict with Svelte
+      'import/no-mutable-exports': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off', // Svelte bindings cause issues
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      // Svelte uses PascalCase for component files
+      'unicorn/filename-case': ['error', { case: 'pascalCase' }],
+      // Allow Props abbreviation in Svelte - common pattern
+      'unicorn/prevent-abbreviations': [
+        'error',
+        { replacements: { props: false, e: { event: true } } },
+      ],
+      // Disable prefer-destructuring - false positives with svelte-eslint-parser
+      'prefer-destructuring': 'off',
     },
   },
   {

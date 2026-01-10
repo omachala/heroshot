@@ -1,28 +1,54 @@
 /**
- * Data passed when an element is picked
+ * Screenshot item stored in the toolbar
  */
-export interface ElementPickedData {
+export interface ScreenshotItem {
+  id: string;
+  name: string;
   url: string;
   selector: string;
 }
 
 /**
- * Callback function exposed by Playwright
+ * Data passed when a screenshot is added
  */
-export type OnElementPickedFunction = (data: ElementPickedData) => void;
-
-/**
- * Extended Window/globalThis interface with heroshot properties
- */
-declare global {
-  var __heroshotToolbarInit: boolean | undefined;
-  var onElementPicked: OnElementPickedFunction | undefined;
+export interface ScreenshotAddedData {
+  id: string;
+  name: string;
+  url: string;
+  selector: string;
 }
 
 /**
- * Picker state
+ * Callback function types
  */
-export interface PickerState {
-  isActive: boolean;
+export type OnScreenshotAddedFunction = (data: ScreenshotAddedData) => void;
+export type OnScreenshotRemovedFunction = (id: string) => void;
+export type OnDoneFunction = () => void;
+
+/**
+ * Global heroshot namespace
+ */
+export interface HeroshotGlobal {
+  initialized: boolean;
+  screenshots: ScreenshotItem[];
+  onScreenshotAdded?: OnScreenshotAddedFunction;
+  onScreenshotRemoved?: OnScreenshotRemovedFunction;
+  onDone?: OnDoneFunction;
+}
+
+/**
+ * Extended globalThis interface
+ */
+declare global {
+  var __heroshot: HeroshotGlobal | undefined;
+}
+
+/**
+ * Toolbar state
+ */
+export interface ToolbarState {
+  isPickerActive: boolean;
   currentElement: Element | null;
+  screenshots: ScreenshotItem[];
+  pendingPick: { url: string; selector: string } | null;
 }

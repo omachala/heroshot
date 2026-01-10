@@ -1,7 +1,7 @@
 /**
- * Heroshot Element Picker
+ * Heroshot Toolbar
  *
- * Browser-injected UI for selecting elements and generating CSS selectors.
+ * Browser-injected UI for selecting elements and managing screenshots.
  * Injected by Playwright during `heroshot setup`.
  */
 
@@ -12,21 +12,30 @@ import {
   getSelector,
   updateOverlay,
 } from './dom';
-import type { PickerState } from './types';
-import './toolbar.css';
+import type { ToolbarState } from './types';
 
 /**
- * Initialize the element picker
+ * Initialize the toolbar
  */
 export function initToolbar(): (() => void) | null {
-  // Prevent double initialization
-  if (globalThis.__heroshotToolbarInit) return null;
-  globalThis.__heroshotToolbarInit = true;
+  // Ensure __heroshot namespace exists
+  if (!globalThis.__heroshot) {
+    globalThis.__heroshot = {
+      initialized: false,
+      screenshots: [],
+    };
+  }
 
-  // State
-  const state: PickerState = {
-    isActive: false,
+  // Prevent double initialization
+  if (globalThis.__heroshot.initialized) return null;
+  globalThis.__heroshot.initialized = true;
+
+  // State - initialize with existing screenshots from global
+  const state: ToolbarState = {
+    isPickerActive: false,
     currentElement: null,
+    screenshots: [...globalThis.__heroshot.screenshots],
+    pendingPick: null,
   };
 
   // Create and append DOM elements
@@ -35,30 +44,30 @@ export function initToolbar(): (() => void) | null {
   document.body.append(toolbar);
   document.body.append(overlay);
 
-  // Get references to toolbar elements (non-null since we just created them)
-  const buttonElement = toolbar.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
+  // Get references to toolbar elements
+  const pickerButton = toolbar.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
   const statusElement = toolbar.querySelector<HTMLSpanElement>('#heroshot-status');
 
-  if (!buttonElement || !statusElement) {
-    throw new Error('Failed to initialize picker: toolbar elements not found');
+  if (!pickerButton || !statusElement) {
+    throw new Error('Failed to initialize toolbar: elements not found');
   }
 
   // Re-assign after guard to ensure TypeScript knows these are non-null in closures
-  const button: HTMLButtonElement = buttonElement;
+  const picker: HTMLButtonElement = pickerButton;
   const status: HTMLSpanElement = statusElement;
 
   /**
    * Toggle picker mode on/off
    */
   function togglePicker(): void {
-    state.isActive = !state.isActive;
+    state.isPickerActive = !state.isPickerActive;
 
-    if (state.isActive) {
-      button.classList.add('active');
+    if (state.isPickerActive) {
+      picker.classList.add('active');
       status.textContent = 'Hover over element, click to select';
       document.body.style.cursor = 'crosshair';
     } else {
-      button.classList.remove('active');
+      picker.classList.remove('active');
       status.textContent = 'Click crosshair to pick element';
       document.body.style.cursor = '';
       updateOverlay(overlay, null);
@@ -70,7 +79,7 @@ export function initToolbar(): (() => void) | null {
    * Handle mouse movement - highlight element under cursor
    */
   function onMouseMove(event: MouseEvent): void {
-    if (!state.isActive) return;
+    if (!state.isPickerActive) return;
 
     const element = deepElementFromPoint(event.clientX, event.clientY);
 
@@ -92,7 +101,7 @@ export function initToolbar(): (() => void) | null {
    * Handle click - select element and notify Playwright
    */
   function onClick(event: MouseEvent): void {
-    if (!state.isActive) return;
+    if (!state.isPickerActive) return;
 
     const { target } = event;
     if (target instanceof Element && target.closest('#heroshot-toolbar')) {
@@ -104,13 +113,22 @@ export function initToolbar(): (() => void) | null {
 
     if (state.currentElement) {
       const selector = getSelector(state.currentElement);
-      // eslint-disable-next-line prefer-destructuring -- Nested destructuring would reduce readability
-      const { href: url } = globalThis.location;
+      const { href } = globalThis.location;
+
+      // Store pending pick and show name modal
+      state.pendingPick = { url: href, selector };
+
+      // TODO: Show name modal instead of directly calling callback
+      // For now, generate a simple name and call callback
+      const name = `screenshot-${Date.now()}`;
+      const id = generateId(name);
+
+      const screenshotData = { id, name, url: href, selector };
+      state.screenshots.push(screenshotData);
 
       // Call exposed function from Playwright
-      const { onElementPicked } = globalThis;
-      if (onElementPicked) {
-        onElementPicked({ url, selector });
+      if (globalThis.__heroshot?.onScreenshotAdded) {
+        globalThis.__heroshot.onScreenshotAdded(screenshotData);
       }
 
       // Deactivate picker
@@ -122,22 +140,22 @@ export function initToolbar(): (() => void) | null {
    * Handle keyboard events - ESC to cancel
    */
   function onKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && state.isActive) {
+    if (event.key === 'Escape' && state.isPickerActive) {
       togglePicker();
     }
   }
 
   // Attach event listeners
-  button.addEventListener('click', togglePicker);
+  picker.addEventListener('click', togglePicker);
   document.addEventListener('mousemove', onMouseMove, true);
   document.addEventListener('click', onClick, true);
   document.addEventListener('keydown', onKeyDown, true);
 
   /**
-   * Cleanup function to remove picker
+   * Cleanup function to remove toolbar
    */
   function cleanup(): void {
-    button.removeEventListener('click', togglePicker);
+    picker.removeEventListener('click', togglePicker);
     document.removeEventListener('mousemove', onMouseMove, true);
     document.removeEventListener('click', onClick, true);
     document.removeEventListener('keydown', onKeyDown, true);
@@ -145,10 +163,22 @@ export function initToolbar(): (() => void) | null {
     toolbar.remove();
     overlay.remove();
 
-    globalThis.__heroshotToolbarInit = false;
+    if (globalThis.__heroshot) {
+      globalThis.__heroshot.initialized = false;
+    }
   }
 
   return cleanup;
+}
+
+/**
+ * Generate a simple ID from name
+ */
+function generateId(name: string): string {
+  return name
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/(?:^-|-$)/g, '');
 }
 
 // Auto-initialize when script loads

@@ -1,11 +1,20 @@
 import { resolve } from 'node:path';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   root: __dirname,
+  plugins: [
+    svelte({
+      compilerOptions: {
+        // Generate JS that works without Svelte runtime
+        css: 'injected',
+      },
+    }),
+  ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/toolbar.ts'),
+      entry: resolve(__dirname, 'src/main.ts'),
       name: 'HeroshotToolbar',
       formats: ['iife'],
       fileName: () => 'toolbar.js',
@@ -17,12 +26,10 @@ export default defineConfig({
       output: {
         // Ensure the IIFE is self-executing
         extend: true,
+        // Inline all dynamic imports
+        inlineDynamicImports: true,
       },
     },
-  },
-  css: {
-    // Inline CSS into JS bundle
-    postcss: {},
   },
   test: {
     globals: true,
@@ -32,7 +39,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: '../coverage/toolbar',
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.ts', 'src/**/*.svelte'],
       exclude: ['src/**/*.d.ts'],
       thresholds: {
         lines: 90,

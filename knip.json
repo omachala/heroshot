@@ -2,5 +2,5 @@
   "ignoreDependencies": ["sharp"],
   "ignore": ["toolbar/**", "src/capture.ts"],
   "ignoreExportsUsedInFile": true,
-  "entry": ["src/cli.ts", "src/config.ts"]
+  "entry": ["src/config.ts"]
 }
