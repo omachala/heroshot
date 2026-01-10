@@ -33,9 +33,9 @@
   }
 </script>
 
-<div class="heroshot-modal-backdrop" onclick={onCancel} onkeydown={handleKeyDown} role="presentation">
+<div class="backdrop" onclick={onCancel} onkeydown={handleKeyDown} role="presentation">
   <div
-    class="heroshot-modal"
+    class="modal"
     onclick={(event) => event.stopPropagation()}
     onkeydown={handleKeyDown}
     role="dialog"
@@ -52,14 +52,14 @@
         bind:value={name}
         type="text"
         placeholder="e.g., hero-section, login-button"
-        class="heroshot-input"
+        class="input"
       />
 
-      <div class="heroshot-modal-actions">
-        <button type="button" class="heroshot-btn-secondary" onclick={onCancel}>
+      <div class="actions">
+        <button type="button" class="btn-secondary" onclick={onCancel}>
           Cancel
         </button>
-        <button type="submit" class="heroshot-btn-primary" disabled={!name.trim()}>
+        <button type="submit" class="btn-primary" disabled={!name.trim()}>
           Save
         </button>
       </div>
@@ -68,106 +68,106 @@
 </div>
 
 <style>
-  .heroshot-modal-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.6) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 2147483647 !important;
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2147483647;
   }
 
-  .heroshot-modal {
-    background: #1a1a2e !important;
-    border-radius: 12px !important;
-    padding: 24px !important;
-    min-width: 400px !important;
-    max-width: 90vw !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-    color: #fff !important;
+  .modal {
+    background: #1a1a2e;
+    border-radius: 12px;
+    padding: 24px;
+    min-width: 400px;
+    max-width: 90vw;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #fff;
   }
 
   h3 {
-    margin: 0 0 12px !important;
-    font-size: 18px !important;
-    font-weight: 600 !important;
+    margin: 0 0 12px;
+    font-size: 18px;
+    font-weight: 600;
   }
 
   .selector-preview {
-    margin: 0 0 20px !important;
-    padding: 8px 12px !important;
-    background: #2d2d44 !important;
-    border-radius: 6px !important;
-    font-family: monospace !important;
-    font-size: 12px !important;
-    color: #aaa !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+    margin: 0 0 20px;
+    padding: 8px 12px;
+    background: #2d2d44;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #aaa;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .heroshot-input {
-    width: 100% !important;
-    padding: 12px !important;
-    border: 2px solid #3d3d5c !important;
-    border-radius: 6px !important;
-    background: #2d2d44 !important;
-    color: #fff !important;
-    font-size: 14px !important;
-    outline: none !important;
-    box-sizing: border-box !important;
-    transition: border-color 0.2s !important;
+  .input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #3d3d5c;
+    border-radius: 6px;
+    background: #2d2d44;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
   }
 
-  .heroshot-input:focus {
-    border-color: #3b82f6 !important;
+  .input:focus {
+    border-color: #3b82f6;
   }
 
-  .heroshot-input::placeholder {
-    color: #666 !important;
+  .input::placeholder {
+    color: #666;
   }
 
-  .heroshot-modal-actions {
-    display: flex !important;
-    gap: 12px !important;
-    justify-content: flex-end !important;
-    margin-top: 20px !important;
+  .actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
   }
 
-  .heroshot-btn-primary,
-  .heroshot-btn-secondary {
-    padding: 10px 20px !important;
-    border: none !important;
-    border-radius: 6px !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
   }
 
-  .heroshot-btn-primary {
-    background: #22c55e !important;
-    color: #fff !important;
+  .btn-primary {
+    background: #22c55e;
+    color: #fff;
   }
 
-  .heroshot-btn-primary:hover:not(:disabled) {
-    background: #16a34a !important;
+  .btn-primary:hover:not(:disabled) {
+    background: #16a34a;
   }
 
-  .heroshot-btn-primary:disabled {
-    background: #3d3d5c !important;
-    color: #666 !important;
-    cursor: not-allowed !important;
+  .btn-primary:disabled {
+    background: #3d3d5c;
+    color: #666;
+    cursor: not-allowed;
   }
 
-  .heroshot-btn-secondary {
-    background: #3d3d5c !important;
-    color: #fff !important;
+  .btn-secondary {
+    background: #3d3d5c;
+    color: #fff;
   }
 
-  .heroshot-btn-secondary:hover {
-    background: #4d4d6c !important;
+  .btn-secondary:hover {
+    background: #4d4d6c;
   }
 </style>

@@ -17,9 +17,9 @@
   }
 </script>
 
-<div class="heroshot-modal-backdrop" onclick={onClose} onkeydown={handleKeyDown} role="presentation">
+<div class="backdrop" onclick={onClose} onkeydown={handleKeyDown} role="presentation">
   <div
-    class="heroshot-dialog"
+    class="dialog"
     onclick={(event) => event.stopPropagation()}
     onkeydown={handleKeyDown}
     role="dialog"
@@ -27,9 +27,9 @@
     aria-labelledby="dialog-title"
     tabindex="0"
   >
-    <div class="heroshot-dialog-header">
+    <div class="header">
       <h3 id="dialog-title">Screenshots ({screenshots.length})</h3>
-      <button class="heroshot-close-btn" onclick={onClose} title="Close">
+      <button class="close-btn" onclick={onClose} title="Close">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"/>
           <line x1="6" y1="6" x2="18" y2="18"/>
@@ -37,19 +37,19 @@
       </button>
     </div>
 
-    <div class="heroshot-dialog-content">
+    <div class="content">
       {#if screenshots.length === 0}
-        <p class="heroshot-empty">No screenshots added yet. Click the crosshair to pick an element.</p>
+        <p class="empty">No screenshots added yet. Click the crosshair to pick an element.</p>
       {:else}
-        <ul class="heroshot-list">
+        <ul class="list">
           {#each screenshots as screenshot (screenshot.id)}
-            <li class="heroshot-list-item">
-              <div class="heroshot-item-info">
-                <span class="heroshot-item-name">{screenshot.name}</span>
-                <span class="heroshot-item-selector">{screenshot.selector}</span>
+            <li class="list-item">
+              <div class="item-info">
+                <span class="item-name">{screenshot.name}</span>
+                <span class="item-selector">{screenshot.selector}</span>
               </div>
               <button
-                class="heroshot-remove-btn"
+                class="remove-btn"
                 onclick={() => onRemove(screenshot.id)}
                 title="Remove screenshot"
               >
@@ -67,137 +67,137 @@
 </div>
 
 <style>
-  .heroshot-modal-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.6) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 2147483647 !important;
+  .backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2147483647;
   }
 
-  .heroshot-dialog {
-    background: #1a1a2e !important;
-    border-radius: 12px !important;
-    min-width: 500px !important;
-    max-width: 90vw !important;
-    max-height: 80vh !important;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-    color: #fff !important;
-    display: flex !important;
-    flex-direction: column !important;
+  .dialog {
+    background: #1a1a2e;
+    border-radius: 12px;
+    min-width: 500px;
+    max-width: 90vw;
+    max-height: 80vh;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
   }
 
-  .heroshot-dialog-header {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    padding: 20px 24px !important;
-    border-bottom: 1px solid #2d2d44 !important;
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #2d2d44;
   }
 
   h3 {
-    margin: 0 !important;
-    font-size: 18px !important;
-    font-weight: 600 !important;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
   }
 
-  .heroshot-close-btn {
-    width: 32px !important;
-    height: 32px !important;
-    border: none !important;
-    border-radius: 6px !important;
-    background: transparent !important;
-    color: #aaa !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.2s !important;
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #aaa;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
   }
 
-  .heroshot-close-btn:hover {
-    background: #2d2d44 !important;
-    color: #fff !important;
+  .close-btn:hover {
+    background: #2d2d44;
+    color: #fff;
   }
 
-  .heroshot-dialog-content {
-    padding: 16px 24px 24px !important;
-    overflow-y: auto !important;
-    flex: 1 !important;
+  .content {
+    padding: 16px 24px 24px;
+    overflow-y: auto;
+    flex: 1;
   }
 
-  .heroshot-empty {
-    color: #666 !important;
-    text-align: center !important;
-    padding: 32px 0 !important;
-    margin: 0 !important;
+  .empty {
+    color: #666;
+    text-align: center;
+    padding: 32px 0;
+    margin: 0;
   }
 
-  .heroshot-list {
-    list-style: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
+  .list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
 
-  .heroshot-list-item {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    padding: 12px 16px !important;
-    background: #2d2d44 !important;
-    border-radius: 8px !important;
-    transition: background 0.2s !important;
+  .list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #2d2d44;
+    border-radius: 8px;
+    transition: background 0.2s;
   }
 
-  .heroshot-list-item:hover {
-    background: #3d3d5c !important;
+  .list-item:hover {
+    background: #3d3d5c;
   }
 
-  .heroshot-item-info {
-    flex: 1 !important;
-    min-width: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 4px !important;
+  .item-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
-  .heroshot-item-name {
-    font-weight: 600 !important;
-    color: #fff !important;
+  .item-name {
+    font-weight: 600;
+    color: #fff;
   }
 
-  .heroshot-item-selector {
-    font-family: monospace !important;
-    font-size: 12px !important;
-    color: #888 !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+  .item-selector {
+    font-family: monospace;
+    font-size: 12px;
+    color: #888;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .heroshot-remove-btn {
-    width: 32px !important;
-    height: 32px !important;
-    border: none !important;
-    border-radius: 6px !important;
-    background: transparent !important;
-    color: #666 !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.2s !important;
-    flex-shrink: 0 !important;
+  .remove-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
   }
 
-  .heroshot-remove-btn:hover {
-    background: #ef4444 !important;
-    color: #fff !important;
+  .remove-btn:hover {
+    background: #ef4444;
+    color: #fff;
   }
 </style>

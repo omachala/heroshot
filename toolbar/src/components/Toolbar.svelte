@@ -195,9 +195,9 @@
 />
 
 <!-- Toolbar -->
-<div id="heroshot-toolbar">
+<div class="toolbar">
   <button
-    id="heroshot-picker-btn"
+    class="picker-btn"
     class:active={isPickerActive}
     onclick={togglePicker}
     title="Pick element"
@@ -212,10 +212,10 @@
     </svg>
   </button>
 
-  <span id="heroshot-status">{statusText}</span>
+  <span class="status">{statusText}</span>
 
   <button
-    id="heroshot-list-btn"
+    class="list-btn"
     class:has-items={screenshotCount > 0}
     onclick={() => showListDialog = true}
     title="View screenshots"
@@ -234,7 +234,7 @@
   </button>
 
   <button
-    id="heroshot-done-btn"
+    class="done-btn"
     onclick={handleDone}
     title="Done - save and close"
   >
@@ -244,25 +244,25 @@
 
 <!-- Overlay for element highlighting -->
 {#if isPickerActive && overlayRects}
-  <div id="heroshot-overlay">
+  <div class="overlay">
     <div
-      class="heroshot-overlay-dark"
+      class="overlay-dark"
       style="top:{overlayRects.top.top}px;left:{overlayRects.top.left}px;width:{overlayRects.top.width}px;height:{overlayRects.top.height}px;"
     ></div>
     <div
-      class="heroshot-overlay-dark"
+      class="overlay-dark"
       style="top:{overlayRects.bottom.top}px;left:{overlayRects.bottom.left}px;width:{overlayRects.bottom.width}px;height:{overlayRects.bottom.height}px;"
     ></div>
     <div
-      class="heroshot-overlay-dark"
+      class="overlay-dark"
       style="top:{overlayRects.left.top}px;left:{overlayRects.left.left}px;width:{overlayRects.left.width}px;height:{overlayRects.left.height}px;"
     ></div>
     <div
-      class="heroshot-overlay-dark"
+      class="overlay-dark"
       style="top:{overlayRects.right.top}px;left:{overlayRects.right.left}px;width:{overlayRects.right.width}px;height:{overlayRects.right.height}px;"
     ></div>
     <div
-      class="heroshot-highlight"
+      class="highlight"
       style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left}px;width:{overlayRects.highlight.width}px;height:{overlayRects.highlight.height}px;"
     ></div>
   </div>
@@ -287,123 +287,128 @@
 {/if}
 
 <style>
-  #heroshot-toolbar {
-    position: fixed !important;
-    bottom: 20px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    z-index: 2147483647 !important;
-    background: #1a1a2e !important;
-    border-radius: 8px !important;
-    padding: 8px 16px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-    font-size: 13px !important;
-    color: #fff !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
-    user-select: none !important;
+  /*
+   * Styles are encapsulated via Shadow DOM (see main.ts).
+   * No !important needed - host page CSS cannot leak in.
+   */
+
+  .toolbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2147483647;
+    background: #1a1a2e;
+    border-radius: 8px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    user-select: none;
   }
 
-  #heroshot-picker-btn,
-  #heroshot-list-btn {
-    width: 36px !important;
-    height: 36px !important;
-    border: 2px solid transparent !important;
-    border-radius: 6px !important;
-    background: #2d2d44 !important;
-    color: #fff !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    transition: all 0.2s !important;
-    position: relative !important;
+  .picker-btn,
+  .list-btn {
+    width: 36px;
+    height: 36px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: #2d2d44;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    position: relative;
   }
 
-  #heroshot-picker-btn:hover,
-  #heroshot-list-btn:hover {
-    background: #3d3d5c !important;
+  .picker-btn:hover,
+  .list-btn:hover {
+    background: #3d3d5c;
   }
 
-  #heroshot-picker-btn.active {
-    background: #22c55e !important;
-    border-color: #16a34a !important;
-    color: #fff !important;
-    animation: heroshot-pulse 1s infinite !important;
+  .picker-btn.active {
+    background: #22c55e;
+    border-color: #16a34a;
+    color: #fff;
+    animation: pulse 1s infinite;
   }
 
-  @keyframes heroshot-pulse {
+  @keyframes pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
     50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
   }
 
-  #heroshot-list-btn.has-items {
-    background: #3b82f6 !important;
+  .list-btn.has-items {
+    background: #3b82f6;
   }
 
   .badge {
-    position: absolute !important;
-    top: -6px !important;
-    right: -6px !important;
-    background: #ef4444 !important;
-    color: #fff !important;
-    font-size: 10px !important;
-    font-weight: bold !important;
-    min-width: 16px !important;
-    height: 16px !important;
-    border-radius: 8px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 0 4px !important;
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
   }
 
-  #heroshot-status {
-    color: #aaa !important;
-    max-width: 400px !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
+  .status {
+    color: #aaa;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  #heroshot-done-btn {
-    padding: 8px 16px !important;
-    border: none !important;
-    border-radius: 6px !important;
-    background: #22c55e !important;
-    color: #fff !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    transition: all 0.2s !important;
+  .done-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: #22c55e;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
   }
 
-  #heroshot-done-btn:hover {
-    background: #16a34a !important;
+  .done-btn:hover {
+    background: #16a34a;
   }
 
-  #heroshot-overlay {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 2147483646 !important;
-    pointer-events: none !important;
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2147483646;
+    pointer-events: none;
   }
 
-  .heroshot-overlay-dark {
-    position: fixed !important;
-    background: rgba(0, 0, 0, 0.5) !important;
-    pointer-events: none !important;
+  .overlay-dark {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
   }
 
-  .heroshot-highlight {
-    position: fixed !important;
-    border: 3px solid #22c55e !important;
-    background: rgba(34, 197, 94, 0.1) !important;
-    pointer-events: none !important;
-    box-sizing: border-box !important;
+  .highlight {
+    position: fixed;
+    border: 3px solid #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+    pointer-events: none;
+    box-sizing: border-box;
   }
 </style>

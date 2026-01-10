@@ -24,14 +24,20 @@ export function initToolbar(): (() => void) | null {
   if (globalThis.__heroshot.initialized) return null;
   globalThis.__heroshot.initialized = true;
 
-  // Create mount target
-  const target = document.createElement('div');
-  target.id = 'heroshot-root';
-  document.body.append(target);
+  // Create mount target with Shadow DOM
+  // We use Shadow DOM to encapsulate styles - this toolbar is injected into
+  // arbitrary websites, and without style isolation the host page's CSS could
+  // override our styles. Shadow DOM provides complete style encapsulation,
+  // eliminating the need for !important declarations.
+  const host = document.createElement('div');
+  host.id = 'heroshot-root';
+  document.body.append(host);
 
-  // Mount Svelte component
+  const shadow = host.attachShadow({ mode: 'closed' });
+
+  // Mount Svelte component into shadow root
   const component = mount(Toolbar, {
-    target,
+    target: shadow,
     props: {
       initialScreenshots: [...globalThis.__heroshot.screenshots],
     },
@@ -42,7 +48,7 @@ export function initToolbar(): (() => void) | null {
    */
   function cleanup(): void {
     void unmount(component);
-    target.remove();
+    host.remove();
 
     if (globalThis.__heroshot) {
       globalThis.__heroshot.initialized = false;
