@@ -1,5 +1,6 @@
 // @ts-check
 import eslint from '@eslint/js';
+import barrelFiles from 'eslint-plugin-barrel-files';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
 
@@ -9,6 +10,9 @@ export default tseslint.config(
   ...tseslint.configs.stylisticTypeChecked,
   prettierConfig,
   {
+    plugins: {
+      'barrel-files': barrelFiles,
+    },
     languageOptions: {
       parserOptions: {
         project: true,
@@ -66,6 +70,24 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-exports': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+      '@typescript-eslint/no-require-imports': 'error',
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '.*',
+              importNamePattern: '^\\*$',
+              message:
+                'Namespace imports (import * as) are not allowed. Use named imports instead.',
+            },
+            {
+              regex: '\\.js$',
+              message: 'Do not use .js extension in imports. TypeScript handles module resolution.',
+            },
+          ],
+        },
+      ],
 
       // Variable scoping
       'no-shadow': 'off',
@@ -104,6 +126,17 @@ export default tseslint.config(
 
       // ===== Code Style =====
       'object-shorthand': ['error', 'always'],
+      'id-length': ['error', { min: 3, exceptions: ['id', 'x', 'y', 'el', 'vw', 'vh'] }],
+      'prefer-destructuring': [
+        'error',
+        {
+          array: false,
+          object: true,
+        },
+      ],
+
+      // ===== Barrel Files =====
+      'barrel-files/avoid-barrel-files': 'error',
 
       // Allow || for default values
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
@@ -121,7 +154,23 @@ export default tseslint.config(
     },
   },
   {
+    // Toolbar folder - uses its own tsconfig
+    files: ['toolbar/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: './toolbar/tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
     // Ignore generated files and config files
-    ignores: ['**/node_modules/**', '**/dist/**', '*.config.js', '*.config.ts'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '*.config.js',
+      '*.config.ts',
+      'toolbar/*.config.ts',
+    ],
   }
 );

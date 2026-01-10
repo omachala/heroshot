@@ -1,6 +1,6 @@
 import { Command } from 'commander';
-import { setup, getProfilePath, captureUrl } from './browser.js';
-import * as fs from 'node:fs';
+import { existsSync, rmSync } from 'node:fs';
+import { setup, getProfilePath, captureUrl } from './browser';
 
 const program = new Command();
 
@@ -16,8 +16,8 @@ program
   .action(async (options: { reset?: boolean }) => {
     if (options.reset) {
       const profilePath = getProfilePath();
-      if (fs.existsSync(profilePath)) {
-        fs.rmSync(profilePath, { recursive: true });
+      if (existsSync(profilePath)) {
+        rmSync(profilePath, { recursive: true });
         console.log('Browser profile cleared.');
       }
     }

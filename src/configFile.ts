@@ -1,26 +1,26 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { parseConfig, type Config } from './config.js';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { parseConfig, type Config } from './config';
 
 const CONFIG_FILENAME = 'heroshot.json';
 
 export function getConfigPath(dir: string = process.cwd()): string {
-  return path.join(dir, CONFIG_FILENAME);
+  return join(dir, CONFIG_FILENAME);
 }
 
 export function loadConfig(configPath: string): Config {
-  if (!fs.existsSync(configPath)) {
+  if (!existsSync(configPath)) {
     return { screenshots: [] };
   }
 
-  const content = fs.readFileSync(configPath, 'utf-8');
+  const content = readFileSync(configPath, 'utf-8');
   const json: unknown = JSON.parse(content);
   return parseConfig(json);
 }
 
 export function saveConfig(configPath: string, config: Config): void {
   const content = JSON.stringify(config, null, 2);
-  fs.writeFileSync(configPath, content, 'utf-8');
+  writeFileSync(configPath, content, 'utf-8');
 }
 
 export function generateScreenshotId(url: string, selector?: string): string {

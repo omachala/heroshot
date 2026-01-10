@@ -1,13 +1,13 @@
 import { chromium, type BrowserContext, type Page } from 'playwright';
-import * as path from 'node:path';
-import * as os from 'node:os';
-import * as fs from 'node:fs';
-import * as readline from 'node:readline';
-import { getConfigPath, loadConfig, saveConfig, generateScreenshotId } from './configFile.js';
-import type { Screenshot } from './config.js';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
+import { readFileSync } from 'node:fs';
+import { createInterface } from 'node:readline';
+import { getConfigPath, loadConfig, saveConfig, generateScreenshotId } from './configFile';
+import type { Screenshot } from './config';
 
-const PROFILE_DIR = path.join(os.homedir(), '.heroshot', 'browser-profile');
-const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
+const PROFILE_DIR = join(homedir(), '.heroshot', 'browser-profile');
+const TOOLBAR_DIR = join(import.meta.dirname, '..', 'toolbar');
 
 export function getProfilePath(): string {
   return PROFILE_DIR;
@@ -25,14 +25,14 @@ async function launchPersistentBrowser(
 }
 
 async function waitForUserInput(message: string): Promise<void> {
-  const rl = readline.createInterface({
+  const readline = createInterface({
     input: process.stdin,
     output: process.stdout,
   });
 
   return new Promise(resolve => {
-    rl.question(message, () => {
-      rl.close();
+    readline.question(message, () => {
+      readline.close();
       resolve();
     });
   });
@@ -55,14 +55,14 @@ async function injectPicker(page: Page, onPicked: (data: PickedElement) => void)
   }
 
   // Inject CSS
-  const cssPath = path.join(TOOLBAR_DIR, 'picker.css');
-  const css = fs.readFileSync(cssPath, 'utf-8');
+  const cssPath = join(TOOLBAR_DIR, 'dist', 'heroshot.css');
+  const css = readFileSync(cssPath, 'utf-8');
   await page.addStyleTag({ content: css });
 
   // Inject JS
-  const jsPath = path.join(TOOLBAR_DIR, 'picker.js');
-  const js = fs.readFileSync(jsPath, 'utf-8');
-  await page.addScriptTag({ content: js });
+  const scriptPath = join(TOOLBAR_DIR, 'dist', 'picker.js');
+  const script = readFileSync(scriptPath, 'utf-8');
+  await page.addScriptTag({ content: script });
 }
 
 export async function captureUrl(url: string, output: string): Promise<void> {
@@ -134,17 +134,17 @@ export async function setup(): Promise<void> {
     const config = loadConfig(configPath);
 
     console.log('Picked elements:');
-    for (const el of pickedElements) {
-      const id = generateScreenshotId(el.url, el.selector);
+    for (const element of pickedElements) {
+      const id = generateScreenshotId(element.url, element.selector);
       const screenshot: Screenshot = {
         id,
-        url: el.url,
-        selector: el.selector,
+        url: element.url,
+        selector: element.selector,
         output: `screenshots/${id}.png`,
       };
 
       // Add or update screenshot
-      const existingIndex = config.screenshots.findIndex(s => s.id === id);
+      const existingIndex = config.screenshots.findIndex(item => item.id === id);
       if (existingIndex >= 0) {
         config.screenshots[existingIndex] = screenshot;
         console.log(`  - Updated: ${id}`);
