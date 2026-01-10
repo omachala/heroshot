@@ -1,0 +1,59 @@
+{
+  "name": "heroshot",
+  "version": "0.0.1",
+  "description": "Define your screenshots once, update them forever with one command",
+  "type": "module",
+  "bin": {
+    "heroshot": "./dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsup",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "check": "pnpm typecheck && pnpm format:check && pnpm lint && pnpm knip && pnpm test:run",
+    "fix": "pnpm format && pnpm lint:fix",
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm check"
+  },
+  "keywords": [
+    "screenshot",
+    "cli",
+    "automation",
+    "documentation",
+    "playwright"
+  ],
+  "author": "Ondrej Machala",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "knip": "^5.80.0",
+    "prettier": "^3.7.4",
+    "simple-git-hooks": "^2.11.1",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.17.0",
+    "vitest": "^2.1.0"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0",
+    "sharp": "^0.33.0",
+    "commander": "^12.1.0"
+  }
+}

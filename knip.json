@@ -1,0 +1,4 @@
+{
+  "ignore": [],
+  "ignoreDependencies": ["playwright", "sharp"]
+}
