@@ -1,4 +1,4 @@
 {
-  "ignore": [],
-  "ignoreDependencies": ["playwright", "sharp"]
+  "ignore": ["toolbar/**"],
+  "ignoreDependencies": ["sharp"]
 }

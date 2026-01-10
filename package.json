@@ -52,8 +52,9 @@
     "vitest": "^2.1.0"
   },
   "dependencies": {
+    "commander": "^12.1.0",
     "playwright": "^1.49.0",
     "sharp": "^0.33.0",
-    "commander": "^12.1.0"
+    "zod": "^4.3.5"
   }
 }
