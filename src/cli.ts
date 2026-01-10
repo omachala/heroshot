@@ -11,7 +11,7 @@ program
   .version('0.0.1');
 
 program
-  .command('setup')
+  .command('setup', { isDefault: true })
   .description('Open browser to log in to sites you want to screenshot')
   .option('--reset', 'Clear existing browser profile and start fresh')
   .action(async (options: { reset?: boolean }) => {
