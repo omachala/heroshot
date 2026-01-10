@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { deepElementFromPoint, getSelector } from './dom';
+  import { deepElementFromPoint, getSelector } from '../lib/dom';
+  import type { ScreenshotItem } from '../types';
   import ListDialog from './ListDialog.svelte';
   import NameModal from './NameModal.svelte';
-  import type { ScreenshotItem } from './types';
 
   interface Props {
     initialScreenshots?: ScreenshotItem[];

@@ -6,7 +6,7 @@
  */
 
 import { mount, unmount } from 'svelte';
-import Toolbar from './Toolbar.svelte';
+import Toolbar from './components/Toolbar.svelte';
 
 /**
  * Initialize the toolbar

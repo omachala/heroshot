@@ -5,7 +5,7 @@ import {
   deepElementFromPoint,
   getSelector,
   updateOverlay,
-} from '../dom';
+} from '../lib/dom';
 
 describe('deepElementFromPoint', () => {
   let originalElementFromPoint: typeof document.elementFromPoint;

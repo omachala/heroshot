@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ScreenshotItem } from './types';
+  import type { ScreenshotItem } from '../types';
 
   interface Props {
     screenshots: ScreenshotItem[];

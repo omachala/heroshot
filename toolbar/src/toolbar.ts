@@ -11,7 +11,7 @@ import {
   deepElementFromPoint,
   getSelector,
   updateOverlay,
-} from './dom';
+} from './lib/dom';
 import type { ToolbarState } from './types';
 
 /**
