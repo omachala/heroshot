@@ -1,11 +1,11 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { parseConfig, type Config } from './config';
+import path from 'node:path';
+import { type Config, parseConfig } from './config';
 
 const CONFIG_FILENAME = 'heroshot.json';
 
-export function getConfigPath(dir: string = process.cwd()): string {
-  return join(dir, CONFIG_FILENAME);
+export function getConfigPath(directory: string = process.cwd()): string {
+  return path.join(directory, CONFIG_FILENAME);
 }
 
 export function loadConfig(configPath: string): Config {
@@ -13,21 +13,21 @@ export function loadConfig(configPath: string): Config {
     return { screenshots: [] };
   }
 
-  const content = readFileSync(configPath, 'utf-8');
+  const content = readFileSync(configPath, 'utf8');
   const json: unknown = JSON.parse(content);
   return parseConfig(json);
 }
 
 export function saveConfig(configPath: string, config: Config): void {
   const content = JSON.stringify(config, null, 2);
-  writeFileSync(configPath, content, 'utf-8');
+  writeFileSync(configPath, content, 'utf8');
 }
 
 export function generateScreenshotId(url: string, selector?: string): string {
   // Extract domain and path
-  const urlObj = new URL(url);
-  const domain = urlObj.hostname.replace(/\./g, '-');
-  const pathPart = urlObj.pathname.replace(/\//g, '-').replace(/^-|-$/g, '');
+  const urlObject = new URL(url);
+  const domain = urlObject.hostname.replaceAll('.', '-');
+  const pathPart = urlObject.pathname.replaceAll('/', '-').replaceAll(/^-$|^-|-$/g, '');
 
   let id = domain;
   if (pathPart) {
@@ -37,9 +37,9 @@ export function generateScreenshotId(url: string, selector?: string): string {
   // Add selector hint if present
   if (selector) {
     const selectorHint = selector
-      .replace(/[#.>:[\]()]/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '')
+      .replaceAll(/[#.>:[\]()]/g, '-')
+      .replaceAll(/-+/g, '-')
+      .replaceAll(/(?:^-|-$)/g, '')
       .slice(0, 20);
     if (selectorHint) {
       id += `-${selectorHint}`;

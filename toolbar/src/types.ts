@@ -9,16 +9,14 @@ export interface ElementPickedData {
 /**
  * Callback function exposed by Playwright
  */
-export type OnElementPickedFn = (data: ElementPickedData) => void;
+export type OnElementPickedFunction = (data: ElementPickedData) => void;
 
 /**
- * Extended Window interface with heroshot properties
+ * Extended Window/globalThis interface with heroshot properties
  */
 declare global {
-  interface Window {
-    __heroshotPickerInit?: boolean;
-    onElementPicked?: OnElementPickedFn;
-  }
+  var __heroshotPickerInit: boolean | undefined;
+  var onElementPicked: OnElementPickedFunction | undefined;
 }
 
 /**

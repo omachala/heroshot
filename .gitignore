@@ -2,7 +2,7 @@ node_modules
 dist
 coverage
 *.log
-.DS_Store
-.claude
+.*
+!.github
 ha-dashboard.png
 heroshot.json

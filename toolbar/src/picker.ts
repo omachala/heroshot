@@ -5,7 +5,6 @@
  * Injected by Playwright during `heroshot setup`.
  */
 
-import type { PickerState } from './types';
 import {
   createOverlay,
   createToolbar,
@@ -13,6 +12,7 @@ import {
   getSelector,
   updateOverlay,
 } from './dom';
+import type { PickerState } from './types';
 import './picker.css';
 
 /**
@@ -20,8 +20,8 @@ import './picker.css';
  */
 export function initPicker(): (() => void) | null {
   // Prevent double initialization
-  if (window.__heroshotPickerInit) return null;
-  window.__heroshotPickerInit = true;
+  if (globalThis.__heroshotPickerInit) return null;
+  globalThis.__heroshotPickerInit = true;
 
   // State
   const state: PickerState = {
@@ -32,20 +32,20 @@ export function initPicker(): (() => void) | null {
   // Create and append DOM elements
   const toolbar = createToolbar();
   const overlay = createOverlay();
-  document.body.appendChild(toolbar);
-  document.body.appendChild(overlay);
+  document.body.append(toolbar);
+  document.body.append(overlay);
 
   // Get references to toolbar elements (non-null since we just created them)
-  const btnEl = toolbar.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
-  const statusEl = toolbar.querySelector<HTMLSpanElement>('#heroshot-status');
+  const buttonElement = toolbar.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
+  const statusElement = toolbar.querySelector<HTMLSpanElement>('#heroshot-status');
 
-  if (!btnEl || !statusEl) {
+  if (!buttonElement || !statusElement) {
     throw new Error('Failed to initialize picker: toolbar elements not found');
   }
 
   // Re-assign after guard to ensure TypeScript knows these are non-null in closures
-  const btn: HTMLButtonElement = btnEl;
-  const status: HTMLSpanElement = statusEl;
+  const button: HTMLButtonElement = buttonElement;
+  const status: HTMLSpanElement = statusElement;
 
   /**
    * Toggle picker mode on/off
@@ -54,11 +54,11 @@ export function initPicker(): (() => void) | null {
     state.isActive = !state.isActive;
 
     if (state.isActive) {
-      btn.classList.add('active');
+      button.classList.add('active');
       status.textContent = 'Hover over element, click to select';
       document.body.style.cursor = 'crosshair';
     } else {
-      btn.classList.remove('active');
+      button.classList.remove('active');
       status.textContent = 'Click crosshair to pick element';
       document.body.style.cursor = '';
       updateOverlay(overlay, null);
@@ -72,18 +72,18 @@ export function initPicker(): (() => void) | null {
   function onMouseMove(event: MouseEvent): void {
     if (!state.isActive) return;
 
-    const el = deepElementFromPoint(event.clientX, event.clientY);
+    const element = deepElementFromPoint(event.clientX, event.clientY);
 
     if (
-      el &&
-      !el.closest('#heroshot-toolbar') &&
-      !el.closest('#heroshot-overlay')
+      element &&
+      !element.closest('#heroshot-toolbar') &&
+      !element.closest('#heroshot-overlay')
     ) {
-      state.currentElement = el;
-      const rect = el.getBoundingClientRect();
+      state.currentElement = element;
+      const rect = element.getBoundingClientRect();
       updateOverlay(overlay, rect);
 
-      const selector = getSelector(el);
+      const selector = getSelector(element);
       status.textContent = selector;
     }
   }
@@ -104,11 +104,13 @@ export function initPicker(): (() => void) | null {
 
     if (state.currentElement) {
       const selector = getSelector(state.currentElement);
-      const url = window.location.href;
+      // eslint-disable-next-line prefer-destructuring -- Nested destructuring would reduce readability
+      const { href: url } = globalThis.location;
 
       // Call exposed function from Playwright
-      if (window.onElementPicked) {
-        window.onElementPicked({ url, selector });
+      const { onElementPicked } = globalThis;
+      if (onElementPicked) {
+        onElementPicked({ url, selector });
       }
 
       // Deactivate picker
@@ -126,7 +128,7 @@ export function initPicker(): (() => void) | null {
   }
 
   // Attach event listeners
-  btn.addEventListener('click', togglePicker);
+  button.addEventListener('click', togglePicker);
   document.addEventListener('mousemove', onMouseMove, true);
   document.addEventListener('click', onClick, true);
   document.addEventListener('keydown', onKeyDown, true);
@@ -135,7 +137,7 @@ export function initPicker(): (() => void) | null {
    * Cleanup function to remove picker
    */
   function cleanup(): void {
-    btn.removeEventListener('click', togglePicker);
+    button.removeEventListener('click', togglePicker);
     document.removeEventListener('mousemove', onMouseMove, true);
     document.removeEventListener('click', onClick, true);
     document.removeEventListener('keydown', onKeyDown, true);
@@ -143,7 +145,7 @@ export function initPicker(): (() => void) | null {
     toolbar.remove();
     overlay.remove();
 
-    window.__heroshotPickerInit = false;
+    globalThis.__heroshotPickerInit = false;
   }
 
   return cleanup;

@@ -1,6 +1,6 @@
-import { Command } from 'commander';
 import { existsSync, rmSync } from 'node:fs';
-import { setup, getProfilePath, captureUrl } from './browser';
+import { Command } from 'commander';
+import { captureUrl, getProfilePath, setup } from './browser';
 
 const program = new Command();
 

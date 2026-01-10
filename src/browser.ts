@@ -1,13 +1,13 @@
-import { chromium, type BrowserContext, type Page } from 'playwright';
-import { join } from 'node:path';
-import { homedir } from 'node:os';
 import { readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import path from 'node:path';
 import { createInterface } from 'node:readline';
-import { getConfigPath, loadConfig, saveConfig, generateScreenshotId } from './configFile';
+import { type BrowserContext, type Page, chromium } from 'playwright';
 import type { Screenshot } from './config';
+import { generateScreenshotId, getConfigPath, loadConfig, saveConfig } from './configFile';
 
-const PROFILE_DIR = join(homedir(), '.heroshot', 'browser-profile');
-const TOOLBAR_DIR = join(import.meta.dirname, '..', 'toolbar');
+const PROFILE_DIR = path.join(homedir(), '.heroshot', 'browser-profile');
+const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
 
 export function getProfilePath(): string {
   return PROFILE_DIR;
@@ -55,13 +55,13 @@ async function injectPicker(page: Page, onPicked: (data: PickedElement) => void)
   }
 
   // Inject CSS
-  const cssPath = join(TOOLBAR_DIR, 'dist', 'heroshot.css');
-  const css = readFileSync(cssPath, 'utf-8');
+  const cssPath = path.join(TOOLBAR_DIR, 'dist', 'heroshot.css');
+  const css = readFileSync(cssPath, 'utf8');
   await page.addStyleTag({ content: css });
 
   // Inject JS
-  const scriptPath = join(TOOLBAR_DIR, 'dist', 'picker.js');
-  const script = readFileSync(scriptPath, 'utf-8');
+  const scriptPath = path.join(TOOLBAR_DIR, 'dist', 'picker.js');
+  const script = readFileSync(scriptPath, 'utf8');
   await page.addScriptTag({ content: script });
 }
 
@@ -145,12 +145,12 @@ export async function setup(): Promise<void> {
 
       // Add or update screenshot
       const existingIndex = config.screenshots.findIndex(item => item.id === id);
-      if (existingIndex >= 0) {
-        config.screenshots[existingIndex] = screenshot;
-        console.log(`  - Updated: ${id}`);
-      } else {
+      if (existingIndex === -1) {
         config.screenshots.push(screenshot);
         console.log(`  - Added: ${id}`);
+      } else {
+        config.screenshots[existingIndex] = screenshot;
+        console.log(`  - Updated: ${id}`);
       }
     }
 

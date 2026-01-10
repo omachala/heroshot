@@ -6,29 +6,29 @@
  * Get element from point, piercing shadow DOMs
  */
 export function deepElementFromPoint(x: number, y: number): Element | null {
-  let el = document.elementFromPoint(x, y);
-  if (!el) return null;
+  let element = document.elementFromPoint(x, y);
+  if (!element) return null;
 
   // Traverse into shadow roots
-  while (el.shadowRoot) {
-    const inner = el.shadowRoot.elementFromPoint(x, y);
-    if (!inner || inner === el) break;
-    el = inner;
+  while (element?.shadowRoot) {
+    const inner: Element | null = element.shadowRoot.elementFromPoint(x, y);
+    if (!inner || inner === element) break;
+    element = inner;
   }
 
-  return el;
+  return element;
 }
 
 /**
  * Get unique CSS selector for element, with shadow DOM support
  */
-export function getSelector(el: Element): string {
-  if (el.id && !el.id.startsWith('heroshot')) {
-    return `#${el.id}`;
+export function getSelector(element: Element): string {
+  if (element.id && !element.id.startsWith('heroshot')) {
+    return `#${element.id}`;
   }
 
   const path: string[] = [];
-  let current: Element | null = el;
+  let current: Element | null = element;
 
   for (let depth = 0; current?.nodeType === Node.ELEMENT_NODE && depth < 8; depth++) {
     let selector = current.tagName.toLowerCase();
@@ -49,11 +49,13 @@ export function getSelector(el: Element): string {
     }
 
     // Add nth-of-type if there are siblings with same tag
-    const parentNode: HTMLElement | null = current.parentElement;
-    if (parentNode) {
-      const currentTagName = current.tagName;
+    // eslint-disable-next-line prefer-destructuring -- Cannot destructure: used in loop reassignment causing circular reference
+    const parent: HTMLElement | null = current.parentElement;
+    if (parent) {
+      // eslint-disable-next-line prefer-destructuring -- Cannot destructure: causes TypeScript circular reference error
+      const currentTagName: string = current.tagName;
       const siblings: Element[] = [];
-      for (const child of parentNode.children) {
+      for (const child of parent.children) {
         if (child.tagName === currentTagName) {
           siblings.push(child);
         }
@@ -72,14 +74,14 @@ export function getSelector(el: Element): string {
       // Add shadow DOM piercing indicator and continue from shadow host
       path.unshift('>>>');
       current = root.host;
-    } else if (parentNode) {
-      current = parentNode;
+    } else if (parent) {
+      current = parent;
     } else {
       current = null;
     }
   }
 
-  return path.join(' > ').replace(/> >>> >/g, ' >>> ');
+  return path.join(' > ').replaceAll('> >>> >', ' >>> ');
 }
 
 /**
@@ -131,36 +133,35 @@ export function updateOverlay(
 
   overlay.style.display = 'block';
 
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const { innerWidth, innerHeight } = globalThis;
 
   // Top dark area
   const top = document.createElement('div');
   top.className = 'heroshot-overlay-dark';
-  top.style.cssText = `top:0;left:0;width:${String(vw)}px;height:${String(rect.top)}px;`;
-  overlay.appendChild(top);
+  top.style.cssText = `top:0;left:0;width:${String(innerWidth)}px;height:${String(rect.top)}px;`;
+  overlay.append(top);
 
   // Bottom dark area
   const bottom = document.createElement('div');
   bottom.className = 'heroshot-overlay-dark';
-  bottom.style.cssText = `top:${String(rect.bottom)}px;left:0;width:${String(vw)}px;height:${String(vh - rect.bottom)}px;`;
-  overlay.appendChild(bottom);
+  bottom.style.cssText = `top:${String(rect.bottom)}px;left:0;width:${String(innerWidth)}px;height:${String(innerHeight - rect.bottom)}px;`;
+  overlay.append(bottom);
 
   // Left dark area
   const left = document.createElement('div');
   left.className = 'heroshot-overlay-dark';
   left.style.cssText = `top:${String(rect.top)}px;left:0;width:${String(rect.left)}px;height:${String(rect.height)}px;`;
-  overlay.appendChild(left);
+  overlay.append(left);
 
   // Right dark area
   const right = document.createElement('div');
   right.className = 'heroshot-overlay-dark';
-  right.style.cssText = `top:${String(rect.top)}px;left:${String(rect.right)}px;width:${String(vw - rect.right)}px;height:${String(rect.height)}px;`;
-  overlay.appendChild(right);
+  right.style.cssText = `top:${String(rect.top)}px;left:${String(rect.right)}px;width:${String(innerWidth - rect.right)}px;height:${String(rect.height)}px;`;
+  overlay.append(right);
 
   // Highlight border around element
   const highlight = document.createElement('div');
   highlight.className = 'heroshot-highlight';
   highlight.style.cssText = `top:${String(rect.top)}px;left:${String(rect.left)}px;width:${String(rect.width)}px;height:${String(rect.height)}px;`;
-  overlay.appendChild(highlight);
+  overlay.append(highlight);
 }
