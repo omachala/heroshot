@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { initPicker } from '../src/picker';
+import { initPicker } from '../picker';
 
 describe('initPicker', () => {
   let cleanup: (() => void) | null;
@@ -7,7 +7,7 @@ describe('initPicker', () => {
 
   beforeEach(() => {
     document.body.innerHTML = '';
-    window.__heroshotPickerInit = false;
+    globalThis.__heroshotPickerInit = false;
     cleanup = null;
     // Store original and create mock for elementFromPoint
     originalElementFromPoint = document.elementFromPoint;
@@ -18,7 +18,7 @@ describe('initPicker', () => {
     if (cleanup) {
       cleanup();
     }
-    window.__heroshotPickerInit = false;
+    globalThis.__heroshotPickerInit = false;
     document.elementFromPoint = originalElementFromPoint;
   });
 
@@ -29,7 +29,7 @@ describe('initPicker', () => {
 
   it('should set __heroshotPickerInit flag', () => {
     cleanup = initPicker();
-    expect(window.__heroshotPickerInit).toBe(true);
+    expect(globalThis.__heroshotPickerInit).toBe(true);
   });
 
   it('should prevent double initialization', () => {
@@ -40,13 +40,13 @@ describe('initPicker', () => {
 
   it('should append toolbar to body', () => {
     cleanup = initPicker();
-    const toolbar = document.getElementById('heroshot-toolbar');
+    const toolbar = document.querySelector('#heroshot-toolbar');
     expect(toolbar).not.toBeNull();
   });
 
   it('should append overlay to body', () => {
     cleanup = initPicker();
-    const overlay = document.getElementById('heroshot-overlay');
+    const overlay = document.querySelector('#heroshot-overlay');
     expect(overlay).not.toBeNull();
   });
 
@@ -56,7 +56,7 @@ describe('initPicker', () => {
       cleanup?.();
       cleanup = null;
 
-      const toolbar = document.getElementById('heroshot-toolbar');
+      const toolbar = document.querySelector('#heroshot-toolbar');
       expect(toolbar).toBeNull();
     });
 
@@ -65,7 +65,7 @@ describe('initPicker', () => {
       cleanup?.();
       cleanup = null;
 
-      const overlay = document.getElementById('heroshot-overlay');
+      const overlay = document.querySelector('#heroshot-overlay');
       expect(overlay).toBeNull();
     });
 
@@ -74,7 +74,7 @@ describe('initPicker', () => {
       cleanup?.();
       cleanup = null;
 
-      expect(window.__heroshotPickerInit).toBe(false);
+      expect(globalThis.__heroshotPickerInit).toBe(false);
     });
 
     it('should allow re-initialization after cleanup', () => {
@@ -89,48 +89,48 @@ describe('initPicker', () => {
   describe('picker activation', () => {
     it('should activate when button is clicked', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
 
-      btn?.click();
+      button?.click();
 
-      expect(btn?.classList.contains('active')).toBe(true);
+      expect(button?.classList.contains('active')).toBe(true);
     });
 
     it('should update status text when activated', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
-      const status = document.getElementById('heroshot-status');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
+      const status = document.querySelector('#heroshot-status');
 
-      btn?.click();
+      button?.click();
 
       expect(status?.textContent).toContain('Hover over element');
     });
 
     it('should set cursor to crosshair when activated', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
 
-      btn?.click();
+      button?.click();
 
       expect(document.body.style.cursor).toBe('crosshair');
     });
 
     it('should deactivate on second button click', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
 
-      btn?.click();
-      btn?.click();
+      button?.click();
+      button?.click();
 
-      expect(btn?.classList.contains('active')).toBe(false);
+      expect(button?.classList.contains('active')).toBe(false);
     });
 
     it('should reset cursor when deactivated', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
 
-      btn?.click();
-      btn?.click();
+      button?.click();
+      button?.click();
 
       expect(document.body.style.cursor).toBe('');
     });
@@ -139,56 +139,56 @@ describe('initPicker', () => {
   describe('keyboard handling', () => {
     it('should deactivate on Escape key', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
 
-      btn?.click();
-      expect(btn?.classList.contains('active')).toBe(true);
+      button?.click();
+      expect(button?.classList.contains('active')).toBe(true);
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       document.dispatchEvent(event);
 
-      expect(btn?.classList.contains('active')).toBe(false);
+      expect(button?.classList.contains('active')).toBe(false);
     });
 
     it('should ignore Escape when not active', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
 
       const event = new KeyboardEvent('keydown', { key: 'Escape' });
       document.dispatchEvent(event);
 
-      expect(btn?.classList.contains('active')).toBe(false);
+      expect(button?.classList.contains('active')).toBe(false);
     });
 
     it('should ignore other keys when active', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
 
-      btn?.click();
+      button?.click();
       const event = new KeyboardEvent('keydown', { key: 'Enter' });
       document.dispatchEvent(event);
 
-      expect(btn?.classList.contains('active')).toBe(true);
+      expect(button?.classList.contains('active')).toBe(true);
     });
   });
 
   describe('element selection', () => {
     it('should call onElementPicked when element is clicked', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
       const mockCallback = vi.fn();
-      window.onElementPicked = mockCallback;
+      globalThis.onElementPicked = mockCallback;
 
       // Create a test element
-      const testEl = document.createElement('div');
-      testEl.id = 'test-element';
-      document.body.appendChild(testEl);
+      const testElement = document.createElement('div');
+      testElement.id = 'test-element';
+      document.body.append(testElement);
 
       // Activate picker
-      btn?.click();
+      button?.click();
 
       // Mock elementFromPoint to return our test element
-      vi.mocked(document.elementFromPoint).mockReturnValue(testEl);
+      vi.mocked(document.elementFromPoint).mockReturnValue(testElement);
 
       // Simulate mousemove to select element
       const moveEvent = new MouseEvent('mousemove', {
@@ -207,21 +207,21 @@ describe('initPicker', () => {
       document.dispatchEvent(clickEvent);
 
       expect(mockCallback).toHaveBeenCalledWith({
-        url: window.location.href,
+        url: globalThis.location.href,
         selector: '#test-element',
       });
     });
 
     it('should not select toolbar elements', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
       const mockCallback = vi.fn();
-      window.onElementPicked = mockCallback;
+      globalThis.onElementPicked = mockCallback;
 
-      btn?.click();
+      button?.click();
 
       // Mock elementFromPoint to return toolbar
-      const toolbar = document.getElementById('heroshot-toolbar');
+      const toolbar = document.querySelector('#heroshot-toolbar');
       vi.mocked(document.elementFromPoint).mockReturnValue(toolbar);
 
       const moveEvent = new MouseEvent('mousemove', {
@@ -236,16 +236,16 @@ describe('initPicker', () => {
 
     it('should deactivate picker after selection', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
-      window.onElementPicked = vi.fn();
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
+      globalThis.onElementPicked = vi.fn();
 
-      const testEl = document.createElement('div');
-      testEl.id = 'test-element';
-      document.body.appendChild(testEl);
+      const testElement = document.createElement('div');
+      testElement.id = 'test-element';
+      document.body.append(testElement);
 
-      btn?.click();
+      button?.click();
 
-      vi.mocked(document.elementFromPoint).mockReturnValue(testEl);
+      vi.mocked(document.elementFromPoint).mockReturnValue(testElement);
 
       const moveEvent = new MouseEvent('mousemove', {
         clientX: 100,
@@ -261,21 +261,21 @@ describe('initPicker', () => {
       });
       document.dispatchEvent(clickEvent);
 
-      expect(btn?.classList.contains('active')).toBe(false);
+      expect(button?.classList.contains('active')).toBe(false);
     });
   });
 
   describe('mouse movement', () => {
     it('should ignore mousemove when not active', () => {
       cleanup = initPicker();
-      const status = document.getElementById('heroshot-status');
+      const status = document.querySelector('#heroshot-status');
       const originalText = status?.textContent;
 
-      const testEl = document.createElement('div');
-      testEl.id = 'test-element';
-      document.body.appendChild(testEl);
+      const testElement = document.createElement('div');
+      testElement.id = 'test-element';
+      document.body.append(testElement);
 
-      vi.mocked(document.elementFromPoint).mockReturnValue(testEl);
+      vi.mocked(document.elementFromPoint).mockReturnValue(testElement);
 
       const moveEvent = new MouseEvent('mousemove', {
         clientX: 100,
@@ -289,16 +289,16 @@ describe('initPicker', () => {
 
     it('should update status with selector on mousemove', () => {
       cleanup = initPicker();
-      const btn = document.getElementById('heroshot-picker-btn');
-      const status = document.getElementById('heroshot-status');
+      const button = document.querySelector<HTMLButtonElement>('#heroshot-picker-btn');
+      const status = document.querySelector('#heroshot-status');
 
-      const testEl = document.createElement('div');
-      testEl.id = 'test-element';
-      document.body.appendChild(testEl);
+      const testElement = document.createElement('div');
+      testElement.id = 'test-element';
+      document.body.append(testElement);
 
-      btn?.click();
+      button?.click();
 
-      vi.mocked(document.elementFromPoint).mockReturnValue(testEl);
+      vi.mocked(document.elementFromPoint).mockReturnValue(testElement);
 
       const moveEvent = new MouseEvent('mousemove', {
         clientX: 100,

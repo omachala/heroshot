@@ -259,13 +259,6 @@ export default tseslint.config(
     },
   },
   {
-    // Test files - relaxed rules
-    files: ['**/*.test.ts'],
-    rules: {
-      '@typescript-eslint/no-non-null-assertion': 'off',
-    },
-  },
-  {
     // Toolbar folder - uses its own tsconfig
     files: ['toolbar/**/*.ts'],
     languageOptions: {
@@ -276,13 +269,15 @@ export default tseslint.config(
     },
   },
   {
-    // Ignore generated files and config files
+    // Ignore generated files, config files, and tests (tests only need to pass typecheck)
     ignores: [
       '**/node_modules/**',
       '**/dist/**',
       '*.config.js',
       '*.config.ts',
       'toolbar/*.config.ts',
+      '**/*.test.ts',
+      '**/tests/**',
     ],
   }
 );

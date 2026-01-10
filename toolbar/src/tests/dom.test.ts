@@ -5,7 +5,7 @@ import {
   deepElementFromPoint,
   getSelector,
   updateOverlay,
-} from '../src/dom';
+} from '../dom';
 
 describe('deepElementFromPoint', () => {
   let originalElementFromPoint: typeof document.elementFromPoint;
@@ -36,7 +36,7 @@ describe('deepElementFromPoint', () => {
     const host = document.createElement('div');
     const shadow = host.attachShadow({ mode: 'open' });
     const inner = document.createElement('span');
-    shadow.appendChild(inner);
+    shadow.append(inner);
 
     vi.mocked(document.elementFromPoint).mockReturnValue(host);
     shadow.elementFromPoint = vi.fn().mockReturnValue(inner);
@@ -73,7 +73,7 @@ describe('getSelector', () => {
   it('should return id selector if element has id', () => {
     const div = document.createElement('div');
     div.id = 'my-element';
-    document.body.appendChild(div);
+    document.body.append(div);
 
     expect(getSelector(div)).toBe('#my-element');
   });
@@ -81,7 +81,7 @@ describe('getSelector', () => {
   it('should ignore heroshot-prefixed ids', () => {
     const div = document.createElement('div');
     div.id = 'heroshot-toolbar';
-    document.body.appendChild(div);
+    document.body.append(div);
 
     const result = getSelector(div);
     expect(result).not.toContain('#heroshot-toolbar');
@@ -91,7 +91,7 @@ describe('getSelector', () => {
   it('should include class names in selector', () => {
     const div = document.createElement('div');
     div.className = 'btn primary';
-    document.body.appendChild(div);
+    document.body.append(div);
 
     expect(getSelector(div)).toContain('.btn.primary');
   });
@@ -99,7 +99,7 @@ describe('getSelector', () => {
   it('should limit to first 2 classes', () => {
     const div = document.createElement('div');
     div.className = 'one two three four';
-    document.body.appendChild(div);
+    document.body.append(div);
 
     const result = getSelector(div);
     expect(result).toContain('.one.two');
@@ -109,7 +109,7 @@ describe('getSelector', () => {
   it('should filter out heroshot classes', () => {
     const div = document.createElement('div');
     div.className = 'heroshot-active btn';
-    document.body.appendChild(div);
+    document.body.append(div);
 
     const result = getSelector(div);
     expect(result).not.toContain('heroshot');
@@ -120,9 +120,9 @@ describe('getSelector', () => {
     const parent = document.createElement('div');
     const child1 = document.createElement('span');
     const child2 = document.createElement('span');
-    parent.appendChild(child1);
-    parent.appendChild(child2);
-    document.body.appendChild(parent);
+    parent.append(child1);
+    parent.append(child2);
+    document.body.append(parent);
 
     expect(getSelector(child2)).toContain(':nth-of-type(2)');
   });
@@ -131,8 +131,8 @@ describe('getSelector', () => {
     const parent = document.createElement('div');
     parent.id = 'container';
     const child = document.createElement('span');
-    parent.appendChild(child);
-    document.body.appendChild(parent);
+    parent.append(child);
+    document.body.append(parent);
 
     const result = getSelector(child);
     expect(result).toBe('#container > span');
@@ -144,8 +144,8 @@ describe('getSelector', () => {
     const shadow = host.attachShadow({ mode: 'open' });
     const inner = document.createElement('span');
     inner.className = 'inner';
-    shadow.appendChild(inner);
-    document.body.appendChild(host);
+    shadow.append(inner);
+    document.body.append(host);
 
     const result = getSelector(inner);
     expect(result).toContain('>>>');
@@ -155,9 +155,9 @@ describe('getSelector', () => {
 
   it('should limit path depth to 8', () => {
     let current = document.body;
-    for (let i = 0; i < 15; i++) {
+    for (let index = 0; index < 15; index++) {
       const div = document.createElement('div');
-      current.appendChild(div);
+      current.append(div);
       current = div;
     }
 
@@ -175,8 +175,8 @@ describe('createToolbar', () => {
 
   it('should contain picker button', () => {
     const toolbar = createToolbar();
-    const btn = toolbar.querySelector('#heroshot-picker-btn');
-    expect(btn).not.toBeNull();
+    const button = toolbar.querySelector('#heroshot-picker-btn');
+    expect(button).not.toBeNull();
   });
 
   it('should contain status element', () => {
@@ -210,7 +210,7 @@ describe('updateOverlay', () => {
 
   beforeEach(() => {
     overlay = createOverlay();
-    document.body.appendChild(overlay);
+    document.body.append(overlay);
   });
 
   it('should hide overlay when rect is null', () => {
@@ -253,10 +253,10 @@ describe('updateOverlay', () => {
 
     const highlight = overlay.querySelector('.heroshot-highlight');
     expect(highlight).not.toBeNull();
-    const highlightEl = highlight as HTMLElement;
-    expect(highlightEl.style.top).toBe('50px');
-    expect(highlightEl.style.left).toBe('100px');
-    expect(highlightEl.style.width).toBe('200px');
-    expect(highlightEl.style.height).toBe('150px');
+    const highlightElement = highlight as HTMLElement;
+    expect(highlightElement.style.top).toBe('50px');
+    expect(highlightElement.style.left).toBe('100px');
+    expect(highlightElement.style.width).toBe('200px');
+    expect(highlightElement.style.height).toBe('150px');
   });
 });
