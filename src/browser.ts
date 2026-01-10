@@ -14,16 +14,55 @@ export function getProfilePath(): string {
 
 const DEFAULT_VIEWPORT: Viewport = { width: 1280, height: 800 };
 
+/**
+ * Browser channels to try in order of preference.
+ * System Chrome first (no download needed), then Playwright's bundled Chromium.
+ */
+const BROWSER_CHANNELS: readonly string[] = ['chrome', 'chromium'];
+
+/**
+ * Launch browser with persistent profile, trying system Chrome first.
+ * Falls back to Playwright's bundled Chromium if Chrome isn't installed.
+ */
 export async function launchPersistentBrowser(
   options: { headless?: boolean; viewport?: Viewport } = {}
 ): Promise<BrowserContext> {
   const viewport = options.viewport ?? DEFAULT_VIEWPORT;
-  const context = await chromium.launchPersistentContext(PROFILE_DIR, {
+  const baseOptions = {
     headless: options.headless ?? false,
     viewport,
-  });
+  };
 
-  return context;
+  // Try each browser channel in order
+  for (const channel of BROWSER_CHANNELS) {
+    try {
+      const context = await chromium.launchPersistentContext(PROFILE_DIR, {
+        ...baseOptions,
+        channel,
+      });
+      return context;
+    } catch {
+      // This channel failed, try next one
+      continue;
+    }
+  }
+
+  // All channels failed - throw error with helpful message
+  const message = [
+    '',
+    'Error: No browser found.',
+    '',
+    'Heroshot needs a browser to capture screenshots. Options:',
+    '',
+    '  1. Install Chrome (recommended):',
+    '     https://www.google.com/chrome/',
+    '',
+    '  2. Or install Playwright browsers:',
+    '     npx playwright install chromium',
+    '',
+  ].join('\n');
+
+  throw new Error(message);
 }
 
 interface ScreenshotData {
