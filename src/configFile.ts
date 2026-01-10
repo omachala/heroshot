@@ -10,7 +10,8 @@ export function getConfigPath(directory: string = process.cwd()): string {
 
 export function loadConfig(configPath: string): Config {
   if (!existsSync(configPath)) {
-    return { screenshots: [] };
+    // Return default config with Zod defaults applied
+    return parseConfig({});
   }
 
   const content = readFileSync(configPath, 'utf8');

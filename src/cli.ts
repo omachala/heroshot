@@ -1,6 +1,7 @@
 import { existsSync, rmSync } from 'node:fs';
 import { Command } from 'commander';
 import { captureUrl, getProfilePath, setup } from './browser';
+import { sync } from './sync';
 
 const program = new Command();
 
@@ -42,8 +43,11 @@ program
   .command('sync')
   .description('Capture all screenshots defined in config')
   .option('--id <id>', 'Only capture a specific screenshot by ID')
-  .action((options: { id?: string }) => {
-    console.log('TODO: Sync screenshots', options);
+  .action(async (options: { id?: string }) => {
+    const result = await sync(options);
+    if (result.failed > 0) {
+      process.exitCode = 1;
+    }
   });
 
 program

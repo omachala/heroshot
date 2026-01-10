@@ -48,6 +48,9 @@ const browserSchema = z.object({
 
 // Global config
 const configSchema = z.object({
+  // Output directory for screenshots (relative to config file)
+  outputDirectory: z.string().default('.'),
+
   // Default browser settings
   browser: browserSchema.optional(),
 

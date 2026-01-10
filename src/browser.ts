@@ -14,7 +14,7 @@ export function getProfilePath(): string {
 
 const DEFAULT_VIEWPORT: Viewport = { width: 1280, height: 800 };
 
-async function launchPersistentBrowser(
+export async function launchPersistentBrowser(
   options: { headless?: boolean; viewport?: Viewport } = {}
 ): Promise<BrowserContext> {
   const viewport = options.viewport ?? DEFAULT_VIEWPORT;

@@ -1,0 +1,214 @@
+import { existsSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
+import type { ElementHandle, Page } from 'playwright';
+import { launchPersistentBrowser } from './browser';
+import type { Config, Screenshot } from './config';
+import { getConfigPath, loadConfig } from './configFile';
+
+/**
+ * Find element using shadow-piercing selector with retries
+ * The >>> syntax pierces shadow DOM boundaries
+ */
+async function findElement(
+  page: Page,
+  selector: string,
+  maxAttempts = 10,
+  intervalMs = 500
+): Promise<ElementHandle | null> {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // Run shadow-piercing query in browser context
+    // The function body runs in browser where DOM types exist
+    const handle = await page.evaluateHandle(`
+      (() => {
+        const selector = ${JSON.stringify(selector)};
+        const parts = selector.split('>>>').map((part) => part.trim());
+        let current = document;
+
+        for (const part of parts) {
+          if (!part) continue;
+
+          const root = current instanceof Element
+            ? (current.shadowRoot ?? current)
+            : current;
+
+          const found = root.querySelector(part);
+          if (!found) return null;
+
+          current = found;
+        }
+
+        return current instanceof Element ? current : null;
+      })()
+    `);
+
+    // Check if we got an element (not null/undefined)
+    const element = handle.asElement();
+    if (element) {
+      return element;
+    }
+
+    // Dispose the handle if it's not an element
+    await handle.dispose();
+
+    if (attempt < maxAttempts) {
+      await page.waitForTimeout(intervalMs);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Capture a single screenshot
+ */
+async function captureScreenshot(
+  page: Page,
+  screenshot: Screenshot,
+  outputDirectory: string
+): Promise<{ success: boolean; error?: string }> {
+  const { name, url, selector, filename } = screenshot;
+
+  console.log(`  ${name}...`);
+
+  // Navigate to URL and wait for network to settle
+  try {
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { success: false, error: `Failed to navigate: ${message}` };
+  }
+
+  // Extra wait for dynamic content (web components, lazy loading)
+  await page.waitForTimeout(1000);
+
+  const outputPath = path.join(outputDirectory, filename);
+
+  // Ensure output directory exists
+  const outputDirectoryPath = path.dirname(outputPath);
+  if (!existsSync(outputDirectoryPath)) {
+    mkdirSync(outputDirectoryPath, { recursive: true });
+  }
+
+  if (selector) {
+    // Find element with shadow-piercing selector
+    const element = await findElement(page, selector);
+
+    if (!element) {
+      return {
+        success: false,
+        error: `Element not found: ${selector}`,
+      };
+    }
+
+    // Screenshot the element
+    try {
+      await element.screenshot({ path: outputPath });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { success: false, error: `Screenshot failed: ${message}` };
+    }
+  } else {
+    // Full page screenshot
+    try {
+      await page.screenshot({ path: outputPath, fullPage: false });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { success: false, error: `Screenshot failed: ${message}` };
+    }
+  }
+
+  return { success: true };
+}
+
+interface SyncOptions {
+  id?: string;
+}
+
+interface ScreenshotResult {
+  id: string;
+  name: string;
+  success: boolean;
+  error?: string;
+}
+
+interface SyncResult {
+  total: number;
+  success: number;
+  failed: number;
+  results: ScreenshotResult[];
+}
+
+/**
+ * Sync all screenshots defined in config
+ */
+export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
+  const configPath = getConfigPath();
+  const config: Config = loadConfig(configPath);
+
+  if (config.screenshots.length === 0) {
+    console.log('No screenshots defined in config.');
+    return { total: 0, success: 0, failed: 0, results: [] };
+  }
+
+  // Filter by ID if specified
+  const { id: filterId } = options;
+  const screenshots = filterId
+    ? config.screenshots.filter(screenshot => screenshot.id === filterId)
+    : config.screenshots;
+
+  if (filterId && screenshots.length === 0) {
+    console.log(`No screenshot found with ID: ${filterId}`);
+    return { total: 0, success: 0, failed: 0, results: [] };
+  }
+
+  console.log(`Syncing ${screenshots.length} screenshot(s)...`);
+  console.log('');
+
+  // Get output directory (relative to config file location)
+  const configDirectory = path.dirname(configPath);
+  const outputDirectory = path.resolve(configDirectory, config.outputDirectory);
+
+  // Launch browser with persistent profile (reuses auth sessions)
+  const viewport = config.browser?.viewport ?? { width: 1280, height: 800 };
+  const context = await launchPersistentBrowser({
+    headless: true,
+    viewport,
+  });
+
+  const page = await context.newPage();
+  const results: SyncResult['results'] = [];
+
+  for (const screenshot of screenshots) {
+    const result = await captureScreenshot(page, screenshot, outputDirectory);
+
+    results.push({
+      id: screenshot.id,
+      name: screenshot.name,
+      success: result.success,
+      error: result.error,
+    });
+
+    if (result.success) {
+      console.log(`    Saved: ${screenshot.filename}`);
+    } else {
+      console.log(`    Failed: ${result.error ?? 'Unknown error'}`);
+    }
+  }
+
+  await context.close();
+
+  const { length: totalCount } = results;
+  const successfulResults = results.filter(({ success }) => success);
+  const { length: successCount } = successfulResults;
+  const failedCount = totalCount - successCount;
+
+  console.log('');
+  console.log(`Done: ${successCount} succeeded, ${failedCount} failed`);
+
+  return {
+    total: totalCount,
+    success: successCount,
+    failed: failedCount,
+    results,
+  };
+}
