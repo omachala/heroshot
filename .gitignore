@@ -4,6 +4,5 @@ coverage
 *.log
 .*
 !.github
-!.claude
 ha-dashboard.png
 heroshot.json
