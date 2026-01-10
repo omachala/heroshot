@@ -153,9 +153,9 @@ describe('getSelector', () => {
     expect(result).toContain('span.inner');
   });
 
-  it('should limit path depth to 8', () => {
+  it('should limit path depth to 20', () => {
     let current = document.body;
-    for (let index = 0; index < 15; index++) {
+    for (let index = 0; index < 30; index++) {
       const div = document.createElement('div');
       current.append(div);
       current = div;
@@ -163,7 +163,7 @@ describe('getSelector', () => {
 
     const result = getSelector(current);
     const parts = result.split(' > ');
-    expect(parts.length).toBeLessThanOrEqual(8);
+    expect(parts.length).toBeLessThanOrEqual(20);
   });
 });
 

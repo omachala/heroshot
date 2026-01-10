@@ -9,21 +9,21 @@ export interface ScreenshotItem {
 }
 
 /**
- * Data passed when a screenshot is added
+ * Job types that CLI sends to toolbar
  */
-export interface ScreenshotAddedData {
-  id: string;
-  name: string;
-  url: string;
-  selector: string;
-}
+export type ToolbarJob =
+  | { type: 'highlight'; selector: string }
+  | { type: 'navigate-and-highlight'; url: string; selector: string };
 
 /**
- * Callback function types
+ * Event types that toolbar sends to CLI
  */
-export type OnScreenshotAddedFunction = (data: ScreenshotAddedData) => void;
-export type OnScreenshotRemovedFunction = (id: string) => void;
-export type OnDoneFunction = () => void;
+export type ToolbarEvent =
+  | { type: 'screenshot-added'; data: ScreenshotItem }
+  | { type: 'screenshot-selected'; id: string; url: string; selector: string }
+  | { type: 'screenshot-removed'; id: string }
+  | { type: 'job-complete' }
+  | { type: 'done' };
 
 /**
  * Global heroshot namespace
@@ -31,9 +31,8 @@ export type OnDoneFunction = () => void;
 export interface HeroshotGlobal {
   initialized: boolean;
   screenshots: ScreenshotItem[];
-  onScreenshotAdded?: OnScreenshotAddedFunction;
-  onScreenshotRemoved?: OnScreenshotRemovedFunction;
-  onDone?: OnDoneFunction;
+  pendingJob: ToolbarJob | null;
+  emit: (event: ToolbarEvent) => void;
 }
 
 /**
@@ -41,14 +40,4 @@ export interface HeroshotGlobal {
  */
 declare global {
   var __heroshot: HeroshotGlobal | undefined;
-}
-
-/**
- * Toolbar state
- */
-export interface ToolbarState {
-  isPickerActive: boolean;
-  currentElement: Element | null;
-  screenshots: ScreenshotItem[];
-  pendingPick: { url: string; selector: string } | null;
 }

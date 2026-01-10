@@ -1,10 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
-import { createInterface } from 'node:readline';
 import { type BrowserContext, type Page, chromium } from 'playwright';
-import type { Screenshot } from './config';
-import { generateScreenshotId, getConfigPath, loadConfig, saveConfig } from './configFile';
+import type { Screenshot, Viewport } from './config';
+import { getConfigPath, loadConfig, saveConfig } from './configFile';
 
 const PROFILE_DIR = path.join(homedir(), '.heroshot', 'browser-profile');
 const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
@@ -13,53 +12,89 @@ export function getProfilePath(): string {
   return PROFILE_DIR;
 }
 
+const DEFAULT_VIEWPORT: Viewport = { width: 1280, height: 800 };
+
 async function launchPersistentBrowser(
-  options: { headless?: boolean } = {}
+  options: { headless?: boolean; viewport?: Viewport } = {}
 ): Promise<BrowserContext> {
+  const viewport = options.viewport ?? DEFAULT_VIEWPORT;
   const context = await chromium.launchPersistentContext(PROFILE_DIR, {
     headless: options.headless ?? false,
-    viewport: { width: 1280, height: 800 },
+    viewport,
   });
 
   return context;
 }
 
-async function waitForUserInput(message: string): Promise<void> {
-  const readline = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  return new Promise(resolve => {
-    readline.question(message, () => {
-      readline.close();
-      resolve();
-    });
-  });
-}
-
-interface PickedElement {
+interface ScreenshotData {
+  id: string;
+  name: string;
   url: string;
   selector: string;
 }
 
+// Job types that CLI can send to toolbar
+type ToolbarJob =
+  | { type: 'highlight'; selector: string }
+  | { type: 'navigate-and-highlight'; url: string; selector: string };
+
+// Events that toolbar sends to CLI
+type ToolbarEvent =
+  | { type: 'screenshot-added'; data: ScreenshotData }
+  | { type: 'screenshot-selected'; id: string; url: string; selector: string }
+  | { type: 'screenshot-removed'; id: string }
+  | { type: 'job-complete' }
+  | { type: 'done' };
+
 const exposedPages = new WeakSet<Page>();
 
-async function injectPicker(page: Page, onPicked: (data: PickedElement) => void): Promise<void> {
-  // Expose callback function to page (only once per page)
+async function injectToolbar(
+  page: Page,
+  initialScreenshots: ScreenshotData[],
+  pendingJob: ToolbarJob | null,
+  onEvent: (event: ToolbarEvent) => void
+): Promise<void> {
+  // Expose single event handler to page (only once per page)
+  // All toolbar events go through this single channel
   if (!exposedPages.has(page)) {
-    await page.exposeFunction('onElementPicked', (data: PickedElement) => {
-      onPicked(data);
+    await page.exposeFunction('__heroshotEmit', (eventJson: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JSON from trusted toolbar
+      const event: ToolbarEvent = JSON.parse(eventJson);
+      onEvent(event);
     });
     exposedPages.add(page);
   }
 
-  // Inject CSS
-  const cssPath = path.join(TOOLBAR_DIR, 'dist', 'heroshot.css');
-  const css = readFileSync(cssPath, 'utf8');
-  await page.addStyleTag({ content: css });
+  // Initialize or update __heroshot namespace
+  // Using string to avoid tsx transpilation issues (__name helper)
+  const screenshotsJson = JSON.stringify(initialScreenshots);
+  const pendingJobJson = JSON.stringify(pendingJob);
 
-  // Inject JS
+  // Check if toolbar is already initialized - if so, just update the job
+  const alreadyInitialized = await page.evaluate('globalThis.__heroshot?.initialized === true');
+
+  if (alreadyInitialized) {
+    // Toolbar already running - just update the pending job and trigger execution
+    await page.evaluate(`
+      globalThis.__heroshot.pendingJob = ${pendingJobJson};
+      // Dispatch custom event to notify toolbar of new job
+      window.dispatchEvent(new CustomEvent('heroshot-job', { detail: ${pendingJobJson} }));
+    `);
+    return;
+  }
+
+  await page.evaluate(`
+    globalThis.__heroshot = {
+      initialized: false,
+      screenshots: ${screenshotsJson},
+      pendingJob: ${pendingJobJson},
+      emit: function(event) {
+        globalThis.__heroshotEmit(JSON.stringify(event));
+      },
+    };
+  `);
+
+  // Inject toolbar JS (CSS is bundled via Shadow DOM)
   const scriptPath = path.join(TOOLBAR_DIR, 'dist', 'toolbar.js');
   const script = readFileSync(scriptPath, 'utf8');
   await page.addScriptTag({ content: script });
@@ -84,15 +119,70 @@ export async function setup(): Promise<void> {
   console.log(`Profile will be saved to: ${PROFILE_DIR}`);
   console.log('');
 
-  const pickedElements: PickedElement[] = [];
+  const configPath = getConfigPath();
+  const config = loadConfig(configPath);
+  const viewport = config.browser?.viewport ?? DEFAULT_VIEWPORT;
 
-  const onPicked = (data: PickedElement) => {
-    pickedElements.push(data);
-    console.log(`\nPicked: ${data.selector}`);
-    console.log(`URL: ${data.url}`);
+  // Convert config screenshots to toolbar format - this is the running list
+  // that includes both original config items AND newly added items
+  const allScreenshots: ScreenshotData[] = config.screenshots.map(screenshot => ({
+    id: screenshot.id,
+    name: screenshot.name,
+    url: screenshot.url,
+    selector: screenshot.selector ?? '',
+  }));
+
+  // Track only NEW items added this session (for saving to config at the end)
+  const newlyAddedIds = new Set<string>();
+  let pendingJob: ToolbarJob | null = null;
+
+  const context = await launchPersistentBrowser({ headless: false, viewport });
+
+  // Handle events from toolbar
+  const handleEvent = (event: ToolbarEvent) => {
+    switch (event.type) {
+      case 'screenshot-added': {
+        allScreenshots.push(event.data);
+        newlyAddedIds.add(event.data.id);
+        console.log(`\nAdded: ${event.data.name} (${event.data.selector})`);
+        console.log(`URL: ${event.data.url}`);
+        break;
+      }
+
+      case 'screenshot-selected': {
+        // User selected a screenshot - create job to highlight it
+        const [currentPage] = context.pages();
+        if (!currentPage) break;
+
+        const currentUrl = currentPage.url();
+
+        if (currentUrl === event.url) {
+          // Already on the right page - send highlight job via event
+          pendingJob = { type: 'highlight', selector: event.selector };
+          void currentPage.evaluate(`
+            window.dispatchEvent(new CustomEvent('heroshot-job', {
+              detail: { type: 'highlight', selector: ${JSON.stringify(event.selector)} }
+            }));
+          `);
+        } else {
+          // Navigate to the page - toolbar will get job on inject
+          pendingJob = { type: 'navigate-and-highlight', url: event.url, selector: event.selector };
+          void currentPage.goto(event.url, { waitUntil: 'domcontentloaded' });
+        }
+        break;
+      }
+
+      case 'job-complete': {
+        pendingJob = null;
+        break;
+      }
+
+      case 'done': {
+        void context.close();
+        break;
+      }
+    }
   };
-
-  const context = await launchPersistentBrowser({ headless: false });
 
   const setupPage = (page: Page) => {
     // Inject on every navigation within the page
@@ -102,9 +192,9 @@ export async function setup(): Promise<void> {
       if (!url.startsWith('http')) return;
 
       try {
-        await injectPicker(page, onPicked);
+        await injectToolbar(page, allScreenshots, pendingJob, handleEvent);
       } catch {
-        // Page might have closed or navigated away
+        // Toolbar injection can fail on some pages, ignore silently
       }
     });
   };
@@ -114,48 +204,60 @@ export async function setup(): Promise<void> {
     setupPage(page);
   });
 
-  const page = await context.newPage();
+  // Use existing page from context or create one if none exists
+  const existingPages = context.pages();
+  const page = existingPages[0] ?? (await context.newPage());
   setupPage(page);
 
   console.log('Browser is open.');
   console.log('1. Navigate to any site (e.g., https://example.com)');
   console.log('2. Click the picker icon in the toolbar to select elements');
-  console.log('3. Press Enter here when done');
+  console.log('3. Click Done or close the browser when finished');
   console.log('');
 
-  await waitForUserInput('Press Enter when done to save session and exit...');
-
-  await context.close();
+  // Wait for browser to close (either via Done button or manual close)
+  await new Promise<void>(resolve => {
+    context.once('close', () => resolve());
+  });
 
   console.log('');
-  if (pickedElements.length > 0) {
-    // Save to config
-    const configPath = getConfigPath();
-    const config = loadConfig(configPath);
+  if (newlyAddedIds.size > 0) {
+    // Reload config in case it was modified while browser was open
+    const latestConfig = loadConfig(configPath);
 
-    console.log('Picked elements:');
-    for (const element of pickedElements) {
-      const id = generateScreenshotId(element.url, element.selector);
+    console.log('Saved screenshots:');
+    // Only save newly added items (not items that were already in config)
+    for (const element of allScreenshots) {
+      if (!newlyAddedIds.has(element.id)) continue;
+
+      // Slugify name for output filename (just filename, no path)
+      const filename =
+        element.name
+          .toLowerCase()
+          .replaceAll(/[^a-z0-9]+/g, '-')
+          .replaceAll(/(?:^-|-$)/g, '') + '.png';
+
       const screenshot: Screenshot = {
-        id,
+        id: element.id,
+        name: element.name,
         url: element.url,
         selector: element.selector,
-        output: `screenshots/${id}.png`,
+        filename,
       };
 
       // Add or update screenshot
-      const existingIndex = config.screenshots.findIndex(item => item.id === id);
+      const existingIndex = latestConfig.screenshots.findIndex(item => item.id === element.id);
       if (existingIndex === -1) {
-        config.screenshots.push(screenshot);
-        console.log(`  - Added: ${id}`);
+        latestConfig.screenshots.push(screenshot);
+        console.log(`  + ${element.name}: ${element.selector}`);
       } else {
-        config.screenshots[existingIndex] = screenshot;
-        console.log(`  - Updated: ${id}`);
+        latestConfig.screenshots[existingIndex] = screenshot;
+        console.log(`  ~ ${element.name}: ${element.selector} (updated)`);
       }
     }
 
-    saveConfig(configPath, config);
-    console.log(`\nSaved to: ${configPath}`);
+    saveConfig(configPath, latestConfig);
+    console.log(`\nConfig saved to: ${configPath}`);
   }
-  console.log('Session saved. You can now use `heroshot sync` to capture screenshots.');
+  console.log('You can now use `heroshot sync` to capture screenshots.');
 }

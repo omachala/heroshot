@@ -1,17 +1,24 @@
 <script lang="ts">
   import { deepElementFromPoint, getSelector } from '../lib/dom';
-  import type { ScreenshotItem } from '../types';
+  import type { ScreenshotItem, ToolbarJob } from '../types';
   import ListDialog from './ListDialog.svelte';
   import NameModal from './NameModal.svelte';
 
   interface Props {
     initialScreenshots?: ScreenshotItem[];
+    pendingJob?: ToolbarJob | null;
   }
 
   const props: Props = $props();
 
+  // Emit event to CLI
+  function emit(event: Parameters<typeof globalThis.__heroshot.emit>[0]): void {
+    globalThis.__heroshot?.emit(event);
+  }
+
   // State
   let isPickerActive = $state(false);
+  let isHighlighting = $state(false); // True when showing highlight from job
   let currentElement = $state<Element | null>(null);
   let statusText = $state('Click crosshair to pick element');
   let screenshots = $state<ScreenshotItem[]>([...(props.initialScreenshots ?? [])]);
@@ -19,14 +26,20 @@
   let showNameModal = $state(false);
   let showListDialog = $state(false);
 
+  // Scroll position tracker - used to trigger overlay recalculation
+  let scrollY = $state(globalThis.scrollY ?? 0);
+  let scrollX = $state(globalThis.scrollX ?? 0);
+
   // Derived
   let screenshotCount = $derived(screenshots.length);
+  let showOverlay = $derived((isPickerActive || isHighlighting) && overlayRects !== null);
 
   /**
    * Toggle picker mode on/off
    */
   function togglePicker(): void {
     isPickerActive = !isPickerActive;
+    isHighlighting = false;
 
     if (isPickerActive) {
       statusText = 'Hover over element, click to select';
@@ -96,6 +109,11 @@
         showListDialog = false;
       } else if (isPickerActive) {
         togglePicker();
+      } else if (isHighlighting) {
+        // Clear highlight mode
+        isHighlighting = false;
+        currentElement = null;
+        statusText = 'Click crosshair to pick element';
       }
     }
   }
@@ -106,20 +124,15 @@
   function handleNameSave(name: string): void {
     if (!pendingPick) return;
 
-    const id = generateId(name);
     const screenshotData: ScreenshotItem = {
-      id,
+      id: generateUid(),
       name,
       url: pendingPick.url,
       selector: pendingPick.selector,
     };
 
     screenshots = [...screenshots, screenshotData];
-
-    // Call exposed function from Playwright
-    if (globalThis.__heroshot?.onScreenshotAdded) {
-      globalThis.__heroshot.onScreenshotAdded(screenshotData);
-    }
+    emit({ type: 'screenshot-added', data: screenshotData });
 
     showNameModal = false;
     pendingPick = null;
@@ -142,35 +155,145 @@
    */
   function handleRemoveScreenshot(id: string): void {
     screenshots = screenshots.filter((s) => s.id !== id);
+    emit({ type: 'screenshot-removed', id });
+  }
 
-    if (globalThis.__heroshot?.onScreenshotRemoved) {
-      globalThis.__heroshot.onScreenshotRemoved(id);
+  /**
+   * Handle screenshot selection - tell CLI to navigate and highlight
+   */
+  function handleSelectScreenshot(screenshot: ScreenshotItem): void {
+    showListDialog = false;
+    emit({
+      type: 'screenshot-selected',
+      id: screenshot.id,
+      url: screenshot.url,
+      selector: screenshot.selector,
+    });
+  }
+
+  /**
+   * Query selector that pierces shadow DOM using >>> syntax
+   * e.g., "host-element >>> .inner-class >>> span"
+   */
+  function querySelectorPiercing(selector: string): Element | null {
+    const parts = selector.split('>>>').map(s => s.trim());
+    let current: Element | Document = document;
+
+    for (const part of parts) {
+      if (!part) continue;
+
+      // Query within current context (document or shadow root)
+      const root = current instanceof Element
+        ? (current.shadowRoot ?? current)
+        : current;
+
+      const found = root.querySelector(part);
+      if (!found) {
+        return null;
+      }
+
+      current = found;
+    }
+
+    return current instanceof Element ? current : null;
+  }
+
+  /**
+   * Find and highlight an element by selector with retry
+   */
+  function highlightElement(selector: string, attempt = 1): void {
+    const maxAttempts = 5;
+
+    // Use shadow-piercing query for >>> selectors, regular querySelector otherwise
+    const element = selector.includes('>>>')
+      ? querySelectorPiercing(selector)
+      : document.querySelector(selector);
+
+    if (element) {
+      currentElement = element;
+      isHighlighting = true;
+      statusText = selector;
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      emit({ type: 'job-complete' });
+    } else if (attempt < maxAttempts) {
+      // Retry after 1 second
+      statusText = `Looking for element... (attempt ${attempt}/${maxAttempts})`;
+      globalThis.setTimeout(() => highlightElement(selector, attempt + 1), 1000);
+    } else {
+      statusText = `Element not found: ${selector}`;
+      emit({ type: 'job-complete' });
     }
   }
+
+  /**
+   * Execute pending job from CLI
+   */
+  function executePendingJob(job: ToolbarJob): void {
+    // Both job types just highlight the selector
+    // For navigate-and-highlight, CLI already navigated us here
+    highlightElement(job.selector);
+  }
+
+  /**
+   * Type guard for ToolbarJob
+   */
+  function isToolbarJob(value: unknown): value is ToolbarJob {
+    return typeof value === 'object' && value !== null && 'type' in value && 'selector' in value;
+  }
+
+  /**
+   * Handle new job events from CLI
+   */
+  function handleNewJob(event: Event): void {
+    if (event instanceof CustomEvent && isToolbarJob(event.detail)) {
+      executePendingJob(event.detail);
+    }
+  }
+
+  // Check for pending job on init
+  $effect(() => {
+    const job = props.pendingJob;
+    if (job) {
+      // Small delay to ensure DOM is ready
+      globalThis.setTimeout(() => executePendingJob(job), 100);
+    }
+  });
+
+  // Listen for new jobs from CLI (when toolbar already running)
+  $effect(() => {
+    globalThis.addEventListener('heroshot-job', handleNewJob);
+    return () => globalThis.removeEventListener('heroshot-job', handleNewJob);
+  });
+
 
   /**
    * Handle done button - close toolbar and signal completion
    */
   function handleDone(): void {
-    if (globalThis.__heroshot?.onDone) {
-      globalThis.__heroshot.onDone();
-    }
+    emit({ type: 'done' });
   }
 
   /**
-   * Generate a simple ID from name
+   * Generate a random UID (8 chars)
    */
-  function generateId(name: string): string {
-    return name
-      .toLowerCase()
-      .replaceAll(/[^a-z0-9]+/g, '-')
-      .replaceAll(/(?:^-|-$)/g, '');
+  function generateUid(): string {
+    // eslint-disable-next-line sonarjs/pseudo-random -- Not used for security, just unique IDs
+    return Math.random().toString(36).slice(2, 10);
+  }
+
+  /**
+   * Handle scroll events to update overlay position
+   */
+  function handleScroll(): void {
+    scrollY = globalThis.scrollY;
+    scrollX = globalThis.scrollX;
   }
 
   /**
    * Calculate overlay rectangles for darkening around element
+   * Dependencies on scrollX/scrollY ensure recalculation on scroll
    */
-  function getOverlayRects(element: Element | null) {
+  function getOverlayRects(element: Element | null, _scrollX: number, _scrollY: number) {
     if (!element) return null;
 
     const rect = element.getBoundingClientRect();
@@ -185,8 +308,10 @@
     };
   }
 
-  let overlayRects = $derived(getOverlayRects(currentElement));
+  let overlayRects = $derived(getOverlayRects(currentElement, scrollX, scrollY));
 </script>
+
+<svelte:window onscroll={handleScroll} />
 
 <svelte:document
   onmousemove={handleMouseMove}
@@ -243,7 +368,7 @@
 </div>
 
 <!-- Overlay for element highlighting -->
-{#if isPickerActive && overlayRects}
+{#if showOverlay && overlayRects}
   <div class="overlay">
     <div
       class="overlay-dark"
@@ -281,6 +406,7 @@
 {#if showListDialog}
   <ListDialog
     {screenshots}
+    onSelect={handleSelectScreenshot}
     onRemove={handleRemoveScreenshot}
     onClose={() => showListDialog = false}
   />

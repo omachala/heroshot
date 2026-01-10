@@ -17,11 +17,17 @@ export function initToolbar(): (() => void) | null {
     globalThis.__heroshot = {
       initialized: false,
       screenshots: [],
+      pendingJob: null,
+      emit: () => {
+        // No-op if not injected by CLI
+      },
     };
   }
 
   // Prevent double initialization
-  if (globalThis.__heroshot.initialized) return null;
+  if (globalThis.__heroshot.initialized) {
+    return null;
+  }
   globalThis.__heroshot.initialized = true;
 
   // Create mount target with Shadow DOM
@@ -36,12 +42,18 @@ export function initToolbar(): (() => void) | null {
   const shadow = host.attachShadow({ mode: 'closed' });
 
   // Mount Svelte component into shadow root
-  const component = mount(Toolbar, {
-    target: shadow,
-    props: {
-      initialScreenshots: [...globalThis.__heroshot.screenshots],
-    },
-  });
+  let component: ReturnType<typeof mount>;
+  try {
+    component = mount(Toolbar, {
+      target: shadow,
+      props: {
+        initialScreenshots: [...globalThis.__heroshot.screenshots],
+        pendingJob: globalThis.__heroshot.pendingJob,
+      },
+    });
+  } catch {
+    return null;
+  }
 
   /**
    * Cleanup function to remove toolbar

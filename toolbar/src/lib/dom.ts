@@ -23,41 +23,53 @@ export function deepElementFromPoint(x: number, y: number): Element | null {
  * Get unique CSS selector for element, with shadow DOM support
  */
 export function getSelector(element: Element): string {
-  if (element.id && !element.id.startsWith('heroshot')) {
+  // Quick return for light DOM elements with ID
+  const elementRoot = element.getRootNode();
+  if (element.id && !element.id.startsWith('heroshot') && !(elementRoot instanceof ShadowRoot)) {
     return `#${element.id}`;
   }
 
   const path: string[] = [];
   let current: Element | null = element;
 
-  for (let depth = 0; current?.nodeType === Node.ELEMENT_NODE && depth < 8; depth++) {
+  for (let depth = 0; current?.nodeType === Node.ELEMENT_NODE && depth < 20; depth++) {
+    const root = current.getRootNode();
+    const isInShadow = root instanceof ShadowRoot;
+    const parent: HTMLElement | null = current.parentElement;
+
     let selector = current.tagName.toLowerCase();
 
+    // Use ID if available
     if (current.id && !current.id.startsWith('heroshot')) {
-      path.unshift(`#${current.id}`);
-      break;
-    }
-
-    if (current.className && typeof current.className === 'string') {
-      const classes = current.className
-        .trim()
-        .split(/\s+/)
-        .filter((cls) => cls && !cls.startsWith('heroshot'));
-      if (classes.length > 0) {
-        selector += '.' + classes.slice(0, 2).join('.');
+      selector = `#${current.id}`;
+      // In light DOM, ID is unique - we can stop here
+      if (!isInShadow) {
+        path.unshift(selector);
+        break;
       }
-    }
-
-    // Add nth-of-type if there are siblings with same tag
-    const parent: HTMLElement | null = current.parentElement;
-    if (parent) {
-      const currentTagName: string = current.tagName;
-      const siblings: Element[] = [];
-      for (const child of parent.children) {
-        if (child.tagName === currentTagName) {
-          siblings.push(child);
+      // In shadow DOM, ID is scoped - use it but continue building path
+    } else {
+      // Add classes for non-ID elements
+      if (current.className && typeof current.className === 'string') {
+        const classes = current.className
+          .trim()
+          .split(/\s+/)
+          .filter((cls) => cls && !cls.startsWith('heroshot'));
+        if (classes.length > 0) {
+          selector += '.' + classes.slice(0, 2).join('.');
         }
       }
+    }
+
+    // Add nth-of-type to disambiguate siblings with same tag
+    // Get siblings from parent, or from shadow root for top-level shadow elements
+    const siblingContainer: ParentNode | null = parent ?? (root instanceof ShadowRoot ? root : null);
+
+    if (siblingContainer) {
+      const currentTagName: string = current.tagName;
+      const siblings: Element[] = [...siblingContainer.children].filter(
+        (child) => child.tagName === currentTagName
+      );
       if (siblings.length > 1) {
         const index = siblings.indexOf(current) + 1;
         selector += `:nth-of-type(${index})`;
@@ -66,19 +78,20 @@ export function getSelector(element: Element): string {
 
     path.unshift(selector);
 
-    // Determine next element - check if we're inside a shadow root
-    const root = current.getRootNode();
-    if (root instanceof ShadowRoot) {
-      // Add shadow DOM piercing indicator and continue from shadow host
+    // Determine next element
+    if (parent) {
+      // Continue up the tree (works both in light DOM and within shadow DOM)
+      current = parent;
+    } else if (root instanceof ShadowRoot) {
+      // Reached top of shadow tree, pierce to host
       path.unshift('>>>');
       current = root.host;
-    } else if (parent) {
-      current = parent;
     } else {
       current = null;
     }
   }
 
+  // Join path and clean up shadow DOM syntax
   return path.join(' > ').replaceAll('> >>> >', ' >>> ');
 }
 

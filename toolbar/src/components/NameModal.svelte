@@ -25,19 +25,32 @@
     }
   }
 
-  function handleKeyDown(event: KeyboardEvent): void {
+  /**
+   * Stop all keyboard events from reaching the page underneath.
+   * This prevents the host page's keyboard shortcuts from interfering.
+   */
+  function stopKeyboardEvent(event: KeyboardEvent): void {
+    event.stopPropagation();
     if (event.key === 'Escape') {
-      event.stopPropagation();
       onCancel();
     }
   }
 </script>
 
-<div class="backdrop" onclick={onCancel} onkeydown={handleKeyDown} role="presentation">
+<div
+  class="backdrop"
+  onclick={onCancel}
+  onkeydown={stopKeyboardEvent}
+  onkeyup={(event) => event.stopPropagation()}
+  onkeypress={(event) => event.stopPropagation()}
+  role="presentation"
+>
   <div
     class="modal"
     onclick={(event) => event.stopPropagation()}
-    onkeydown={handleKeyDown}
+    onkeydown={stopKeyboardEvent}
+    onkeyup={(event) => event.stopPropagation()}
+    onkeypress={(event) => event.stopPropagation()}
     role="dialog"
     aria-modal="true"
     aria-labelledby="modal-title"

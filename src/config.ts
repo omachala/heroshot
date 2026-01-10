@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+/**
+ * Generate a simple random UID (8 chars)
+ */
+function generateUid(): string {
+  // eslint-disable-next-line sonarjs/pseudo-random -- Not used for security, just unique IDs
+  return Math.random().toString(36).slice(2, 10);
+}
+
 // Browser/viewport settings
 const viewportSchema = z.object({
   width: z.number().int().positive().default(1280),
@@ -19,9 +27,10 @@ const colorSchemeSchema = z.enum(['light', 'dark', 'both']);
 
 // Single screenshot definition
 const screenshotSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().min(1).default(generateUid),
+  name: z.string().min(1),
   url: z.url(),
-  output: z.string().min(1),
+  filename: z.string().min(1),
   selector: z.string().optional(),
   viewport: viewportSchema.optional(),
   waitFor: z.string().optional(),

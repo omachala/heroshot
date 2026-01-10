@@ -3,25 +3,38 @@
 
   interface Props {
     screenshots: ScreenshotItem[];
+    onSelect: (screenshot: ScreenshotItem) => void;
     onRemove: (id: string) => void;
     onClose: () => void;
   }
 
-  let { screenshots, onRemove, onClose }: Props = $props();
+  let { screenshots, onSelect, onRemove, onClose }: Props = $props();
 
-  function handleKeyDown(event: KeyboardEvent): void {
+  /**
+   * Stop all keyboard events from reaching the page underneath.
+   */
+  function stopKeyboardEvent(event: KeyboardEvent): void {
+    event.stopPropagation();
     if (event.key === 'Escape') {
-      event.stopPropagation();
       onClose();
     }
   }
 </script>
 
-<div class="backdrop" onclick={onClose} onkeydown={handleKeyDown} role="presentation">
+<div
+  class="backdrop"
+  onclick={onClose}
+  onkeydown={stopKeyboardEvent}
+  onkeyup={(event) => event.stopPropagation()}
+  onkeypress={(event) => event.stopPropagation()}
+  role="presentation"
+>
   <div
     class="dialog"
     onclick={(event) => event.stopPropagation()}
-    onkeydown={handleKeyDown}
+    onkeydown={stopKeyboardEvent}
+    onkeyup={(event) => event.stopPropagation()}
+    onkeypress={(event) => event.stopPropagation()}
     role="dialog"
     aria-modal="true"
     aria-labelledby="dialog-title"
@@ -44,10 +57,14 @@
         <ul class="list">
           {#each screenshots as screenshot (screenshot.id)}
             <li class="list-item">
-              <div class="item-info">
+              <button
+                class="item-info"
+                onclick={() => onSelect(screenshot)}
+                title="Navigate to this element"
+              >
                 <span class="item-name">{screenshot.name}</span>
                 <span class="item-selector">{screenshot.selector}</span>
-              </div>
+              </button>
               <button
                 class="remove-btn"
                 onclick={() => onRemove(screenshot.id)}
@@ -164,7 +181,17 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: 4px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .item-info:hover .item-name {
+    color: #3b82f6;
   }
 
   .item-name {
