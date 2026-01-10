@@ -13,15 +13,15 @@ import {
   updateOverlay,
 } from './dom';
 import type { PickerState } from './types';
-import './picker.css';
+import './toolbar.css';
 
 /**
  * Initialize the element picker
  */
-export function initPicker(): (() => void) | null {
+export function initToolbar(): (() => void) | null {
   // Prevent double initialization
-  if (globalThis.__heroshotPickerInit) return null;
-  globalThis.__heroshotPickerInit = true;
+  if (globalThis.__heroshotToolbarInit) return null;
+  globalThis.__heroshotToolbarInit = true;
 
   // State
   const state: PickerState = {
@@ -145,11 +145,11 @@ export function initPicker(): (() => void) | null {
     toolbar.remove();
     overlay.remove();
 
-    globalThis.__heroshotPickerInit = false;
+    globalThis.__heroshotToolbarInit = false;
   }
 
   return cleanup;
 }
 
 // Auto-initialize when script loads
-initPicker();
+initToolbar();

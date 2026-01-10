@@ -15,7 +15,7 @@ export type OnElementPickedFunction = (data: ElementPickedData) => void;
  * Extended Window/globalThis interface with heroshot properties
  */
 declare global {
-  var __heroshotPickerInit: boolean | undefined;
+  var __heroshotToolbarInit: boolean | undefined;
   var onElementPicked: OnElementPickedFunction | undefined;
 }
 

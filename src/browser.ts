@@ -60,7 +60,7 @@ async function injectPicker(page: Page, onPicked: (data: PickedElement) => void)
   await page.addStyleTag({ content: css });
 
   // Inject JS
-  const scriptPath = path.join(TOOLBAR_DIR, 'dist', 'picker.js');
+  const scriptPath = path.join(TOOLBAR_DIR, 'dist', 'toolbar.js');
   const script = readFileSync(scriptPath, 'utf8');
   await page.addScriptTag({ content: script });
 }

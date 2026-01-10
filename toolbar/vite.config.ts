@@ -5,10 +5,10 @@ export default defineConfig({
   root: __dirname,
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/picker.ts'),
-      name: 'HeroshotPicker',
+      entry: resolve(__dirname, 'src/toolbar.ts'),
+      name: 'HeroshotToolbar',
       formats: ['iife'],
-      fileName: () => 'picker.js',
+      fileName: () => 'toolbar.js',
     },
     outDir: 'dist',
     emptyOutDir: true,
