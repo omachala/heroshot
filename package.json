@@ -41,7 +41,7 @@
     "playwright"
   ],
   "author": "Ondrej Machala",
-  "license": "MIT",
+  "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@eslint/js": "^9.16.0",
     "@sveltejs/vite-plugin-svelte": "^6.2.4",
