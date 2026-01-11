@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/logo2.svg" alt="heroshot" width="120" />
-</p>
-
 <h1 align="center">heroshot</h1>
 
 <p align="center">

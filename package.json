@@ -4,7 +4,7 @@
   "description": "Define your screenshots once, update them forever with one command",
   "type": "module",
   "author": "Ondrej Machala",
-  "license": "AGPL-3.0-or-later",
+  "license": "MIT",
   "bin": {
     "heroshot": "dist/cli.js"
   },
