@@ -18,6 +18,7 @@ describe('types', () => {
   it('should allow config with multiple screenshots', () => {
     const config: Config = {
       outputDirectory: './screenshots',
+      jpegQuality: 80,
       screenshots: [
         { id: 'one', name: 'One', url: 'http://localhost:3000', filename: 'one.png' },
         { id: 'two', name: 'Two', url: 'http://localhost:3000/page', filename: 'two.png' },
@@ -30,6 +31,7 @@ describe('types', () => {
   it('should allow browser settings', () => {
     const config: Config = {
       outputDirectory: '.',
+      jpegQuality: 80,
       browser: {
         viewport: { width: 1920, height: 1080 },
         colorScheme: 'dark',

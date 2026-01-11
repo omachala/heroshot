@@ -24,6 +24,9 @@ export const viewportSchema = z.object({
 /** Color scheme for light/dark mode ('both' captures two screenshots) */
 export const colorSchemeSchema = z.enum(['light', 'dark', 'both']);
 
+/** Output format for screenshots */
+export const outputFormatSchema = z.enum(['png', 'jpeg']).default('png');
+
 /** Single screenshot definition */
 export const screenshotSchema = z.object({
   id: z.string().min(1).default(generateUid),
@@ -43,6 +46,12 @@ export const browserSchema = z.object({
 export const configSchema = z.object({
   /** Output directory for screenshots (relative to config file) */
   outputDirectory: z.string().default('.'),
+
+  /** Output format for screenshots (png or jpeg) */
+  outputFormat: outputFormatSchema.optional(),
+
+  /** JPEG quality (1-100), only used when outputFormat is 'jpeg' */
+  jpegQuality: z.number().int().min(1).max(100).default(80),
 
   /** Browser settings (viewport, colorScheme) */
   browser: browserSchema.optional(),

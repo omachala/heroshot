@@ -70,6 +70,13 @@ function addFilenameSuffix(filename: string, suffix: string): string {
   return path.join(directory, `${base}${suffix}${extension}`);
 }
 
+interface CaptureOptions {
+  /** Output format (png or jpeg) */
+  format: 'png' | 'jpeg';
+  /** JPEG quality (1-100) */
+  quality: number;
+}
+
 /**
  * Capture a single screenshot
  */
@@ -77,9 +84,11 @@ async function captureScreenshot(
   page: Page,
   screenshot: Screenshot,
   outputDirectory: string,
+  captureOptions: CaptureOptions,
   filenameSuffix = ''
 ): Promise<{ success: boolean; error?: string }> {
   const { name, url, selector, filename } = screenshot;
+  const { format, quality } = captureOptions;
   const finalFilename = filenameSuffix ? addFilenameSuffix(filename, filenameSuffix) : filename;
 
   log.verbose(`  ${name}${filenameSuffix}...`);
@@ -116,7 +125,9 @@ async function captureScreenshot(
 
     // Screenshot the element
     try {
-      await element.screenshot({ path: outputPath });
+      await (format === 'jpeg'
+        ? element.screenshot({ path: outputPath, type: 'jpeg', quality })
+        : element.screenshot({ path: outputPath, type: 'png' }));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { success: false, error: `Screenshot failed: ${message}` };
@@ -124,7 +135,9 @@ async function captureScreenshot(
   } else {
     // Full page screenshot
     try {
-      await page.screenshot({ path: outputPath, fullPage: false });
+      await (format === 'jpeg'
+        ? page.screenshot({ path: outputPath, fullPage: false, type: 'jpeg', quality })
+        : page.screenshot({ path: outputPath, fullPage: false, type: 'png' }));
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       return { success: false, error: `Screenshot failed: ${message}` };
@@ -157,9 +170,10 @@ async function captureAndLog(
   page: Page,
   screenshot: Screenshot,
   outputDirectory: string,
+  captureOptions: CaptureOptions,
   suffix: string
 ): Promise<ScreenshotResult> {
-  const result = await captureScreenshot(page, screenshot, outputDirectory, suffix);
+  const result = await captureScreenshot(page, screenshot, outputDirectory, captureOptions, suffix);
   const filename = suffix ? addFilenameSuffix(screenshot.filename, suffix) : screenshot.filename;
 
   if (result.success) {
@@ -229,19 +243,31 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const colorSchemeSetting = config.browser?.colorScheme;
   const schemes = getColorSchemes(colorSchemeSetting);
 
+  // Build capture options from config
+  const captureOptions: CaptureOptions = {
+    format: config.outputFormat ?? 'png',
+    quality: config.jpegQuality,
+  };
+
   const results: ScreenshotResult[] = [];
 
   for (const screenshot of screenshots) {
     if (schemes.length === 0) {
       // No color scheme specified - capture once with browser default
-      const result = await captureAndLog(page, screenshot, outputDirectory, '');
+      const result = await captureAndLog(page, screenshot, outputDirectory, captureOptions, '');
       results.push(result);
     } else {
       // Capture for each color scheme
       for (const scheme of schemes) {
         await page.emulateMedia({ colorScheme: scheme });
         const suffix = schemes.length > 1 ? `-${scheme}` : '';
-        const result = await captureAndLog(page, screenshot, outputDirectory, suffix);
+        const result = await captureAndLog(
+          page,
+          screenshot,
+          outputDirectory,
+          captureOptions,
+          suffix
+        );
         results.push(result);
       }
     }
