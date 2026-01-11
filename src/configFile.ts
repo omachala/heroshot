@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { type Config, parseConfig } from './config';
+import { parseConfig } from './config';
+import type { Config } from './types';
 
 const CONFIG_FILENAME = 'heroshot.json';
 

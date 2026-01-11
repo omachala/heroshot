@@ -2,9 +2,9 @@ import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import { type BrowserContext, type Page, chromium } from 'playwright';
-import type { Screenshot, Viewport } from './config';
 import { getConfigPath, loadConfig, saveConfig } from './configFile';
 import { log } from './logger';
+import type { Screenshot, Viewport } from './types';
 
 const PROFILE_DIR = path.join(homedir(), '.heroshot', 'browser-profile');
 const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');

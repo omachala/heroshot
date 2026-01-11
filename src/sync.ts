@@ -2,9 +2,9 @@ import { existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Page } from 'playwright';
 import { launchPersistentBrowser } from './browser';
-import type { Config, Screenshot } from './config';
 import { getConfigPath, loadConfig } from './configFile';
 import { log } from './logger';
+import type { Config, Screenshot } from './types';
 
 /**
  * Find element using shadow-piercing selector with retries

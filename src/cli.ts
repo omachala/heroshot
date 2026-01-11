@@ -46,7 +46,8 @@ program
   .command('config')
   .description('Open browser to add/edit screenshot definitions')
   .option('--reset', 'Clear existing browser profile and start fresh')
-  .action(async (options: { reset?: boolean }) => {
+  .option('--only', 'Only run config, skip sync afterwards')
+  .action(async (options: { reset?: boolean; only?: boolean }) => {
     if (options.reset) {
       const profilePath = getProfilePath();
       if (existsSync(profilePath)) {
@@ -55,7 +56,7 @@ program
       }
     }
     const { hasScreenshots } = await setup();
-    if (hasScreenshots) {
+    if (hasScreenshots && !options.only) {
       log('');
       const result = await sync({});
       if (result.failed > 0) {

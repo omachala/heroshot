@@ -51,16 +51,26 @@ export function initToolbar(): (() => void) | null {
 
   const shadow = host.attachShadow({ mode: 'open' });
 
+  // Detect system color scheme and apply OPPOSITE for contrast
+  // Dark page → light toolbar, Light page → dark toolbar
+  const prefersDark = globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  const toolbarTheme = prefersDark ? 'light' : 'dark';
+
+  // Create a wrapper div for theme scoping
+  const themeWrapper = document.createElement('div');
+  themeWrapper.dataset.theme = toolbarTheme;
+  shadow.append(themeWrapper);
+
   // Inject Tailwind styles into shadow root
   const styleElement = document.createElement('style');
   styleElement.textContent = styles;
-  shadow.append(styleElement);
+  themeWrapper.append(styleElement);
 
-  // Mount Svelte component into shadow root
+  // Mount Svelte component into theme wrapper
   let component: ReturnType<typeof mount>;
   try {
     component = mount(Toolbar, {
-      target: shadow,
+      target: themeWrapper,
       props: {
         initialScreenshots: [...heroshot.screenshots],
         initialSettings: heroshot.settings,
