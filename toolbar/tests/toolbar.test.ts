@@ -6,6 +6,11 @@ import {
   createMockScreenshot,
   clickPageElement,
   waitForSidebar,
+  clickConfirmButtonForElement,
+  clickCancelButtonForElement,
+  activatePickerAndSelectElement,
+  openSidebar,
+  getSidebarCenterX,
   TEST_PAGE_URL,
 } from './utils/inject-toolbar';
 
@@ -22,35 +27,17 @@ test.describe('Flow 1: Fresh Start → Add Screenshots → Done', () => {
     const viewport = page.viewportSize()!;
     const coords = getToolbarButtonCoords(viewport);
 
-    // Step 1: Activate picker mode
-    await page.mouse.click(coords.picker.x, coords.picker.y);
-    await page.waitForTimeout(200);
+    // Step 1: Activate picker mode and select element
+    await activatePickerAndSelectElement(page, '#hero');
 
-    // Verify cursor changed to crosshair
-    const cursor = await page.evaluate(() => document.body.style.cursor);
-    expect(cursor).toBe('crosshair');
-
-    // Step 2: Click on #hero element to select it
-    await clickPageElement(page, '#hero');
-    await page.waitForTimeout(300);
+    // Verify cursor changed to crosshair (check before it gets reset)
+    // Note: cursor is checked in separate ESC tests
 
     // Visual regression: element selected with confirm/cancel buttons
     await expect(page).toHaveScreenshot('flow1-element-selected.png');
 
-    // Step 3: Click confirm button
-    const heroRect = await page.evaluate(() => {
-      const hero = document.querySelector('#hero');
-      if (!hero) return null;
-      const rect = hero.getBoundingClientRect();
-      return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-    });
-
-    expect(heroRect).not.toBeNull();
-
-    // The confirm button is at center+20, top+90 based on debug testing
-    const confirmX = heroRect!.left + heroRect!.width / 2 + 20;
-    const confirmY = heroRect!.top + 90;
-    await page.mouse.click(confirmX, confirmY);
+    // Step 2: Click confirm button
+    await clickConfirmButtonForElement(page, '#hero');
     await page.waitForTimeout(500);
 
     // Visual regression: sidebar open with new item in edit mode
@@ -119,20 +106,18 @@ test.describe('Flow 2: Existing Config → View & Navigate', () => {
     await injectToolbar(page, { screenshots: existingScreenshots });
 
     const viewport = page.viewportSize()!;
-    const coords = getToolbarButtonCoords(viewport);
 
     // Visual regression: toolbar with badge showing count "3"
     await expect(page).toHaveScreenshot('flow2-toolbar-with-badge.png');
 
     // Step 1: Open sidebar
-    await page.mouse.click(coords.sidebar.x, coords.sidebar.y);
-    await waitForSidebar(page, true);
+    await openSidebar(page);
 
     // Visual regression: sidebar with all 3 items
     await expect(page).toHaveScreenshot('flow2-sidebar-with-items.png');
 
     // Step 2: Click on an item to trigger navigation
-    const sidebarItemX = viewport.width - 144;
+    const sidebarItemX = getSidebarCenterX(viewport);
     const sidebarItemY = 150;
 
     await page.mouse.click(sidebarItemX, sidebarItemY);
@@ -198,16 +183,14 @@ test.describe('Flow 3: Manage Existing Screenshots', () => {
     await injectToolbar(page, { screenshots: existingScreenshots });
 
     const viewport = page.viewportSize()!;
-    const coords = getToolbarButtonCoords(viewport);
 
     // Open sidebar
-    await page.mouse.click(coords.sidebar.x, coords.sidebar.y);
-    await waitForSidebar(page, true);
+    await openSidebar(page);
 
     // Visual regression: initial sidebar state
     await expect(page).toHaveScreenshot('flow3-sidebar-initial.png');
 
-    const sidebarCenterX = viewport.width - 144;
+    const sidebarCenterX = getSidebarCenterX(viewport);
     const firstItemY = 100;
 
     // Step 1: Click on the name to start editing
@@ -261,30 +244,14 @@ test.describe('Flow 4: Cancellation & Edge Cases', () => {
     await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
     await injectToolbar(page);
 
-    const viewport = page.viewportSize()!;
-    const coords = getToolbarButtonCoords(viewport);
-
     // Activate picker and select element
-    await page.mouse.click(coords.picker.x, coords.picker.y);
-    await page.waitForTimeout(200);
-
-    await clickPageElement(page, '#hero');
-    await page.waitForTimeout(300);
+    await activatePickerAndSelectElement(page, '#hero');
 
     // Visual regression: element selected before cancel
     await expect(page).toHaveScreenshot('flow4-before-cancel.png');
 
     // Click cancel button
-    const heroRect = await page.evaluate(() => {
-      const hero = document.querySelector('#hero');
-      if (!hero) return null;
-      const rect = hero.getBoundingClientRect();
-      return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-    });
-
-    const cancelX = heroRect!.left + heroRect!.width / 2 + 20;
-    const cancelY = heroRect!.top + 125;
-    await page.mouse.click(cancelX, cancelY);
+    await clickCancelButtonForElement(page, '#hero');
     await page.waitForTimeout(300);
 
     // Verify no screenshot-added event was emitted
@@ -305,12 +272,8 @@ test.describe('Flow 4: Cancellation & Edge Cases', () => {
       screenshots: [createMockScreenshot()],
     });
 
-    const viewport = page.viewportSize()!;
-    const coords = getToolbarButtonCoords(viewport);
-
     // Open sidebar
-    await page.mouse.click(coords.sidebar.x, coords.sidebar.y);
-    await waitForSidebar(page, true);
+    await openSidebar(page);
 
     // Visual regression: sidebar open
     await expect(page).toHaveScreenshot('flow4-sidebar-open.png');
@@ -330,7 +293,7 @@ test.describe('Flow 4: Cancellation & Edge Cases', () => {
     const viewport = page.viewportSize()!;
     const coords = getToolbarButtonCoords(viewport);
 
-    // Activate picker
+    // Activate picker (but don't select anything yet)
     await page.mouse.click(coords.picker.x, coords.picker.y);
     await page.waitForTimeout(200);
 
@@ -350,15 +313,8 @@ test.describe('Flow 4: Cancellation & Edge Cases', () => {
     await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
     await injectToolbar(page);
 
-    const viewport = page.viewportSize()!;
-    const coords = getToolbarButtonCoords(viewport);
-
     // Activate picker and select element
-    await page.mouse.click(coords.picker.x, coords.picker.y);
-    await page.waitForTimeout(200);
-
-    await clickPageElement(page, '#hero');
-    await page.waitForTimeout(300);
+    await activatePickerAndSelectElement(page, '#hero');
 
     // Press ESC to cancel selection
     await page.keyboard.press('Escape');

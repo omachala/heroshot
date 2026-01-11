@@ -160,70 +160,87 @@ export async function waitForSidebar(page: Page, visible: boolean): Promise<void
 }
 
 /**
- * Click on an element on the page (for element picking)
+ * Get the bounding rect of an element
  */
-export async function clickPageElement(page: Page, selector: string): Promise<void> {
-  // Find the element's position
-  const position = await page.evaluate((sel) => {
+export async function getElementRect(
+  page: Page,
+  selector: string
+): Promise<{ top: number; left: number; width: number; height: number }> {
+  const rect = await page.evaluate((sel) => {
     const element = document.querySelector(sel);
     if (!element) return null;
-    const rect = element.getBoundingClientRect();
-    return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-    };
+    const domRect = element.getBoundingClientRect();
+    return { top: domRect.top, left: domRect.left, width: domRect.width, height: domRect.height };
   }, selector);
 
-  if (!position) {
+  if (!rect) {
     throw new Error(`Element not found: ${selector}`);
   }
 
-  await page.mouse.click(position.x, position.y);
+  return rect;
 }
 
 /**
- * Click the confirm button (tick) on the highlight overlay
+ * Click on an element on the page (for element picking)
  */
-export async function clickConfirmButton(page: Page): Promise<void> {
-  // The confirm button appears above the highlighted element
-  // It's inside shadow DOM, so we need to find it by scanning
+export async function clickPageElement(page: Page, selector: string): Promise<void> {
+  const rect = await getElementRect(page, selector);
+  await page.mouse.click(rect.left + rect.width / 2, rect.top + rect.height / 2);
+}
+
+/**
+ * Click the confirm button (tick) on the highlight overlay for a selected element
+ * The confirm button is at center+20, top+90 based on debug testing
+ */
+export async function clickConfirmButtonForElement(page: Page, selector: string): Promise<void> {
+  const rect = await getElementRect(page, selector);
+  const confirmX = rect.left + rect.width / 2 + 20;
+  const confirmY = rect.top + 90;
+  await page.mouse.click(confirmX, confirmY);
+}
+
+/**
+ * Click the cancel button (X) on the highlight overlay for a selected element
+ * The cancel button is at center+20, top+125 based on debug testing
+ */
+export async function clickCancelButtonForElement(page: Page, selector: string): Promise<void> {
+  const rect = await getElementRect(page, selector);
+  const cancelX = rect.left + rect.width / 2 + 20;
+  const cancelY = rect.top + 125;
+  await page.mouse.click(cancelX, cancelY);
+}
+
+/**
+ * Activate picker mode and select an element
+ * Combines clicking the picker button and clicking on an element
+ */
+export async function activatePickerAndSelectElement(page: Page, selector: string): Promise<void> {
   const viewport = page.viewportSize()!;
+  const coords = getToolbarButtonCoords(viewport);
 
-  // Find confirm button by looking for green circular button
-  // It appears at -top-10 from the highlight, centered
-  const confirmPos = await page.evaluate(() => {
-    // The buttons are inside heroshot-root shadow DOM
-    // We need to scan for clickable areas
-    const hero = document.querySelector('#hero');
-    if (!hero) return null;
-    const rect = hero.getBoundingClientRect();
-    // Confirm button is 40px above the highlight, centered
-    return {
-      x: rect.left + rect.width / 2 - 20, // Left button (confirm)
-      y: rect.top - 25,
-    };
-  });
+  // Activate picker mode
+  await page.mouse.click(coords.picker.x, coords.picker.y);
+  await page.waitForTimeout(200);
 
-  if (confirmPos) {
-    await page.mouse.click(confirmPos.x, confirmPos.y);
-  }
+  // Click on the element
+  await clickPageElement(page, selector);
+  await page.waitForTimeout(300);
 }
 
 /**
- * Click the cancel button (X) on the highlight overlay
+ * Open the sidebar panel
  */
-export async function clickCancelButton(page: Page): Promise<void> {
-  const cancelPos = await page.evaluate(() => {
-    const hero = document.querySelector('#hero');
-    if (!hero) return null;
-    const rect = hero.getBoundingClientRect();
-    return {
-      x: rect.left + rect.width / 2 + 20, // Right button (cancel)
-      y: rect.top - 25,
-    };
-  });
+export async function openSidebar(page: Page): Promise<void> {
+  const viewport = page.viewportSize()!;
+  const coords = getToolbarButtonCoords(viewport);
 
-  if (cancelPos) {
-    await page.mouse.click(cancelPos.x, cancelPos.y);
-  }
+  await page.mouse.click(coords.sidebar.x, coords.sidebar.y);
+  await waitForSidebar(page, true);
+}
+
+/**
+ * Get sidebar item center X coordinate (for clicking items)
+ */
+export function getSidebarCenterX(viewport: { width: number }): number {
+  return viewport.width - 144;
 }
