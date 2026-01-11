@@ -60,16 +60,29 @@ async function findElement(
 }
 
 /**
+ * Add suffix to filename before extension
+ * e.g., "hero.png" + "-dark" => "hero-dark.png"
+ */
+function addFilenameSuffix(filename: string, suffix: string): string {
+  const extension = path.extname(filename);
+  const base = path.basename(filename, extension);
+  const directory = path.dirname(filename);
+  return path.join(directory, `${base}${suffix}${extension}`);
+}
+
+/**
  * Capture a single screenshot
  */
 async function captureScreenshot(
   page: Page,
   screenshot: Screenshot,
-  outputDirectory: string
+  outputDirectory: string,
+  filenameSuffix = ''
 ): Promise<{ success: boolean; error?: string }> {
   const { name, url, selector, filename } = screenshot;
+  const finalFilename = filenameSuffix ? addFilenameSuffix(filename, filenameSuffix) : filename;
 
-  log.verbose(`  ${name}...`);
+  log.verbose(`  ${name}${filenameSuffix}...`);
 
   // Navigate to URL and wait for network to settle
   try {
@@ -82,7 +95,7 @@ async function captureScreenshot(
   // Extra wait for dynamic content (web components, lazy loading)
   await page.waitForTimeout(1000);
 
-  const outputPath = path.join(outputDirectory, filename);
+  const outputPath = path.join(outputDirectory, finalFilename);
 
   // Ensure output directory exists
   const outputDirectoryPath = path.dirname(outputPath);
@@ -121,8 +134,13 @@ async function captureScreenshot(
   return { success: true };
 }
 
-interface SyncOptions {
-  id?: string;
+/**
+ * Get array of color schemes to capture based on config setting
+ */
+function getColorSchemes(setting?: 'light' | 'dark' | 'both'): ('light' | 'dark')[] {
+  if (setting === 'both') return ['light', 'dark'];
+  if (setting) return [setting];
+  return [];
 }
 
 interface ScreenshotResult {
@@ -130,6 +148,36 @@ interface ScreenshotResult {
   name: string;
   success: boolean;
   error?: string;
+}
+
+/**
+ * Capture screenshot and log result
+ */
+async function captureAndLog(
+  page: Page,
+  screenshot: Screenshot,
+  outputDirectory: string,
+  suffix: string
+): Promise<ScreenshotResult> {
+  const result = await captureScreenshot(page, screenshot, outputDirectory, suffix);
+  const filename = suffix ? addFilenameSuffix(screenshot.filename, suffix) : screenshot.filename;
+
+  if (result.success) {
+    log.verbose(`    Saved: ${filename}`);
+  } else {
+    log.error(`  ${screenshot.name}${suffix}: ${result.error ?? 'Unknown error'}`);
+  }
+
+  return {
+    id: `${screenshot.id}${suffix}`,
+    name: `${screenshot.name}${suffix}`,
+    success: result.success,
+    error: result.error,
+  };
+}
+
+interface SyncOptions {
+  id?: string;
 }
 
 interface SyncResult {
@@ -176,22 +224,26 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   });
 
   const page = await context.newPage();
-  const results: SyncResult['results'] = [];
+
+  // Determine which color schemes to capture
+  const colorSchemeSetting = config.browser?.colorScheme;
+  const schemes = getColorSchemes(colorSchemeSetting);
+
+  const results: ScreenshotResult[] = [];
 
   for (const screenshot of screenshots) {
-    const result = await captureScreenshot(page, screenshot, outputDirectory);
-
-    results.push({
-      id: screenshot.id,
-      name: screenshot.name,
-      success: result.success,
-      error: result.error,
-    });
-
-    if (result.success) {
-      log.verbose(`    Saved: ${screenshot.filename}`);
+    if (schemes.length === 0) {
+      // No color scheme specified - capture once with browser default
+      const result = await captureAndLog(page, screenshot, outputDirectory, '');
+      results.push(result);
     } else {
-      log.error(`  ${screenshot.name}: ${result.error ?? 'Unknown error'}`);
+      // Capture for each color scheme
+      for (const scheme of schemes) {
+        await page.emulateMedia({ colorScheme: scheme });
+        const suffix = schemes.length > 1 ? `-${scheme}` : '';
+        const result = await captureAndLog(page, screenshot, outputDirectory, suffix);
+        results.push(result);
+      }
     }
   }
 

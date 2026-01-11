@@ -1,10 +1,12 @@
 <script lang="ts">
+  import { ChevronRightIcon, TrashIcon } from '../icons';
   import type { ScreenshotItem } from '../types';
 
   interface Props {
     screenshots: ScreenshotItem[];
     visible: boolean;
     editingId: string | null;
+    selectedId: string | null;
     onClose: () => void;
     onSelect: (screenshot: ScreenshotItem) => void;
     onRemove: (id: string) => void;
@@ -16,6 +18,7 @@
     screenshots,
     visible,
     editingId,
+    selectedId,
     onClose,
     onSelect,
     onRemove,
@@ -29,7 +32,7 @@
 
   // Sort screenshots by createdAt (newest first)
   let sortedScreenshots = $derived(
-    [...screenshots].sort((a, b) => b.createdAt - a.createdAt)
+    screenshots.toSorted((a, b) => b.createdAt - a.createdAt)
   );
 
   // Sync external editingId to local state
@@ -140,9 +143,7 @@
         onclick={onClose}
         title="Collapse sidebar"
       >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="9 18 15 12 9 6"/>
-        </svg>
+        <ChevronRightIcon />
       </button>
     </div>
 
@@ -151,13 +152,18 @@
         <p class="text-slate-500 text-center py-8 text-sm">No screenshots yet.<br/>Click the picker to add one.</p>
       {:else}
         <ul class="space-y-1">
-          {#each sortedScreenshots as screenshot (screenshot.id)}
-            <li class="group flex items-center gap-2 p-2 bg-slate-700 hover:bg-slate-600 rounded-md transition-colors">
+          {#each sortedScreenshots as screenshot, index (screenshot.id)}
+            <li
+              class="group flex items-center gap-2 p-2 rounded-md transition-colors {selectedId === screenshot.id ? 'bg-blue-600 ring-2 ring-blue-400' : 'bg-slate-700 hover:bg-slate-600'}"
+              data-testid="sidebar-item"
+              data-item-index={index}
+            >
               <button
                 class="flex-1 min-w-0 flex flex-col items-start gap-0.5 text-left"
                 onclick={() => onSelect(screenshot)}
                 title="Navigate to this element"
               >
+                <!-- eslint-disable @typescript-eslint/no-unsafe-argument -- Svelte each variable typing issue -->
                 {#if localEditingId === screenshot.id}
                   <input
                     bind:this={inputElement}
@@ -196,11 +202,10 @@
                   onRemove(screenshot.id);
                 }}
                 title="Remove screenshot"
+                data-testid="delete-button"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"/>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
+                <!-- eslint-enable @typescript-eslint/no-unsafe-argument -->
+                <TrashIcon />
               </button>
             </li>
           {/each}

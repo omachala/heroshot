@@ -1,3 +1,10 @@
+/**
+ * Toolbar Injection Utility
+ *
+ * Injects the compiled toolbar script into a Playwright page for e2e testing.
+ * Sets up event capturing to verify toolbar behavior.
+ */
+
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,6 +27,14 @@ export interface ScreenshotItem {
 }
 
 /**
+ * Browser settings for toolbar
+ */
+export interface BrowserSettings {
+  viewport: { width: number; height: number };
+  colorScheme?: 'light' | 'dark' | 'both';
+}
+
+/**
  * Event types emitted by toolbar
  */
 export type ToolbarEvent =
@@ -27,6 +42,7 @@ export type ToolbarEvent =
   | { type: 'screenshot-updated'; data: ScreenshotItem }
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
+  | { type: 'settings-updated'; data: BrowserSettings }
   | { type: 'job-complete' }
   | { type: 'done' };
 
@@ -39,25 +55,15 @@ export interface InjectOptions {
 }
 
 /**
- * Captured events from the toolbar
- */
-export interface EventCapture {
-  events: ToolbarEvent[];
-  getByType: <T extends ToolbarEvent['type']>(type: T) => Extract<ToolbarEvent, { type: T }>[];
-  clear: () => void;
-}
-
-/**
  * Inject the toolbar into the page with optional config
  */
 export async function injectToolbar(
   page: Page,
   options: InjectOptions = {}
-): Promise<EventCapture> {
+): Promise<void> {
   const script = readFileSync(TOOLBAR_SCRIPT_PATH, 'utf-8');
   const { screenshots = [], pendingJob = null } = options;
 
-  // Set up event capture array in page context
   await page.evaluate(
     ({ scriptContent, initialScreenshots, initialJob }) => {
       // Create event store
@@ -67,6 +73,7 @@ export async function injectToolbar(
       (globalThis as any).__heroshot = {
         initialized: false,
         screenshots: initialScreenshots,
+        settings: { viewport: { width: 1280, height: 800 } },
         pendingJob: initialJob,
         emit: (event: any) => {
           (window as any).__capturedEvents.push(event);
@@ -84,17 +91,6 @@ export async function injectToolbar(
 
   // Wait for toolbar to initialize
   await page.waitForTimeout(300);
-
-  // Return event capture interface
-  return {
-    get events() {
-      return [] as ToolbarEvent[]; // Will be fetched via getEvents()
-    },
-    getByType: <T extends ToolbarEvent['type']>(type: T) => {
-      return [] as Extract<ToolbarEvent, { type: T }>[]; // Placeholder
-    },
-    clear: () => {},
-  };
 }
 
 /**
@@ -125,19 +121,6 @@ export async function clearEvents(page: Page): Promise<void> {
 }
 
 /**
- * Get click coordinates for toolbar buttons
- * Toolbar is at bottom-5 (20px from bottom), centered horizontally
- */
-export function getToolbarButtonCoords(viewport: { width: number; height: number }) {
-  const toolbarY = viewport.height - 45;
-  return {
-    picker: { x: 660, y: toolbarY },
-    sidebar: { x: 705, y: toolbarY },
-    done: { x: 760, y: toolbarY },
-  };
-}
-
-/**
  * Create a mock screenshot item for testing
  */
 export function createMockScreenshot(overrides: Partial<ScreenshotItem> = {}): ScreenshotItem {
@@ -150,97 +133,4 @@ export function createMockScreenshot(overrides: Partial<ScreenshotItem> = {}): S
     createdAt: Date.now(),
     ...overrides,
   };
-}
-
-/**
- * Wait for sidebar to be visible/hidden
- */
-export async function waitForSidebar(page: Page, visible: boolean): Promise<void> {
-  await page.waitForTimeout(400); // Wait for transition
-}
-
-/**
- * Get the bounding rect of an element
- */
-export async function getElementRect(
-  page: Page,
-  selector: string
-): Promise<{ top: number; left: number; width: number; height: number }> {
-  const rect = await page.evaluate((sel) => {
-    const element = document.querySelector(sel);
-    if (!element) return null;
-    const domRect = element.getBoundingClientRect();
-    return { top: domRect.top, left: domRect.left, width: domRect.width, height: domRect.height };
-  }, selector);
-
-  if (!rect) {
-    throw new Error(`Element not found: ${selector}`);
-  }
-
-  return rect;
-}
-
-/**
- * Click on an element on the page (for element picking)
- */
-export async function clickPageElement(page: Page, selector: string): Promise<void> {
-  const rect = await getElementRect(page, selector);
-  await page.mouse.click(rect.left + rect.width / 2, rect.top + rect.height / 2);
-}
-
-/**
- * Click the confirm button (tick) on the highlight overlay for a selected element
- * The confirm button is at center+20, top+90 based on debug testing
- */
-export async function clickConfirmButtonForElement(page: Page, selector: string): Promise<void> {
-  const rect = await getElementRect(page, selector);
-  const confirmX = rect.left + rect.width / 2 + 20;
-  const confirmY = rect.top + 90;
-  await page.mouse.click(confirmX, confirmY);
-}
-
-/**
- * Click the cancel button (X) on the highlight overlay for a selected element
- * The cancel button is at center+20, top+125 based on debug testing
- */
-export async function clickCancelButtonForElement(page: Page, selector: string): Promise<void> {
-  const rect = await getElementRect(page, selector);
-  const cancelX = rect.left + rect.width / 2 + 20;
-  const cancelY = rect.top + 125;
-  await page.mouse.click(cancelX, cancelY);
-}
-
-/**
- * Activate picker mode and select an element
- * Combines clicking the picker button and clicking on an element
- */
-export async function activatePickerAndSelectElement(page: Page, selector: string): Promise<void> {
-  const viewport = page.viewportSize()!;
-  const coords = getToolbarButtonCoords(viewport);
-
-  // Activate picker mode
-  await page.mouse.click(coords.picker.x, coords.picker.y);
-  await page.waitForTimeout(200);
-
-  // Click on the element
-  await clickPageElement(page, selector);
-  await page.waitForTimeout(300);
-}
-
-/**
- * Open the sidebar panel
- */
-export async function openSidebar(page: Page): Promise<void> {
-  const viewport = page.viewportSize()!;
-  const coords = getToolbarButtonCoords(viewport);
-
-  await page.mouse.click(coords.sidebar.x, coords.sidebar.y);
-  await waitForSidebar(page, true);
-}
-
-/**
- * Get sidebar item center X coordinate (for clicking items)
- */
-export function getSidebarCenterX(viewport: { width: number }): number {
-  return viewport.width - 144;
 }

@@ -10,6 +10,14 @@ export interface ScreenshotItem {
 }
 
 /**
+ * Browser settings
+ */
+export interface BrowserSettings {
+  viewport: { width: number; height: number };
+  colorScheme?: 'light' | 'dark' | 'both';
+}
+
+/**
  * Job types that CLI sends to toolbar
  */
 export type ToolbarJob =
@@ -24,6 +32,7 @@ export type ToolbarEvent =
   | { type: 'screenshot-updated'; data: ScreenshotItem }
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
+  | { type: 'settings-updated'; data: BrowserSettings }
   | { type: 'job-complete' }
   | { type: 'done' };
 
@@ -33,6 +42,7 @@ export type ToolbarEvent =
 export interface HeroshotGlobal {
   initialized: boolean;
   screenshots: ScreenshotItem[];
+  settings: BrowserSettings;
   pendingJob: ToolbarJob | null;
   emit: (event: ToolbarEvent) => void;
 }

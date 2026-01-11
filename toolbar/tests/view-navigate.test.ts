@@ -1,0 +1,157 @@
+/**
+ * Flow 2: Existing Config - View & Navigate
+ *
+ * Tests the user journey when toolbar opens with existing screenshots:
+ * 1. Toolbar loads with pre-existing screenshot configurations
+ * 2. Badge shows count of existing screenshots
+ * 3. User opens sidebar to view list of screenshots
+ * 4. User clicks on a screenshot item to navigate to it
+ * 5. CLI receives navigation event to highlight the element
+ *
+ * Also tests pending job handling:
+ * - When CLI sends a highlight job, toolbar finds and highlights the element
+ * - job-complete event is emitted when highlight is done
+ *
+ * Events tested:
+ * - screenshot-selected: Emitted when user clicks a sidebar item
+ * - job-complete: Emitted when pending highlight job finishes
+ */
+
+import { expect, test } from 'playwright/test';
+import {
+  clickSidebarItem,
+  createMockScreenshot,
+  getEventsByType,
+  injectToolbar,
+  openSidebar,
+  SIDEBAR_SELECTORS,
+  TOOLBAR_SELECTORS,
+  TEST_PAGE_URL,
+} from './utils';
+
+test('load existing screenshots and select one for navigation', async ({ page }) => {
+  await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
+
+  // Create pre-existing screenshots
+  const existingScreenshots = [
+    createMockScreenshot({
+      id: 'shot-1',
+      name: 'Hero Section',
+      selector: '#hero',
+      createdAt: Date.now() - 2000,
+    }),
+    createMockScreenshot({
+      id: 'shot-2',
+      name: 'Primary Button',
+      selector: '#primary-btn',
+      createdAt: Date.now() - 1000,
+    }),
+    createMockScreenshot({
+      id: 'shot-3',
+      name: 'Data Table',
+      selector: '#data-table',
+      createdAt: Date.now(),
+    }),
+  ];
+
+  await injectToolbar(page, { screenshots: existingScreenshots });
+
+  // Visual regression: toolbar with badge showing count "3"
+  await expect(page).toHaveScreenshot('toolbar-with-badge.png');
+
+  // Step 1: Open sidebar
+  await openSidebar(page);
+
+  // Visual regression: sidebar with all 3 items
+  await expect(page).toHaveScreenshot('sidebar-with-items.png');
+
+  // Step 2: Click on an item to trigger navigation (item 0 is newest = Data Table)
+  await clickSidebarItem(page, 0);
+  await page.waitForTimeout(300);
+
+  // Verify screenshot-selected event was emitted
+  const selectedEvents = await getEventsByType(page, 'screenshot-selected');
+  expect(selectedEvents.length).toBeGreaterThanOrEqual(1);
+
+  const lastSelected = selectedEvents.at(-1)!;
+  expect(lastSelected.id).toBeDefined();
+  expect(lastSelected.selector).toBeDefined();
+  expect(lastSelected.url).toBeDefined();
+});
+
+test('pending job highlights element on load', async ({ page }) => {
+  await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
+
+  // Inject with a pending highlight job
+  await injectToolbar(page, {
+    pendingJob: {
+      type: 'highlight',
+      selector: '#hero',
+    },
+  });
+
+  // Wait for highlight to appear
+  await page.waitForTimeout(500);
+
+  // Visual regression: hero element highlighted
+  await expect(page).toHaveScreenshot('pending-job-highlight.png');
+
+  // Verify job-complete event was emitted
+  const completeEvents = await getEventsByType(page, 'job-complete');
+  expect(completeEvents.length).toBe(1);
+});
+
+test('selected item is highlighted in sidebar', async ({ page }) => {
+  await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
+
+  const existingScreenshots = [
+    createMockScreenshot({
+      id: 'shot-1',
+      name: 'Hero Section',
+      selector: '#hero',
+      createdAt: Date.now() - 1000,
+    }),
+    createMockScreenshot({
+      id: 'shot-2',
+      name: 'Primary Button',
+      selector: '#primary-btn',
+      createdAt: Date.now(),
+    }),
+  ];
+
+  await injectToolbar(page, { screenshots: existingScreenshots });
+
+  // Open sidebar
+  await openSidebar(page);
+
+  // Click on the second item (index 1 = older item = Hero Section)
+  await clickSidebarItem(page, 1);
+  await page.waitForTimeout(300);
+
+  // The selected item should have a visual indicator (e.g., ring or different background)
+  const selectedItem = page.locator(SIDEBAR_SELECTORS.item(1));
+  await expect(selectedItem).toHaveClass(/ring|border-blue|bg-blue/);
+
+  // Visual regression: sidebar with selected item highlighted
+  await expect(page).toHaveScreenshot('sidebar-item-selected.png');
+});
+
+test('sidebar button is not blue when sidebar is closed with screenshots', async ({ page }) => {
+  await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
+
+  const existingScreenshots = [
+    createMockScreenshot({ id: 'shot-1', name: 'Test', selector: '#hero' }),
+  ];
+
+  await injectToolbar(page, { screenshots: existingScreenshots });
+
+  // Sidebar button should NOT have active blue state when closed
+  const sidebarButton = page.locator(TOOLBAR_SELECTORS.sidebar);
+
+  // Should have slate background, not blue
+  await expect(sidebarButton).toHaveClass(/bg-slate-700/);
+  await expect(sidebarButton).not.toHaveClass(/bg-blue-500|bg-blue-600/);
+
+  // Visual regression: toolbar with badge but sidebar closed (button not blue)
+  await expect(page).toHaveScreenshot('toolbar-sidebar-closed-with-badge.png');
+});

@@ -1,14 +1,23 @@
 <script lang="ts">
+  import { CheckIcon, CloseIcon, PickerIcon, SettingsIcon, SidebarIcon } from '../icons';
   import { deepElementFromPoint, getSelector } from '../lib/dom';
-  import type { ScreenshotItem, ToolbarJob } from '../types';
+  import type { BrowserSettings, ScreenshotItem, ToolbarJob } from '../types';
+  import SettingsModal from './SettingsModal.svelte';
   import Sidebar from './Sidebar.svelte';
 
   interface Props {
     initialScreenshots?: ScreenshotItem[];
+    initialSettings?: BrowserSettings;
     pendingJob?: ToolbarJob | null;
   }
 
   const props: Props = $props();
+
+  // Default settings
+  const defaultSettings: BrowserSettings = {
+    viewport: { width: 1280, height: 800 },
+    colorScheme: undefined,
+  };
 
   // Emit event to CLI
   type EmitEvent = Parameters<NonNullable<typeof globalThis.__heroshot>['emit']>[0];
@@ -23,8 +32,11 @@
   let selectedElement = $state<Element | null>(null); // Element selected and awaiting confirmation
   let selectedSelector = $state<string | null>(null);
   let screenshots = $state<ScreenshotItem[]>([...(props.initialScreenshots ?? [])]);
+  let settings = $state<BrowserSettings>({ ...defaultSettings, ...props.initialSettings });
   let sidebarVisible = $state(false);
+  let settingsVisible = $state(false);
   let editingId = $state<string | null>(null); // ID of newly added item being edited
+  let selectedScreenshotId = $state<string | null>(null); // ID of selected screenshot in sidebar
 
   // Scroll position tracker - used to trigger overlay recalculation
   let scrollY = $state(globalThis.scrollY ?? 0);
@@ -38,6 +50,12 @@
     isHighlighting
   );
   let activeElement = $derived(selectedElement ?? currentElement);
+
+  // Compute sidebar button class - only blue when sidebar is open
+  let sidebarButtonClass = $derived.by(() => {
+    if (sidebarVisible) return 'bg-blue-600';
+    return 'bg-slate-700 hover:bg-slate-600';
+  });
 
   /**
    * Toggle picker mode on/off
@@ -167,22 +185,23 @@
    */
   function extractSelectorName(selector: string): string {
     // Get the last part of the selector (most specific)
-    const parts = selector.split(/\s*(?:>>>|>)\s*/);
+    // Split on >>> or > with optional single space around them
+    const parts = selector.split(/ ?(?:>>>|>) ?/);
     const lastPart = parts.at(-1) ?? selector;
 
     // Try to extract ID
-    const idMatch = lastPart.match(/#([a-z0-9_-]+)/i);
+    const idMatch = /#([a-z0-9_-]+)/i.exec(lastPart);
     if (idMatch?.[1]) {
       return idMatch[1].replaceAll('-', ' ').replaceAll('_', ' ');
     }
 
     // Try to extract class name
-    const classMatch = lastPart.match(/\.([a-z0-9_-]+)/i);
+    const classMatch = /\.([a-z0-9_-]+)/i.exec(lastPart);
     if (classMatch?.[1]) {
       const className = classMatch[1].replaceAll('-', ' ').replaceAll('_', ' ');
 
       // Check for nth-of-type
-      const nthMatch = lastPart.match(/:nth-of-type\((\d+)\)/);
+      const nthMatch = /:nth-of-type\((\d+)\)/.exec(lastPart);
       if (nthMatch?.[1]) {
         return `${className} ${nthMatch[1]}`;
       }
@@ -191,10 +210,10 @@
     }
 
     // Fall back to tag name
-    const tagMatch = lastPart.match(/^([a-z0-9]+)/i);
+    const tagMatch = /^([a-z0-9]+)/i.exec(lastPart);
     if (tagMatch?.[1]) {
       const tagName = tagMatch[1];
-      const nthMatch = lastPart.match(/:nth-of-type\((\d+)\)/);
+      const nthMatch = /:nth-of-type\((\d+)\)/.exec(lastPart);
       if (nthMatch?.[1]) {
         return `${tagName} ${nthMatch[1]}`;
       }
@@ -249,6 +268,7 @@
    * Handle screenshot selection - tell CLI to navigate and highlight
    */
   function handleSelectScreenshot(screenshot: ScreenshotItem): void {
+    selectedScreenshotId = screenshot.id;
     emit({
       type: 'screenshot-selected',
       id: screenshot.id,
@@ -263,30 +283,30 @@
    */
   function querySelectorPiercing(selector: string): Element | null {
     const parts = selector.split('>>>').map(selectorPart => selectorPart.trim());
-    let currentElement: Element | null = null;
+    let foundElement: Element | null = null;
 
     for (const part of parts) {
       if (!part) continue;
 
       // Query within current context (document or shadow root)
       let root: ParentNode;
-      if (currentElement === null) {
+      if (foundElement === null) {
         root = document;
-      } else if (currentElement.shadowRoot) {
-        root = currentElement.shadowRoot;
+      } else if (foundElement.shadowRoot) {
+        root = foundElement.shadowRoot;
       } else {
-        root = currentElement;
+        root = foundElement;
       }
 
-      const found = root.querySelector(part);
-      if (!found) {
+      const result = root.querySelector(part);
+      if (!result) {
         return null;
       }
 
-      currentElement = found;
+      foundElement = result;
     }
 
-    return currentElement;
+    return foundElement;
   }
 
   /**
@@ -369,6 +389,21 @@
   }
 
   /**
+   * Toggle settings modal
+   */
+  function toggleSettings(): void {
+    settingsVisible = !settingsVisible;
+  }
+
+  /**
+   * Handle settings save
+   */
+  function handleSaveSettings(newSettings: BrowserSettings): void {
+    settings = newSettings;
+    emit({ type: 'settings-updated', data: newSettings });
+  }
+
+  /**
    * Generate a random UID (8 chars)
    */
   function generateUid(): string {
@@ -421,28 +456,26 @@
     onclick={togglePicker}
     title="Pick element"
   >
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/>
-      <circle cx="12" cy="12" r="3"/>
-      <line x1="12" y1="2" x2="12" y2="6"/>
-      <line x1="12" y1="18" x2="12" y2="22"/>
-      <line x1="2" y1="12" x2="6" y2="12"/>
-      <line x1="18" y1="12" x2="22" y2="12"/>
-    </svg>
+    <PickerIcon size={20} />
   </button>
 
   <button
-    class="w-9 h-9 rounded-md flex items-center justify-center transition-colors relative {sidebarVisible ? 'bg-blue-600' : screenshotCount > 0 ? 'bg-blue-500 hover:bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}"
+    class="w-9 h-9 rounded-md flex items-center justify-center transition-colors relative {sidebarButtonClass}"
     onclick={toggleSidebar}
     title="Toggle screenshots sidebar"
   >
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-      <line x1="15" y1="3" x2="15" y2="21"/>
-    </svg>
+    <SidebarIcon />
     {#if screenshotCount > 0}
       <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{screenshotCount}</span>
     {/if}
+  </button>
+
+  <button
+    class="w-9 h-9 rounded-md flex items-center justify-center transition-colors {settingsVisible ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}"
+    onclick={toggleSettings}
+    title="Settings"
+  >
+    <SettingsIcon />
   </button>
 
   <button
@@ -474,7 +507,7 @@
       style="top:{overlayRects.right.top}px;left:{overlayRects.right.left}px;width:{overlayRects.right.width}px;height:{overlayRects.right.height}px;"
     ></div>
     <div
-      class="fixed border-3 pointer-events-none box-border {selectedElement !== null ? 'border-heroshot-secondary bg-heroshot-secondary/10' : 'border-heroshot-primary bg-heroshot-primary/10'}"
+      class="fixed border-3 pointer-events-none box-border {selectedElement === null ? 'border-heroshot-primary bg-heroshot-primary/10' : 'border-heroshot-secondary bg-heroshot-secondary/10'}"
       style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left}px;width:{overlayRects.highlight.width}px;height:{overlayRects.highlight.height}px;"
     >
       <!-- Confirm/Cancel buttons when element is selected -->
@@ -485,19 +518,14 @@
             onclick={handleConfirm}
             title="Confirm selection"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
+            <CheckIcon />
           </button>
           <button
             class="w-8 h-8 border-none rounded-full cursor-pointer flex items-center justify-center transition-all duration-200 shadow-md bg-heroshot-danger text-white hover:bg-heroshot-danger-hover hover:scale-110"
             onclick={handleCancelSelection}
             title="Cancel selection"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+            <CloseIcon />
           </button>
         </div>
       {/if}
@@ -510,11 +538,20 @@
   {screenshots}
   visible={sidebarVisible}
   {editingId}
+  selectedId={selectedScreenshotId}
   onClose={() => sidebarVisible = false}
   onSelect={handleSelectScreenshot}
   onRemove={handleRemoveScreenshot}
   onRename={handleRenameScreenshot}
   onEditingComplete={() => editingId = null}
+/>
+
+<!-- Settings Modal -->
+<SettingsModal
+  visible={settingsVisible}
+  {settings}
+  onClose={() => settingsVisible = false}
+  onSave={handleSaveSettings}
 />
 
 <style>

@@ -18,6 +18,7 @@ export function initToolbar(): (() => void) | null {
     globalThis.__heroshot = {
       initialized: false,
       screenshots: [],
+      settings: { viewport: { width: 1280, height: 800 } },
       pendingJob: null,
       emit: () => {
         // No-op if not injected by CLI
@@ -25,11 +26,13 @@ export function initToolbar(): (() => void) | null {
     };
   }
 
+  const heroshot = globalThis.__heroshot;
+
   // Prevent double initialization
-  if (globalThis.__heroshot.initialized) {
+  if (heroshot.initialized) {
     return null;
   }
-  globalThis.__heroshot.initialized = true;
+  heroshot.initialized = true;
 
   // Create mount target with Shadow DOM
   // We use Shadow DOM to encapsulate styles - this toolbar is injected into
@@ -44,12 +47,12 @@ export function initToolbar(): (() => void) | null {
   host.style.cssText = 'position:fixed;inset:0;z-index:2147483646;pointer-events:none;';
   document.body.append(host);
 
-  const shadow = host.attachShadow({ mode: 'closed' });
+  const shadow = host.attachShadow({ mode: 'open' });
 
   // Inject Tailwind styles into shadow root
   const styleElement = document.createElement('style');
   styleElement.textContent = styles;
-  shadow.appendChild(styleElement);
+  shadow.append(styleElement);
 
   // Mount Svelte component into shadow root
   let component: ReturnType<typeof mount>;
@@ -57,8 +60,9 @@ export function initToolbar(): (() => void) | null {
     component = mount(Toolbar, {
       target: shadow,
       props: {
-        initialScreenshots: [...globalThis.__heroshot.screenshots],
-        pendingJob: globalThis.__heroshot.pendingJob,
+        initialScreenshots: [...heroshot.screenshots],
+        initialSettings: heroshot.settings,
+        pendingJob: heroshot.pendingJob,
       },
     });
   } catch {

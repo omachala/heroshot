@@ -21,7 +21,7 @@
     "test:run": "vitest run",
     "test:toolbar": "vitest run --config toolbar/vite.config.ts",
     "test:toolbar:coverage": "vitest run --config toolbar/vite.config.ts --coverage",
-    "test:toolbar:e2e": "vitest run --config toolbar/vitest.e2e.config.ts",
+    "test:toolbar:e2e": "playwright test --config toolbar/playwright.config.ts",
     "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo",
     "typecheck:toolbar": "tsc --noEmit -p toolbar/tsconfig.json --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo-toolbar",
     "lint": "eslint --cache --cache-location node_modules/.cache/eslint src/",
