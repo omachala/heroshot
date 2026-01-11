@@ -4,7 +4,6 @@ import {
   getEventsByType,
   getToolbarButtonCoords,
   createMockScreenshot,
-  clickPageElement,
   waitForSidebar,
   clickConfirmButtonForElement,
   clickCancelButtonForElement,
