@@ -90,12 +90,16 @@ type ToolbarEvent =
 
 const exposedPages = new WeakSet<Page>();
 
-async function injectToolbar(
-  page: Page,
-  initialScreenshots: ScreenshotData[],
-  pendingJob: ToolbarJob | null,
-  onEvent: (event: ToolbarEvent) => void
-): Promise<void> {
+interface InjectToolbarOptions {
+  screenshots: ScreenshotData[];
+  pendingJob: ToolbarJob | null;
+  selectedId: string | null;
+  sidebarVisible: boolean;
+  onEvent: (event: ToolbarEvent) => void;
+}
+
+async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise<void> {
+  const { screenshots, pendingJob, selectedId, sidebarVisible, onEvent } = options;
   // Expose single event handler to page (only once per page)
   // All toolbar events go through this single channel
   if (!exposedPages.has(page)) {
@@ -109,8 +113,9 @@ async function injectToolbar(
 
   // Initialize or update __heroshot namespace
   // Using string to avoid tsx transpilation issues (__name helper)
-  const screenshotsJson = JSON.stringify(initialScreenshots);
+  const screenshotsJson = JSON.stringify(screenshots);
   const pendingJobJson = JSON.stringify(pendingJob);
+  const selectedIdJson = JSON.stringify(selectedId);
 
   // Check if toolbar is already initialized - if so, just update the job
   const alreadyInitialized = await page.evaluate('globalThis.__heroshot?.initialized === true');
@@ -130,6 +135,8 @@ async function injectToolbar(
       initialized: false,
       screenshots: ${screenshotsJson},
       pendingJob: ${pendingJobJson},
+      selectedId: ${selectedIdJson},
+      sidebarVisible: ${sidebarVisible},
       emit: function(event) {
         globalThis.__heroshotEmit(JSON.stringify(event));
       },
@@ -164,6 +171,9 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
   // Track only NEW items added this session (for saving to config at the end)
   const newlyAddedIds = new Set<string>();
   let pendingJob: ToolbarJob | null = null;
+  // Track selected screenshot and sidebar state for cross-URL navigation
+  let selectedId: string | null = null;
+  let sidebarVisible = false;
 
   const context = await launchPersistentBrowser({ headless: false, viewport });
 
@@ -192,6 +202,10 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
         // User selected a screenshot - create job to highlight it
         const [currentPage] = context.pages();
         if (!currentPage) break;
+
+        // Track selected ID and keep sidebar open for cross-URL navigation
+        selectedId = event.id;
+        sidebarVisible = true;
 
         const currentUrl = currentPage.url();
 
@@ -231,7 +245,13 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
       if (!url.startsWith('http')) return;
 
       try {
-        await injectToolbar(page, allScreenshots, pendingJob, handleEvent);
+        await injectToolbar(page, {
+          screenshots: allScreenshots,
+          pendingJob,
+          selectedId,
+          sidebarVisible,
+          onEvent: handleEvent,
+        });
       } catch {
         // Toolbar injection can fail on some pages, ignore silently
       }

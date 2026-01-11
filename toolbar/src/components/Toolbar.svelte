@@ -9,6 +9,10 @@
     initialScreenshots?: ScreenshotItem[];
     initialSettings?: BrowserSettings;
     pendingJob?: ToolbarJob | null;
+    /** ID of selected screenshot (for cross-URL navigation persistence) */
+    initialSelectedId?: string | null;
+    /** Whether sidebar should be open on init */
+    initialSidebarVisible?: boolean;
   }
 
   const props: Props = $props();
@@ -33,10 +37,10 @@
   let selectedSelector = $state<string | null>(null);
   let screenshots = $state<ScreenshotItem[]>([...(props.initialScreenshots ?? [])]);
   let settings = $state<BrowserSettings>({ ...defaultSettings, ...props.initialSettings });
-  let sidebarVisible = $state(false);
+  let sidebarVisible = $state(props.initialSidebarVisible ?? false);
   let settingsVisible = $state(false);
   let editingId = $state<string | null>(null); // ID of newly added item being edited
-  let selectedScreenshotId = $state<string | null>(null); // ID of selected screenshot in sidebar
+  let selectedScreenshotId = $state<string | null>(props.initialSelectedId ?? null); // ID of selected screenshot in sidebar
 
   // Scroll position tracker - used to trigger overlay recalculation
   let scrollY = $state(globalThis.scrollY ?? 0);

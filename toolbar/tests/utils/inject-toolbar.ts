@@ -52,6 +52,10 @@ export type ToolbarEvent =
 export interface InjectOptions {
   screenshots?: ScreenshotItem[];
   pendingJob?: { type: string; selector: string; url?: string } | null;
+  /** ID of the selected screenshot (for cross-URL navigation) */
+  selectedId?: string | null;
+  /** Whether sidebar should be open on init */
+  sidebarVisible?: boolean;
 }
 
 /**
@@ -62,10 +66,15 @@ export async function injectToolbar(
   options: InjectOptions = {}
 ): Promise<void> {
   const script = readFileSync(TOOLBAR_SCRIPT_PATH, 'utf-8');
-  const { screenshots = [], pendingJob = null } = options;
+  const {
+    screenshots = [],
+    pendingJob = null,
+    selectedId = null,
+    sidebarVisible = false,
+  } = options;
 
   await page.evaluate(
-    ({ scriptContent, initialScreenshots, initialJob }) => {
+    ({ scriptContent, initialScreenshots, initialJob, initialSelectedId, initialSidebarVisible }) => {
       // Create event store
       (window as any).__capturedEvents = [];
 
@@ -75,6 +84,8 @@ export async function injectToolbar(
         screenshots: initialScreenshots,
         settings: { viewport: { width: 1280, height: 800 } },
         pendingJob: initialJob,
+        selectedId: initialSelectedId,
+        sidebarVisible: initialSidebarVisible,
         emit: (event: any) => {
           (window as any).__capturedEvents.push(event);
           console.log('[Heroshot Event]', JSON.stringify(event));
@@ -86,7 +97,13 @@ export async function injectToolbar(
       scriptEl.textContent = scriptContent;
       document.body.appendChild(scriptEl);
     },
-    { scriptContent: script, initialScreenshots: screenshots, initialJob: pendingJob }
+    {
+      scriptContent: script,
+      initialScreenshots: screenshots,
+      initialJob: pendingJob,
+      initialSelectedId: selectedId,
+      initialSidebarVisible: sidebarVisible,
+    }
   );
 
   // Wait for toolbar to initialize

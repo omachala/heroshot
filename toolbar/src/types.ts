@@ -44,6 +44,10 @@ export interface HeroshotGlobal {
   screenshots: ScreenshotItem[];
   settings: BrowserSettings;
   pendingJob: ToolbarJob | null;
+  /** ID of selected screenshot (for cross-URL navigation persistence) */
+  selectedId: string | null;
+  /** Whether sidebar should be open on init */
+  sidebarVisible: boolean;
   emit: (event: ToolbarEvent) => void;
 }
 

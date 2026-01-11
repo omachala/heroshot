@@ -155,3 +155,57 @@ test('sidebar button is not blue when sidebar is closed with screenshots', async
   // Visual regression: toolbar with badge but sidebar closed (button not blue)
   await expect(page).toHaveScreenshot('toolbar-sidebar-closed-with-badge.png');
 });
+
+test('cross-URL navigation preserves sidebar state and selected item', async ({ page }) => {
+  // This test simulates what happens after CLI navigates to a different URL:
+  // The toolbar is re-injected with pendingJob, selectedId, and sidebarVisible
+
+  await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
+
+  const existingScreenshots = [
+    createMockScreenshot({
+      id: 'shot-1',
+      name: 'Hero Section',
+      selector: '#hero',
+      url: 'https://heroshot.sh/other-page', // Different URL
+      createdAt: Date.now() - 1000,
+    }),
+    createMockScreenshot({
+      id: 'shot-2',
+      name: 'Primary Button',
+      selector: '#primary-btn',
+      createdAt: Date.now(),
+    }),
+  ];
+
+  // Inject toolbar as CLI would after navigation:
+  // - pendingJob to highlight the element
+  // - selectedId to show which item is selected
+  // - sidebarVisible to keep sidebar open
+  await injectToolbar(page, {
+    screenshots: existingScreenshots,
+    pendingJob: {
+      type: 'highlight',
+      selector: '#hero',
+    },
+    selectedId: 'shot-1',
+    sidebarVisible: true,
+  });
+
+  await page.waitForTimeout(500);
+
+  // Sidebar should be open
+  const sidebarButton = page.locator(TOOLBAR_SELECTORS.sidebar);
+  await expect(sidebarButton).toHaveClass(/bg-blue-600/);
+
+  // The selected item (shot-1 = Hero Section = index 1 since sorted by createdAt desc)
+  const selectedItem = page.locator(SIDEBAR_SELECTORS.item(1));
+  await expect(selectedItem).toHaveClass(/ring|bg-blue/);
+
+  // Visual regression: sidebar open with selected item after cross-URL navigation
+  await expect(page).toHaveScreenshot('cross-url-navigation-sidebar.png');
+
+  // Verify job-complete event was emitted (highlight worked)
+  const completeEvents = await getEventsByType(page, 'job-complete');
+  expect(completeEvents.length).toBe(1);
+});

@@ -20,6 +20,8 @@ export function initToolbar(): (() => void) | null {
       screenshots: [],
       settings: { viewport: { width: 1280, height: 800 } },
       pendingJob: null,
+      selectedId: null,
+      sidebarVisible: false,
       emit: () => {
         // No-op if not injected by CLI
       },
@@ -63,6 +65,8 @@ export function initToolbar(): (() => void) | null {
         initialScreenshots: [...heroshot.screenshots],
         initialSettings: heroshot.settings,
         pendingJob: heroshot.pendingJob,
+        initialSelectedId: heroshot.selectedId,
+        initialSidebarVisible: heroshot.sidebarVisible,
       },
     });
   } catch {
