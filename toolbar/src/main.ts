@@ -7,6 +7,7 @@
 
 import { mount, unmount } from 'svelte';
 import Toolbar from './components/Toolbar.svelte';
+import styles from './styles.css?inline';
 
 /**
  * Initialize the toolbar
@@ -37,9 +38,18 @@ export function initToolbar(): (() => void) | null {
   // eliminating the need for !important declarations.
   const host = document.createElement('div');
   host.id = 'heroshot-root';
+  // Make the host cover the entire viewport so clicks can reach fixed children
+  // WITHOUT pointer-events:none - we want clicks to reach the shadow DOM content
+  // The shadow DOM children will have their own pointer-events settings
+  host.style.cssText = 'position:fixed;inset:0;z-index:2147483646;';
   document.body.append(host);
 
   const shadow = host.attachShadow({ mode: 'closed' });
+
+  // Inject Tailwind styles into shadow root
+  const styleElement = document.createElement('style');
+  styleElement.textContent = styles;
+  shadow.appendChild(styleElement);
 
   // Mount Svelte component into shadow root
   let component: ReturnType<typeof mount>;

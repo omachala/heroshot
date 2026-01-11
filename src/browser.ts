@@ -70,6 +70,7 @@ interface ScreenshotData {
   name: string;
   url: string;
   selector: string;
+  createdAt: number;
 }
 
 // Job types that CLI can send to toolbar
@@ -80,6 +81,7 @@ type ToolbarJob =
 // Events that toolbar sends to CLI
 type ToolbarEvent =
   | { type: 'screenshot-added'; data: ScreenshotData }
+  | { type: 'screenshot-updated'; data: ScreenshotData }
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
   | { type: 'job-complete' }
@@ -164,11 +166,13 @@ export async function setup(): Promise<void> {
 
   // Convert config screenshots to toolbar format - this is the running list
   // that includes both original config items AND newly added items
-  const allScreenshots: ScreenshotData[] = config.screenshots.map(screenshot => ({
+  const allScreenshots: ScreenshotData[] = config.screenshots.map((screenshot, index) => ({
     id: screenshot.id,
     name: screenshot.name,
     url: screenshot.url,
     selector: screenshot.selector ?? '',
+    // Use index as fallback createdAt for existing items (older items first)
+    createdAt: index,
   }));
 
   // Track only NEW items added this session (for saving to config at the end)
@@ -183,8 +187,18 @@ export async function setup(): Promise<void> {
       case 'screenshot-added': {
         allScreenshots.push(event.data);
         newlyAddedIds.add(event.data.id);
-        console.log(`\nAdded: ${event.data.name} (${event.data.selector})`);
-        console.log(`URL: ${event.data.url}`);
+        console.log(`\nAdded: ${event.data.name}`);
+        break;
+      }
+
+      case 'screenshot-updated': {
+        const index = allScreenshots.findIndex(item => item.id === event.data.id);
+        if (index !== -1) {
+          allScreenshots[index] = event.data;
+          // Mark as newly added so it gets saved
+          newlyAddedIds.add(event.data.id);
+          console.log(`\nRenamed to: ${event.data.name}`);
+        }
         break;
       }
 
@@ -248,10 +262,12 @@ export async function setup(): Promise<void> {
   const page = existingPages[0] ?? (await context.newPage());
   setupPage(page);
 
+  // Navigate to heroshot.sh welcome page
+  await page.goto('https://heroshot.sh/welcome', { waitUntil: 'domcontentloaded' });
+
   console.log('Browser is open.');
-  console.log('1. Navigate to any site (e.g., https://example.com)');
-  console.log('2. Click the picker icon in the toolbar to select elements');
-  console.log('3. Click Done or close the browser when finished');
+  console.log('Navigate to any site, use the picker to select elements.');
+  console.log('Click Done or close the browser when finished.');
   console.log('');
 
   // Wait for browser to close (either via Done button or manual close)

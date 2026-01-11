@@ -1,10 +1,12 @@
 import { resolve } from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   root: __dirname,
   plugins: [
+    tailwindcss(),
     svelte({
       compilerOptions: {
         // Generate JS that works without Svelte runtime

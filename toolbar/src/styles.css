@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Custom theme for heroshot toolbar */
+@theme {
+  /* Colors */
+  --color-heroshot-bg: #1a1a2e;
+  --color-heroshot-bg-hover: #2d2d44;
+  --color-heroshot-bg-active: #3d3d5c;
+  --color-heroshot-border: #2d2d44;
+  --color-heroshot-text: #ffffff;
+  --color-heroshot-text-muted: #888888;
+  --color-heroshot-text-dim: #666666;
+
+  /* Action colors */
+  --color-heroshot-primary: #22c55e;
+  --color-heroshot-primary-hover: #16a34a;
+  --color-heroshot-secondary: #3b82f6;
+  --color-heroshot-secondary-hover: #2563eb;
+  --color-heroshot-danger: #ef4444;
+  --color-heroshot-danger-hover: #dc2626;
+}

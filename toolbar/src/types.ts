@@ -6,6 +6,7 @@ export interface ScreenshotItem {
   name: string;
   url: string;
   selector: string;
+  createdAt: number; // Unix timestamp for ordering (newest first)
 }
 
 /**
@@ -20,6 +21,7 @@ export type ToolbarJob =
  */
 export type ToolbarEvent =
   | { type: 'screenshot-added'; data: ScreenshotItem }
+  | { type: 'screenshot-updated'; data: ScreenshotItem }
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
   | { type: 'job-complete' }

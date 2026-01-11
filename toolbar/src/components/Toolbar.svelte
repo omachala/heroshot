@@ -1,8 +1,7 @@
 <script lang="ts">
   import { deepElementFromPoint, getSelector } from '../lib/dom';
   import type { ScreenshotItem, ToolbarJob } from '../types';
-  import ListDialog from './ListDialog.svelte';
-  import NameModal from './NameModal.svelte';
+  import Sidebar from './Sidebar.svelte';
 
   interface Props {
     initialScreenshots?: ScreenshotItem[];
@@ -12,7 +11,8 @@
   const props: Props = $props();
 
   // Emit event to CLI
-  function emit(event: Parameters<typeof globalThis.__heroshot.emit>[0]): void {
+  type EmitEvent = Parameters<NonNullable<typeof globalThis.__heroshot>['emit']>[0];
+  function emit(event: EmitEvent): void {
     globalThis.__heroshot?.emit(event);
   }
 
@@ -20,11 +20,11 @@
   let isPickerActive = $state(false);
   let isHighlighting = $state(false); // True when showing highlight from job
   let currentElement = $state<Element | null>(null);
-  let statusText = $state('Click crosshair to pick element');
+  let selectedElement = $state<Element | null>(null); // Element selected and awaiting confirmation
+  let selectedSelector = $state<string | null>(null);
   let screenshots = $state<ScreenshotItem[]>([...(props.initialScreenshots ?? [])]);
-  let pendingPick = $state<{ url: string; selector: string } | null>(null);
-  let showNameModal = $state(false);
-  let showListDialog = $state(false);
+  let sidebarVisible = $state(false);
+  let editingId = $state<string | null>(null); // ID of newly added item being edited
 
   // Scroll position tracker - used to trigger overlay recalculation
   let scrollY = $state(globalThis.scrollY ?? 0);
@@ -32,7 +32,12 @@
 
   // Derived
   let screenshotCount = $derived(screenshots.length);
-  let showOverlay = $derived((isPickerActive || isHighlighting) && overlayRects !== null);
+  let showOverlay = $derived(
+    (isPickerActive && currentElement !== null) ||
+    (selectedElement !== null) ||
+    isHighlighting
+  );
+  let activeElement = $derived(selectedElement ?? currentElement);
 
   /**
    * Toggle picker mode on/off
@@ -42,10 +47,11 @@
     isHighlighting = false;
 
     if (isPickerActive) {
-      statusText = 'Hover over element, click to select';
       document.body.style.cursor = 'crosshair';
+      // Clear any selected element when entering picker mode
+      selectedElement = null;
+      selectedSelector = null;
     } else {
-      statusText = 'Click crosshair to pick element';
       document.body.style.cursor = '';
       currentElement = null;
     }
@@ -65,13 +71,11 @@
       !element.closest('#heroshot-overlay')
     ) {
       currentElement = element;
-      const selector = getSelector(element);
-      statusText = selector;
     }
   }
 
   /**
-   * Handle click - select element and show name modal
+   * Handle click - select element and keep it selected (awaiting confirmation)
    */
   function handleClick(event: MouseEvent): void {
     if (!isPickerActive) return;
@@ -86,15 +90,118 @@
 
     if (currentElement) {
       const selector = getSelector(currentElement);
-      const { href } = globalThis.location;
 
-      pendingPick = { url: href, selector };
-      showNameModal = true;
+      // Select the element (keep it highlighted with confirm button)
+      selectedElement = currentElement;
+      selectedSelector = selector;
 
-      // Deactivate picker
+      // Deactivate picker mode
       isPickerActive = false;
       document.body.style.cursor = '';
+      currentElement = null;
     }
+  }
+
+  /**
+   * Handle confirmation - add screenshot and open sidebar for naming
+   */
+  function handleConfirm(): void {
+    if (!selectedElement || !selectedSelector) return;
+
+    const { href } = globalThis.location;
+    const smartName = generateSmartName(selectedSelector);
+
+    const screenshotData: ScreenshotItem = {
+      id: generateUid(),
+      name: smartName,
+      url: href,
+      selector: selectedSelector,
+      createdAt: Date.now(),
+    };
+
+    screenshots = [...screenshots, screenshotData];
+    emit({ type: 'screenshot-added', data: screenshotData });
+
+    // Clear selection
+    selectedElement = null;
+    selectedSelector = null;
+
+    // Open sidebar with the new item in edit mode
+    sidebarVisible = true;
+    editingId = screenshotData.id;
+  }
+
+  /**
+   * Cancel selection
+   */
+  function handleCancelSelection(): void {
+    selectedElement = null;
+    selectedSelector = null;
+    isHighlighting = false;
+    currentElement = null;
+  }
+
+  /**
+   * Generate a smart name from page title and selector
+   * e.g., "Heroshot.sh - hero-section" or "Dashboard - card 3"
+   */
+  function generateSmartName(selector: string): string {
+    // Get page title, clean it up
+    let pageTitle = document.title || 'Page';
+    // Truncate long titles
+    if (pageTitle.length > 30) {
+      pageTitle = pageTitle.slice(0, 30).trim();
+    }
+
+    // Extract meaningful part from selector
+    const selectorPart = extractSelectorName(selector);
+
+    return `${pageTitle} - ${selectorPart}`;
+  }
+
+  /**
+   * Extract a human-readable name from a CSS selector
+   * e.g., ".hero-section" → "hero-section"
+   *       "#contact-form" → "contact-form"
+   *       "div.card:nth-of-type(3)" → "card 3"
+   */
+  function extractSelectorName(selector: string): string {
+    // Get the last part of the selector (most specific)
+    const parts = selector.split(/\s*(?:>>>|>)\s*/);
+    const lastPart = parts.at(-1) ?? selector;
+
+    // Try to extract ID
+    const idMatch = lastPart.match(/#([a-z0-9_-]+)/i);
+    if (idMatch?.[1]) {
+      return idMatch[1].replaceAll('-', ' ').replaceAll('_', ' ');
+    }
+
+    // Try to extract class name
+    const classMatch = lastPart.match(/\.([a-z0-9_-]+)/i);
+    if (classMatch?.[1]) {
+      const className = classMatch[1].replaceAll('-', ' ').replaceAll('_', ' ');
+
+      // Check for nth-of-type
+      const nthMatch = lastPart.match(/:nth-of-type\((\d+)\)/);
+      if (nthMatch?.[1]) {
+        return `${className} ${nthMatch[1]}`;
+      }
+
+      return className;
+    }
+
+    // Fall back to tag name
+    const tagMatch = lastPart.match(/^([a-z0-9]+)/i);
+    if (tagMatch?.[1]) {
+      const tagName = tagMatch[1];
+      const nthMatch = lastPart.match(/:nth-of-type\((\d+)\)/);
+      if (nthMatch?.[1]) {
+        return `${tagName} ${nthMatch[1]}`;
+      }
+      return tagName;
+    }
+
+    return 'element';
   }
 
   /**
@@ -102,67 +209,46 @@
    */
   function handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
-      if (showNameModal) {
-        showNameModal = false;
-        pendingPick = null;
-      } else if (showListDialog) {
-        showListDialog = false;
+      if (sidebarVisible) {
+        sidebarVisible = false;
+      } else if (selectedElement) {
+        handleCancelSelection();
       } else if (isPickerActive) {
         togglePicker();
       } else if (isHighlighting) {
         // Clear highlight mode
         isHighlighting = false;
         currentElement = null;
-        statusText = 'Click crosshair to pick element';
       }
     }
   }
 
   /**
-   * Handle name modal save
-   */
-  function handleNameSave(name: string): void {
-    if (!pendingPick) return;
-
-    const screenshotData: ScreenshotItem = {
-      id: generateUid(),
-      name,
-      url: pendingPick.url,
-      selector: pendingPick.selector,
-    };
-
-    screenshots = [...screenshots, screenshotData];
-    emit({ type: 'screenshot-added', data: screenshotData });
-
-    showNameModal = false;
-    pendingPick = null;
-    currentElement = null;
-    statusText = 'Click crosshair to pick element';
-  }
-
-  /**
-   * Handle name modal cancel
-   */
-  function handleNameCancel(): void {
-    showNameModal = false;
-    pendingPick = null;
-    currentElement = null;
-    statusText = 'Click crosshair to pick element';
-  }
-
-  /**
-   * Handle screenshot removal from list
+   * Handle screenshot removal from sidebar
    */
   function handleRemoveScreenshot(id: string): void {
-    screenshots = screenshots.filter((s) => s.id !== id);
+    screenshots = screenshots.filter((screenshot) => screenshot.id !== id);
     emit({ type: 'screenshot-removed', id });
+  }
+
+  /**
+   * Handle screenshot rename from sidebar
+   */
+  function handleRenameScreenshot(id: string, newName: string): void {
+    screenshots = screenshots.map((screenshot) =>
+      screenshot.id === id ? { ...screenshot, name: newName } : screenshot
+    );
+
+    const updated = screenshots.find((screenshot) => screenshot.id === id);
+    if (updated) {
+      emit({ type: 'screenshot-updated', data: updated });
+    }
   }
 
   /**
    * Handle screenshot selection - tell CLI to navigate and highlight
    */
   function handleSelectScreenshot(screenshot: ScreenshotItem): void {
-    showListDialog = false;
     emit({
       type: 'screenshot-selected',
       id: screenshot.id,
@@ -176,26 +262,31 @@
    * e.g., "host-element >>> .inner-class >>> span"
    */
   function querySelectorPiercing(selector: string): Element | null {
-    const parts = selector.split('>>>').map(s => s.trim());
-    let current: Element | Document = document;
+    const parts = selector.split('>>>').map(selectorPart => selectorPart.trim());
+    let currentElement: Element | null = null;
 
     for (const part of parts) {
       if (!part) continue;
 
       // Query within current context (document or shadow root)
-      const root = current instanceof Element
-        ? (current.shadowRoot ?? current)
-        : current;
+      let root: ParentNode;
+      if (currentElement === null) {
+        root = document;
+      } else if (currentElement.shadowRoot) {
+        root = currentElement.shadowRoot;
+      } else {
+        root = currentElement;
+      }
 
       const found = root.querySelector(part);
       if (!found) {
         return null;
       }
 
-      current = found;
+      currentElement = found;
     }
 
-    return current instanceof Element ? current : null;
+    return currentElement;
   }
 
   /**
@@ -212,15 +303,12 @@
     if (element) {
       currentElement = element;
       isHighlighting = true;
-      statusText = selector;
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       emit({ type: 'job-complete' });
     } else if (attempt < maxAttempts) {
       // Retry after 1 second
-      statusText = `Looking for element... (attempt ${attempt}/${maxAttempts})`;
       globalThis.setTimeout(() => highlightElement(selector, attempt + 1), 1000);
     } else {
-      statusText = `Element not found: ${selector}`;
       emit({ type: 'job-complete' });
     }
   }
@@ -274,6 +362,13 @@
   }
 
   /**
+   * Toggle sidebar visibility
+   */
+  function toggleSidebar(): void {
+    sidebarVisible = !sidebarVisible;
+  }
+
+  /**
    * Generate a random UID (8 chars)
    */
   function generateUid(): string {
@@ -308,7 +403,7 @@
     };
   }
 
-  let overlayRects = $derived(getOverlayRects(currentElement, scrollX, scrollY));
+  let overlayRects = $derived(getOverlayRects(activeElement, scrollX, scrollY));
 </script>
 
 <svelte:window onscroll={handleScroll} />
@@ -320,10 +415,9 @@
 />
 
 <!-- Toolbar -->
-<div class="toolbar">
+<div class="fixed bottom-5 left-1/2 -translate-x-1/2 z-[2147483647] bg-slate-800 rounded-lg px-3 py-2 flex items-center gap-2 font-sans text-sm text-white shadow-xl select-none pointer-events-auto">
   <button
-    class="picker-btn"
-    class:active={isPickerActive}
+    class="w-9 h-9 rounded-md flex items-center justify-center transition-colors {isPickerActive ? 'bg-green-500 animate-pulse-green' : 'bg-slate-700 hover:bg-slate-600'}"
     onclick={togglePicker}
     title="Pick element"
   >
@@ -337,29 +431,22 @@
     </svg>
   </button>
 
-  <span class="status">{statusText}</span>
-
   <button
-    class="list-btn"
-    class:has-items={screenshotCount > 0}
-    onclick={() => showListDialog = true}
-    title="View screenshots"
+    class="w-9 h-9 rounded-md flex items-center justify-center transition-colors relative {sidebarVisible ? 'bg-blue-600' : screenshotCount > 0 ? 'bg-blue-500 hover:bg-blue-600' : 'bg-slate-700 hover:bg-slate-600'}"
+    onclick={toggleSidebar}
+    title="Toggle screenshots sidebar"
   >
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <line x1="8" y1="6" x2="21" y2="6"/>
-      <line x1="8" y1="12" x2="21" y2="12"/>
-      <line x1="8" y1="18" x2="21" y2="18"/>
-      <line x1="3" y1="6" x2="3.01" y2="6"/>
-      <line x1="3" y1="12" x2="3.01" y2="12"/>
-      <line x1="3" y1="18" x2="3.01" y2="18"/>
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+      <line x1="15" y1="3" x2="15" y2="21"/>
     </svg>
     {#if screenshotCount > 0}
-      <span class="badge">{screenshotCount}</span>
+      <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{screenshotCount}</span>
     {/if}
   </button>
 
   <button
-    class="done-btn"
+    class="px-4 py-2 rounded-md bg-green-500 hover:bg-green-600 text-white font-semibold transition-colors"
     onclick={handleDone}
     title="Done - save and close"
   >
@@ -369,172 +456,73 @@
 
 <!-- Overlay for element highlighting -->
 {#if showOverlay && overlayRects}
-  <div class="overlay">
+  <div class="fixed inset-0 w-screen h-screen z-[2147483646] pointer-events-none">
     <div
-      class="overlay-dark"
+      class="fixed bg-black/50 pointer-events-none"
       style="top:{overlayRects.top.top}px;left:{overlayRects.top.left}px;width:{overlayRects.top.width}px;height:{overlayRects.top.height}px;"
     ></div>
     <div
-      class="overlay-dark"
+      class="fixed bg-black/50 pointer-events-none"
       style="top:{overlayRects.bottom.top}px;left:{overlayRects.bottom.left}px;width:{overlayRects.bottom.width}px;height:{overlayRects.bottom.height}px;"
     ></div>
     <div
-      class="overlay-dark"
+      class="fixed bg-black/50 pointer-events-none"
       style="top:{overlayRects.left.top}px;left:{overlayRects.left.left}px;width:{overlayRects.left.width}px;height:{overlayRects.left.height}px;"
     ></div>
     <div
-      class="overlay-dark"
+      class="fixed bg-black/50 pointer-events-none"
       style="top:{overlayRects.right.top}px;left:{overlayRects.right.left}px;width:{overlayRects.right.width}px;height:{overlayRects.right.height}px;"
     ></div>
     <div
-      class="highlight"
+      class="fixed border-3 pointer-events-none box-border {selectedElement !== null ? 'border-heroshot-secondary bg-heroshot-secondary/10' : 'border-heroshot-primary bg-heroshot-primary/10'}"
       style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left}px;width:{overlayRects.highlight.width}px;height:{overlayRects.highlight.height}px;"
-    ></div>
+    >
+      <!-- Confirm/Cancel buttons when element is selected -->
+      {#if selectedElement !== null}
+        <div class="absolute -top-10 left-1/2 -translate-x-1/2 flex gap-2 pointer-events-auto">
+          <button
+            class="w-8 h-8 border-none rounded-full cursor-pointer flex items-center justify-center transition-all duration-200 shadow-md bg-heroshot-primary text-white hover:bg-heroshot-primary-hover hover:scale-110"
+            onclick={handleConfirm}
+            title="Confirm selection"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+          <button
+            class="w-8 h-8 border-none rounded-full cursor-pointer flex items-center justify-center transition-all duration-200 shadow-md bg-heroshot-danger text-white hover:bg-heroshot-danger-hover hover:scale-110"
+            onclick={handleCancelSelection}
+            title="Cancel selection"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      {/if}
+    </div>
   </div>
 {/if}
 
-<!-- Name Modal -->
-{#if showNameModal && pendingPick}
-  <NameModal
-    selector={pendingPick.selector}
-    onSave={handleNameSave}
-    onCancel={handleNameCancel}
-  />
-{/if}
-
-<!-- List Dialog -->
-{#if showListDialog}
-  <ListDialog
-    {screenshots}
-    onSelect={handleSelectScreenshot}
-    onRemove={handleRemoveScreenshot}
-    onClose={() => showListDialog = false}
-  />
-{/if}
+<!-- Sidebar -->
+<Sidebar
+  {screenshots}
+  visible={sidebarVisible}
+  {editingId}
+  onClose={() => sidebarVisible = false}
+  onSelect={handleSelectScreenshot}
+  onRemove={handleRemoveScreenshot}
+  onRename={handleRenameScreenshot}
+  onEditingComplete={() => editingId = null}
+/>
 
 <style>
-  /*
-   * Styles are encapsulated via Shadow DOM (see main.ts).
-   * No !important needed - host page CSS cannot leak in.
-   */
-
-  .toolbar {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2147483647;
-    background: #1a1a2e;
-    border-radius: 8px;
-    padding: 8px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 13px;
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    user-select: none;
-  }
-
-  .picker-btn,
-  .list-btn {
-    width: 36px;
-    height: 36px;
-    border: 2px solid transparent;
-    border-radius: 6px;
-    background: #2d2d44;
-    color: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-    position: relative;
-  }
-
-  .picker-btn:hover,
-  .list-btn:hover {
-    background: #3d3d5c;
-  }
-
-  .picker-btn.active {
-    background: #22c55e;
-    border-color: #16a34a;
-    color: #fff;
-    animation: pulse 1s infinite;
-  }
-
   @keyframes pulse {
     0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
     50% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
   }
-
-  .list-btn.has-items {
-    background: #3b82f6;
-  }
-
-  .badge {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: #ef4444;
-    color: #fff;
-    font-size: 10px;
-    font-weight: bold;
-    min-width: 16px;
-    height: 16px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 4px;
-  }
-
-  .status {
-    color: #aaa;
-    max-width: 400px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .done-btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    background: #22c55e;
-    color: #fff;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .done-btn:hover {
-    background: #16a34a;
-  }
-
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 2147483646;
-    pointer-events: none;
-  }
-
-  .overlay-dark {
-    position: fixed;
-    background: rgba(0, 0, 0, 0.5);
-    pointer-events: none;
-  }
-
-  .highlight {
-    position: fixed;
-    border: 3px solid #22c55e;
-    background: rgba(34, 197, 94, 0.1);
-    pointer-events: none;
-    box-sizing: border-box;
+  .animate-pulse-green {
+    animation: pulse 1s infinite;
   }
 </style>

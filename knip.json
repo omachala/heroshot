@@ -1,5 +1,5 @@
 {
-  "ignoreDependencies": ["sharp"],
+  "ignoreDependencies": ["sharp", "tailwindcss"],
   "ignore": ["toolbar/**", "src/capture.ts"],
   "ignoreExportsUsedInFile": true,
   "entry": ["src/config.ts"]

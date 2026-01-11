@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heroshot Toolbar Test Page</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; padding: 40px; background: #f5f5f5; }
+    h1 { margin-bottom: 20px; }
+    h2 { margin: 30px 0 15px; color: #333; }
+
+    /* Test sections */
+    .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+    /* Basic elements */
+    .button { padding: 10px 20px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .button:hover { background: #2563eb; }
+
+    .card { padding: 20px; background: #e5e7eb; border-radius: 8px; margin: 10px 0; }
+    .card-title { font-weight: bold; margin-bottom: 8px; }
+    .card-body { color: #666; }
+
+    /* Grid of items for nth-of-type testing */
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .grid-item { padding: 20px; background: #ddd6fe; border-radius: 4px; text-align: center; }
+
+    /* Nested elements */
+    .nested-outer { padding: 20px; background: #fef3c7; border-radius: 8px; }
+    .nested-inner { padding: 15px; background: #fde68a; border-radius: 6px; margin-top: 10px; }
+    .nested-deep { padding: 10px; background: #fcd34d; border-radius: 4px; margin-top: 10px; }
+
+    /* Form elements */
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px;
+    }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; }
+    tr:hover { background: #f9fafb; }
+
+    /* Navigation */
+    .nav { display: flex; gap: 20px; padding: 15px; background: #1f2937; border-radius: 8px; }
+    .nav-link { color: white; text-decoration: none; }
+    .nav-link:hover { text-decoration: underline; }
+
+    /* Hero section */
+    #hero { padding: 60px 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; text-align: center; }
+    #hero h1 { font-size: 2.5rem; margin-bottom: 15px; }
+    #hero p { font-size: 1.2rem; opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <h1>Heroshot Toolbar E2E Test Page</h1>
+  <p style="margin-bottom: 30px; color: #666;">This page contains various elements for testing the toolbar's element picker and selector generation.</p>
+
+  <!-- Hero Section with ID -->
+  <section id="hero" class="section">
+    <h1>Hero Section</h1>
+    <p>This section has an ID selector</p>
+    <button class="button" style="margin-top: 20px;">Call to Action</button>
+  </section>
+
+  <!-- Basic Elements -->
+  <section class="section">
+    <h2>Basic Elements</h2>
+    <button id="primary-btn" class="button">Primary Button</button>
+    <button class="button" style="background: #10b981; margin-left: 10px;">Secondary Button</button>
+    <button class="button" style="background: #ef4444; margin-left: 10px;">Danger Button</button>
+  </section>
+
+  <!-- Cards -->
+  <section class="section">
+    <h2>Cards (same class, different instances)</h2>
+    <div class="card">
+      <div class="card-title">Card One</div>
+      <div class="card-body">First card content</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Card Two</div>
+      <div class="card-body">Second card content</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Card Three</div>
+      <div class="card-body">Third card content</div>
+    </div>
+  </section>
+
+  <!-- Grid Items for nth-of-type -->
+  <section class="section">
+    <h2>Grid (for nth-of-type testing)</h2>
+    <div class="grid">
+      <div class="grid-item">Item 1</div>
+      <div class="grid-item">Item 2</div>
+      <div class="grid-item">Item 3</div>
+      <div class="grid-item">Item 4</div>
+      <div class="grid-item">Item 5</div>
+      <div class="grid-item">Item 6</div>
+    </div>
+  </section>
+
+  <!-- Nested Elements -->
+  <section class="section">
+    <h2>Nested Elements</h2>
+    <div class="nested-outer">
+      Outer Level
+      <div class="nested-inner">
+        Inner Level
+        <div class="nested-deep">
+          Deep Level - Target Me!
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Form Elements -->
+  <section class="section">
+    <h2>Form Elements</h2>
+    <form id="test-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter username">
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter email">
+      </div>
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="3" placeholder="Enter message"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="country">Country</label>
+        <select id="country" name="country">
+          <option value="">Select country</option>
+          <option value="us">United States</option>
+          <option value="uk">United Kingdom</option>
+          <option value="cz">Czech Republic</option>
+        </select>
+      </div>
+      <button type="submit" class="button">Submit Form</button>
+    </form>
+  </section>
+
+  <!-- Table -->
+  <section class="section">
+    <h2>Table</h2>
+    <table id="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>John Doe</td>
+          <td>john@example.com</td>
+          <td>Admin</td>
+        </tr>
+        <tr>
+          <td>Jane Smith</td>
+          <td>jane@example.com</td>
+          <td>Editor</td>
+        </tr>
+        <tr>
+          <td>Bob Wilson</td>
+          <td>bob@example.com</td>
+          <td>Viewer</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Navigation -->
+  <section class="section">
+    <h2>Navigation</h2>
+    <nav class="nav">
+      <a href="#" class="nav-link">Home</a>
+      <a href="#" class="nav-link">About</a>
+      <a href="#" class="nav-link">Services</a>
+      <a href="#" class="nav-link">Contact</a>
+    </nav>
+  </section>
+
+  <!-- Shadow DOM -->
+  <section class="section">
+    <h2>Shadow DOM Elements</h2>
+    <p style="margin-bottom: 15px; color: #666;">These elements are inside Shadow DOM - tests the >>> piercing selector</p>
+    <div id="shadow-host-1"></div>
+    <div id="shadow-host-2" style="margin-top: 15px;"></div>
+  </section>
+
+  <script>
+    // Create Shadow DOM elements
+    const host1 = document.getElementById('shadow-host-1');
+    const shadow1 = host1.attachShadow({ mode: 'open' });
+    shadow1.innerHTML = `
+      <style>
+        .shadow-card { padding: 20px; background: #e0f2fe; border-radius: 8px; border: 2px dashed #0ea5e9; }
+        .shadow-title { font-weight: bold; color: #0369a1; margin-bottom: 8px; }
+        .shadow-button { padding: 8px 16px; background: #0ea5e9; color: white; border: none; border-radius: 4px; cursor: pointer; }
+      </style>
+      <div class="shadow-card">
+        <div class="shadow-title">Shadow DOM Card 1</div>
+        <p>This content is inside shadow DOM</p>
+        <button class="shadow-button">Shadow Button 1</button>
+      </div>
+    `;
+
+    const host2 = document.getElementById('shadow-host-2');
+    const shadow2 = host2.attachShadow({ mode: 'open' });
+    shadow2.innerHTML = `
+      <style>
+        .shadow-card { padding: 20px; background: #fce7f3; border-radius: 8px; border: 2px dashed #ec4899; }
+        .shadow-title { font-weight: bold; color: #be185d; margin-bottom: 8px; }
+        .shadow-button { padding: 8px 16px; background: #ec4899; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .nested-shadow-host { margin-top: 15px; }
+      </style>
+      <div class="shadow-card">
+        <div class="shadow-title">Shadow DOM Card 2 (with nested shadow)</div>
+        <p>This has another shadow DOM inside</p>
+        <button class="shadow-button">Shadow Button 2</button>
+        <div class="nested-shadow-host" id="nested-shadow"></div>
+      </div>
+    `;
+
+    // Nested shadow DOM
+    const nestedHost = shadow2.getElementById('nested-shadow');
+    const nestedShadow = nestedHost.attachShadow({ mode: 'open' });
+    nestedShadow.innerHTML = `
+      <style>
+        .deep-shadow { padding: 15px; background: #fdf4ff; border-radius: 6px; border: 2px dotted #a855f7; }
+        .deep-button { padding: 6px 12px; background: #a855f7; color: white; border: none; border-radius: 4px; cursor: pointer; }
+      </style>
+      <div class="deep-shadow">
+        <strong>Deeply Nested Shadow DOM</strong>
+        <button class="deep-button">Deep Shadow Button</button>
+      </div>
+    `;
+  </script>
+</body>
+</html>
