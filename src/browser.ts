@@ -4,6 +4,7 @@ import path from 'node:path';
 import { type BrowserContext, type Page, chromium } from 'playwright';
 import type { Screenshot, Viewport } from './config';
 import { getConfigPath, loadConfig, saveConfig } from './configFile';
+import { log } from './logger';
 
 const PROFILE_DIR = path.join(homedir(), '.heroshot', 'browser-profile');
 const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
@@ -141,24 +142,9 @@ async function injectToolbar(
   await page.addScriptTag({ content: script });
 }
 
-export async function captureUrl(url: string, output: string): Promise<void> {
-  console.log(`Capturing: ${url}`);
-
-  const context = await launchPersistentBrowser({ headless: true });
-  const page = await context.newPage();
-
-  await page.goto(url, { waitUntil: 'networkidle' });
-  await page.screenshot({ path: output, fullPage: false });
-
-  await context.close();
-
-  console.log(`Saved: ${output}`);
-}
-
-export async function setup(): Promise<void> {
-  console.log('Opening browser for setup...');
-  console.log(`Profile will be saved to: ${PROFILE_DIR}`);
-  console.log('');
+export async function setup(): Promise<{ hasScreenshots: boolean }> {
+  log.verbose('Opening browser...');
+  log.verbose(`Profile: ${PROFILE_DIR}`);
 
   const configPath = getConfigPath();
   const config = loadConfig(configPath);
@@ -187,7 +173,7 @@ export async function setup(): Promise<void> {
       case 'screenshot-added': {
         allScreenshots.push(event.data);
         newlyAddedIds.add(event.data.id);
-        console.log(`\nAdded: ${event.data.name}`);
+        log.verbose(`Added: ${event.data.name}`);
         break;
       }
 
@@ -197,7 +183,7 @@ export async function setup(): Promise<void> {
           allScreenshots[index] = event.data;
           // Mark as newly added so it gets saved
           newlyAddedIds.add(event.data.id);
-          console.log(`\nRenamed to: ${event.data.name}`);
+          log.verbose(`Renamed: ${event.data.name}`);
         }
         break;
       }
@@ -265,22 +251,17 @@ export async function setup(): Promise<void> {
   // Navigate to heroshot.sh welcome page
   await page.goto('https://heroshot.sh/welcome', { waitUntil: 'domcontentloaded' });
 
-  console.log('Browser is open.');
-  console.log('Navigate to any site, use the picker to select elements.');
-  console.log('Click Done or close the browser when finished.');
-  console.log('');
+  log('Pick elements to screenshot. Close browser or click Done when finished.');
 
   // Wait for browser to close (either via Done button or manual close)
   await new Promise<void>(resolve => {
     context.once('close', () => resolve());
   });
 
-  console.log('');
   if (newlyAddedIds.size > 0) {
     // Reload config in case it was modified while browser was open
     const latestConfig = loadConfig(configPath);
 
-    console.log('Saved screenshots:');
     // Only save newly added items (not items that were already in config)
     for (const element of allScreenshots) {
       if (!newlyAddedIds.has(element.id)) continue;
@@ -304,15 +285,17 @@ export async function setup(): Promise<void> {
       const existingIndex = latestConfig.screenshots.findIndex(item => item.id === element.id);
       if (existingIndex === -1) {
         latestConfig.screenshots.push(screenshot);
-        console.log(`  + ${element.name}: ${element.selector}`);
+        log.verbose(`+ ${element.name}`);
       } else {
         latestConfig.screenshots[existingIndex] = screenshot;
-        console.log(`  ~ ${element.name}: ${element.selector} (updated)`);
+        log.verbose(`~ ${element.name} (updated)`);
       }
     }
 
     saveConfig(configPath, latestConfig);
-    console.log(`\nConfig saved to: ${configPath}`);
+    log.verbose(`Config saved: ${configPath}`);
   }
-  console.log('You can now use `heroshot sync` to capture screenshots.');
+
+  // Return whether there are screenshots to sync
+  return { hasScreenshots: allScreenshots.length > 0 };
 }

@@ -1,6 +1,8 @@
 import { existsSync, rmSync } from 'node:fs';
 import { Command } from 'commander';
-import { captureUrl, getProfilePath, setup } from './browser';
+import { getProfilePath, setup } from './browser';
+import { getConfigPath } from './configFile';
+import { log, setVerbose } from './logger';
 import { sync } from './sync';
 
 const program = new Command();
@@ -8,53 +10,58 @@ const program = new Command();
 program
   .name('heroshot')
   .description('Define your screenshots once, update them forever with one command')
-  .version('0.0.2-alpha.2');
+  .version('0.0.2-alpha.2')
+  .option('-v, --verbose', 'Show detailed output')
+  .hook('preAction', () => {
+    const options = program.opts<{ verbose?: boolean }>();
+    setVerbose(options.verbose ?? false);
+  });
+
+// Default command: check for config, run setup if missing, otherwise sync
+program
+  .command('run', { isDefault: true, hidden: true })
+  .description('Run heroshot (setup if no config, otherwise sync)')
+  .action(async () => {
+    const configPath = getConfigPath();
+    if (existsSync(configPath)) {
+      // Config exists - run sync
+      const result = await sync({});
+      if (result.failed > 0) {
+        process.exitCode = 1;
+      }
+    } else {
+      // No config - run setup, then auto-sync if there are screenshots
+      const { hasScreenshots } = await setup();
+      if (hasScreenshots) {
+        log('');
+        const result = await sync({});
+        if (result.failed > 0) {
+          process.exitCode = 1;
+        }
+      }
+    }
+  });
 
 program
-  .command('setup', { isDefault: true })
-  .description('Open browser to log in to sites you want to screenshot')
+  .command('config')
+  .description('Open browser to add/edit screenshot definitions')
   .option('--reset', 'Clear existing browser profile and start fresh')
   .action(async (options: { reset?: boolean }) => {
     if (options.reset) {
       const profilePath = getProfilePath();
       if (existsSync(profilePath)) {
         rmSync(profilePath, { recursive: true });
-        console.log('Browser profile cleared.');
+        log.verbose('Browser profile cleared.');
       }
     }
-    await setup();
-  });
-
-program
-  .command('capture <url> <output>')
-  .description('Capture a screenshot of a URL')
-  .action(async (url: string, output: string) => {
-    await captureUrl(url, output);
-  });
-
-program
-  .command('init')
-  .description('Create a heroshot.json config file')
-  .action(() => {
-    console.log('TODO: Create heroshot.json');
-  });
-
-program
-  .command('sync')
-  .description('Capture all screenshots defined in config')
-  .option('--id <id>', 'Only capture a specific screenshot by ID')
-  .action(async (options: { id?: string }) => {
-    const result = await sync(options);
-    if (result.failed > 0) {
-      process.exitCode = 1;
+    const { hasScreenshots } = await setup();
+    if (hasScreenshots) {
+      log('');
+      const result = await sync({});
+      if (result.failed > 0) {
+        process.exitCode = 1;
+      }
     }
-  });
-
-program
-  .command('check')
-  .description('Check if screenshots are up-to-date (for CI)')
-  .action(() => {
-    console.log('TODO: Check screenshots');
   });
 
 program.parse();

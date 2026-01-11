@@ -4,6 +4,7 @@ import type { ElementHandle, Page } from 'playwright';
 import { launchPersistentBrowser } from './browser';
 import type { Config, Screenshot } from './config';
 import { getConfigPath, loadConfig } from './configFile';
+import { log } from './logger';
 
 /**
  * Find element using shadow-piercing selector with retries
@@ -68,7 +69,7 @@ async function captureScreenshot(
 ): Promise<{ success: boolean; error?: string }> {
   const { name, url, selector, filename } = screenshot;
 
-  console.log(`  ${name}...`);
+  log.verbose(`  ${name}...`);
 
   // Navigate to URL and wait for network to settle
   try {
@@ -146,7 +147,7 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const config: Config = loadConfig(configPath);
 
   if (config.screenshots.length === 0) {
-    console.log('No screenshots defined in config.');
+    log('No screenshots defined.');
     return { total: 0, success: 0, failed: 0, results: [] };
   }
 
@@ -157,12 +158,11 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     : config.screenshots;
 
   if (filterId && screenshots.length === 0) {
-    console.log(`No screenshot found with ID: ${filterId}`);
+    log(`No screenshot found with ID: ${filterId}`);
     return { total: 0, success: 0, failed: 0, results: [] };
   }
 
-  console.log(`Syncing ${screenshots.length} screenshot(s)...`);
-  console.log('');
+  log.verbose(`Syncing ${screenshots.length} screenshot(s)...`);
 
   // Get output directory (relative to config file location)
   const configDirectory = path.dirname(configPath);
@@ -189,9 +189,9 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     });
 
     if (result.success) {
-      console.log(`    Saved: ${screenshot.filename}`);
+      log.verbose(`    Saved: ${screenshot.filename}`);
     } else {
-      console.log(`    Failed: ${result.error ?? 'Unknown error'}`);
+      log.error(`  ${screenshot.name}: ${result.error ?? 'Unknown error'}`);
     }
   }
 
@@ -202,8 +202,11 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const { length: successCount } = successfulResults;
   const failedCount = totalCount - successCount;
 
-  console.log('');
-  console.log(`Done: ${successCount} succeeded, ${failedCount} failed`);
+  if (failedCount > 0) {
+    log(`Done: ${successCount}/${totalCount} screenshots (${failedCount} failed)`);
+  } else {
+    log(`Done: ${successCount} screenshot${successCount === 1 ? '' : 's'} captured`);
+  }
 
   return {
     total: totalCount,
