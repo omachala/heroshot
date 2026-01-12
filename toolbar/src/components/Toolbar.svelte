@@ -13,7 +13,7 @@
     initialSettings?: BrowserSettings;
     pendingJob?: ToolbarJob | null;
     initialSelectedId?: string | null;
-    initialSidebarVisible?: boolean;
+    initialSidebarExpanded?: boolean;
   }
 
   const props: Props = $props();
@@ -34,7 +34,8 @@
   let isPickerActive = $state(false);
   let screenshots = $state<ScreenshotItem[]>([...(props.initialScreenshots ?? [])]);
   let settings = $state<BrowserSettings>({ ...defaultSettings, ...props.initialSettings });
-  let sidebarVisible = $state(props.initialSidebarVisible ?? false);
+  // Auto-expand sidebar if there are screenshots (but don't select any)
+  let sidebarExpanded = $state(props.initialSidebarExpanded || (props.initialScreenshots?.length ?? 0) > 0);
   let settingsVisible = $state(false);
   let editingId = $state<string | null>(null);
   let draftId = $state<string | null>(null); // ID of draft item (not yet saved)
@@ -46,7 +47,7 @@
 
   // Derived
   let screenshotCount = $derived(screenshots.length);
-  let sidebarButtonClass = $derived(sidebarVisible ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600');
+  let sidebarButtonClass = $derived(sidebarExpanded ? 'bg-blue-600' : 'bg-slate-700 hover:bg-slate-600');
 
   /**
    * Toggle picker mode
@@ -75,7 +76,7 @@
     // Add as draft (at the beginning for visibility)
     screenshots = [screenshotData, ...screenshots];
     draftId = id;
-    sidebarVisible = true;
+    sidebarExpanded = true;
     editingId = id; // Focus the name input
     selectedElementPosition = elementPicker.getSelectedElementSide();
   }
@@ -263,10 +264,10 @@
   }
 
   /**
-   * Toggle sidebar
+   * Toggle sidebar expanded/collapsed
    */
   function toggleSidebar(): void {
-    sidebarVisible = !sidebarVisible;
+    sidebarExpanded = !sidebarExpanded;
   }
 
   /**
@@ -343,13 +344,12 @@
 <!-- Sidebar -->
 <Sidebar
   {screenshots}
-  visible={sidebarVisible}
+  expanded={sidebarExpanded}
   {editingId}
   {draftId}
   selectedId={selectedScreenshotId}
   {selectedElementPosition}
-  onClose={() => sidebarVisible = false}
-  onOpen={() => sidebarVisible = true}
+  onToggle={() => sidebarExpanded = !sidebarExpanded}
   onSelect={handleSelectScreenshot}
   onRemove={handleRemoveScreenshot}
   onRename={handleRenameScreenshot}

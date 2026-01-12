@@ -1,19 +1,20 @@
 <script lang="ts">
-  import ChevronLeftIcon from '../icons/ChevronLeftIcon.svelte';
-  import ChevronRightIcon from '../icons/ChevronRightIcon.svelte';
+  import ChevronDownIcon from '../icons/ChevronDownIcon.svelte';
+  import ChevronUpIcon from '../icons/ChevronUpIcon.svelte';
+  import GripIcon from '../icons/GripIcon.svelte';
   import TrashIcon from '../icons/TrashIcon.svelte';
   import type { ScreenshotItem } from '../types';
 
   interface Props {
     screenshots: ScreenshotItem[];
-    visible: boolean;
+    /** Whether the content list is expanded */
+    expanded: boolean;
     editingId: string | null;
     draftId: string | null;
     selectedId: string | null;
     /** Position of selected element (to determine which side to show sidebar) */
     selectedElementPosition: 'left' | 'right' | null;
-    onClose: () => void;
-    onOpen: () => void;
+    onToggle: () => void;
     onSelect: (screenshot: ScreenshotItem) => void;
     onRemove: (id: string) => void;
     onRename: (id: string, name: string) => void;
@@ -23,13 +24,12 @@
 
   let {
     screenshots,
-    visible,
+    expanded,
     editingId,
     draftId,
     selectedId,
     selectedElementPosition,
-    onClose,
-    onOpen,
+    onToggle,
     onSelect,
     onRemove,
     onRename,
@@ -45,6 +45,44 @@
   let localEditingId = $state<string | null>(null);
   let editValue = $state('');
   let inputElement = $state<HTMLInputElement | null>(null);
+
+  // Drag state for repositioning
+  let isDragging = $state(false);
+  let dragOffsetX = $state(0);
+  let dragOffsetY = $state(0);
+  let dragStartX = $state(0);
+  let dragStartY = $state(0);
+  let dragStartOffsetX = $state(0);
+  let dragStartOffsetY = $state(0);
+
+  /**
+   * Start dragging the sidebar
+   */
+  function handleDragStart(event: PointerEvent): void {
+    isDragging = true;
+    dragStartX = event.clientX;
+    dragStartY = event.clientY;
+    dragStartOffsetX = dragOffsetX;
+    dragStartOffsetY = dragOffsetY;
+    (event.target as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  /**
+   * Handle drag movement
+   */
+  function handleDragMove(event: PointerEvent): void {
+    if (!isDragging) return;
+    dragOffsetX = dragStartOffsetX + (event.clientX - dragStartX);
+    dragOffsetY = dragStartOffsetY + (event.clientY - dragStartY);
+  }
+
+  /**
+   * End dragging
+   */
+  function handleDragEnd(event: PointerEvent): void {
+    isDragging = false;
+    (event.target as HTMLElement).releasePointerCapture(event.pointerId);
+  }
 
   // Sort screenshots by createdAt (newest first)
   let sortedScreenshots = $derived(
@@ -139,7 +177,7 @@
   function stopKeyboardEvent(event: KeyboardEvent): void {
     event.stopPropagation();
     if (event.key === 'Escape' && !localEditingId) {
-      onClose();
+      onToggle();
     }
   }
 
@@ -156,53 +194,23 @@
     return 'bg-slate-700/50 hover:bg-slate-600';
   }
 
-  // Position styles based on side
-  let visibleOffset = $derived(visible ? '16px' : '-260px');
+  // Position styles based on side and drag offset
+  let dragTransform = $derived(
+    dragOffsetX !== 0 || dragOffsetY !== 0
+      ? `transform: translate(${dragOffsetX}px, ${dragOffsetY}px);`
+      : ''
+  );
   let positionStyle = $derived(
     side === 'right'
-      ? `right: ${visibleOffset}; left: auto;`
-      : `left: ${visibleOffset}; right: auto;`
-  );
-
-  // Collapsed tab position
-  let tabPositionStyle = $derived(
-    side === 'right'
-      ? 'right: 0; left: auto;'
-      : 'left: 0; right: auto;'
-  );
-
-  // Tab border radius based on side
-  let tabBorderRadius = $derived(
-    side === 'right'
-      ? 'border-radius: 8px 0 0 8px;'
-      : 'border-radius: 0 8px 8px 0;'
+      ? `right: 16px; left: auto; ${dragTransform}`
+      : `left: 16px; right: auto; ${dragTransform}`
   );
 </script>
 
-<!-- Collapsed tab (bookmark) - only show when not visible -->
-{#if !visible}
-  <button
-    type="button"
-    class="fixed top-1/2 -translate-y-1/2 z-[2147483646] bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors flex items-center justify-center shadow-lg pointer-events-auto"
-    style="{tabPositionStyle} {tabBorderRadius} width: 24px; height: 48px;"
-    onclick={onOpen}
-    title="Open screenshots"
-  >
-    {#if side === 'right'}
-      <ChevronLeftIcon size={16} />
-    {:else}
-      <ChevronRightIcon size={16} />
-    {/if}
-    {#if screenshots.length > 0}
-      <span class="absolute -top-1 {side === 'right' ? '-left-1' : '-right-1'} bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">{screenshots.length}</span>
-    {/if}
-  </button>
-{/if}
-
-<!-- Floating bar -->
+<!-- Floating sidebar panel -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
-  class="fixed top-4 z-[2147483646] transition-all duration-300 pointer-events-auto"
+  class="fixed top-4 z-[2147483646] pointer-events-auto {isDragging ? '' : 'transition-all duration-300'}"
   style="{positionStyle}"
   onkeydown={stopKeyboardEvent}
   onkeyup={(event) => event.stopPropagation()}
@@ -211,22 +219,38 @@
   aria-label="Screenshots panel"
 >
   <div class="w-64 max-h-[calc(100vh-32px)] bg-slate-800 rounded-xl shadow-2xl font-sans text-white flex flex-col overflow-hidden">
-    <div class="flex items-center justify-between px-3 py-2 border-b border-slate-700">
-      <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400">Screenshots</h3>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      class="flex items-center justify-between px-3 py-2 {expanded ? 'border-b border-slate-700' : ''}"
+      style="cursor: {isDragging ? 'grabbing' : 'grab'}; user-select: none; touch-action: none;"
+      onpointerdown={handleDragStart}
+      onpointermove={handleDragMove}
+      onpointerup={handleDragEnd}
+      onpointercancel={handleDragEnd}
+    >
+      <div class="flex items-center gap-1.5 pointer-events-none">
+        <GripIcon size={12} />
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400">Screenshots</h3>
+        {#if screenshots.length > 0}
+          <span class="bg-slate-600 text-white text-xs font-bold min-w-5 h-5 px-1 rounded-full flex items-center justify-center">{screenshots.length}</span>
+        {/if}
+      </div>
       <button
         type="button"
         class="w-6 h-6 rounded flex items-center justify-center text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
-        onclick={onClose}
-        title="Collapse panel"
+        onclick={onToggle}
+        onpointerdown={(event) => event.stopPropagation()}
+        title={expanded ? 'Collapse list' : 'Expand list'}
       >
-        {#if side === 'right'}
-          <ChevronRightIcon size={14} />
+        {#if expanded}
+          <ChevronUpIcon size={14} />
         {:else}
-          <ChevronLeftIcon size={14} />
+          <ChevronDownIcon size={14} />
         {/if}
       </button>
     </div>
 
+    {#if expanded}
     <div class="flex-1 overflow-y-auto p-2">
       {#if sortedScreenshots.length === 0}
         <p class="text-slate-500 text-center py-6 text-xs">No screenshots yet.<br/>Click the picker to add one.</p>
@@ -300,6 +324,7 @@
         </ul>
       {/if}
     </div>
+    {/if}
   </div>
 </div>
 

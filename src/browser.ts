@@ -104,12 +104,12 @@ interface InjectToolbarOptions {
   screenshots: ScreenshotData[];
   pendingJob: ToolbarJob | null;
   selectedId: string | null;
-  sidebarVisible: boolean;
+  sidebarExpanded: boolean;
   onEvent: (event: ToolbarEvent) => void;
 }
 
 async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise<void> {
-  const { screenshots, pendingJob, selectedId, sidebarVisible, onEvent } = options;
+  const { screenshots, pendingJob, selectedId, sidebarExpanded, onEvent } = options;
   // Expose single event handler to page (only once per page)
   // All toolbar events go through this single channel
   if (!exposedPages.has(page)) {
@@ -146,7 +146,7 @@ async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise
       screenshots: ${screenshotsJson},
       pendingJob: ${pendingJobJson},
       selectedId: ${selectedIdJson},
-      sidebarVisible: ${sidebarVisible},
+      sidebarExpanded: ${sidebarExpanded},
       emit: function(event) {
         globalThis.__heroshotEmit(JSON.stringify(event));
       },
@@ -185,7 +185,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
   let pendingJob: ToolbarJob | null = null;
   // Track selected screenshot and sidebar state for cross-URL navigation
   let selectedId: string | null = null;
-  let sidebarVisible = false;
+  let sidebarExpanded = false;
 
   const context = await launchPersistentBrowser({ headless: false, viewport });
 
@@ -217,7 +217,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
 
         // Track selected ID and keep sidebar open for cross-URL navigation
         selectedId = event.id;
-        sidebarVisible = true;
+        sidebarExpanded = true;
 
         const currentUrl = currentPage.url();
 
@@ -266,7 +266,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
           screenshots: allScreenshots,
           pendingJob,
           selectedId,
-          sidebarVisible,
+          sidebarExpanded,
           onEvent: handleEvent,
         });
       } catch {
