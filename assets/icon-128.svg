@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg"
- width="650" height="755" viewBox="194 361 650 755"
+ width="128" height="128" viewBox="141.5 361 755 755"
  preserveAspectRatio="xMidYMid meet">
 <defs>
   <linearGradient id="boltGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -29,7 +29,7 @@
 c-482 0 -876 3 -876 6 0 3 36 58 81 122 44 64 121 176 170 247 48 72 106 155
 127 185 22 30 125 179 229 330 174 253 316 457 657 950 318 457 403 579 446
 640 26 36 50 71 54 78 6 9 -189 12 -958 12 -909 0 -966 -1 -975 -17z"/>
-<!-- Black outline (bolt stroke) on top - 50% transparent -->
+<!-- Black outline (bolt stroke) on top - 20% transparent -->
 <path fill="#000000" fill-opacity="0.8" d="M4678 11612 c-31 -75 -96 -229 -144 -342 -47 -113 -165 -392 -261
 -620 -96 -228 -195 -462 -220 -520 -25 -58 -68 -159 -95 -225 -27 -66 -83
 -199 -124 -295 -164 -383 -207 -484 -300 -705 -53 -126 -137 -324 -186 -440
