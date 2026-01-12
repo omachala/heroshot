@@ -106,24 +106,28 @@
         <span class="block text-sm text-slate-400 mb-2">Color Scheme</span>
         <div class="flex gap-2">
           <button
+            type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === undefined ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
             onclick={() => { colorScheme = undefined; applyColorScheme(); }}
           >
             Auto
           </button>
           <button
+            type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === 'light' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
             onclick={() => { colorScheme = 'light'; applyColorScheme('light'); }}
           >
             Light
           </button>
           <button
+            type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === 'dark' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
             onclick={() => { colorScheme = 'dark'; applyColorScheme('dark'); }}
           >
             Dark
           </button>
           <button
+            type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === 'both' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
             onclick={() => colorScheme = 'both'}
             title="Capture both light and dark versions"
@@ -139,12 +143,14 @@
       <!-- Actions -->
       <div class="flex justify-end gap-2">
         <button
+          type="button"
           class="px-4 py-2 rounded bg-slate-700 text-white hover:bg-slate-600 transition-colors"
           onclick={props.onClose}
         >
           Cancel
         </button>
         <button
+          type="button"
           class="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600 transition-colors"
           onclick={handleSave}
         >

@@ -72,12 +72,22 @@ interface ScreenshotData {
   url: string;
   selector: string;
   createdAt: number;
+  padding?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+  scroll?: {
+    x: number;
+    y: number;
+  };
 }
 
 // Job types that CLI can send to toolbar
 type ToolbarJob =
-  | { type: 'highlight'; selector: string }
-  | { type: 'navigate-and-highlight'; url: string; selector: string };
+  | { type: 'highlight'; selector: string; screenshotId?: string }
+  | { type: 'navigate-and-highlight'; url: string; selector: string; screenshotId?: string };
 
 // Events that toolbar sends to CLI
 type ToolbarEvent =
@@ -166,6 +176,8 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
     selector: screenshot.selector ?? '',
     // Use index as fallback createdAt for existing items (older items first)
     createdAt: index,
+    ...(screenshot.padding && { padding: screenshot.padding }),
+    ...(screenshot.scroll && { scroll: screenshot.scroll }),
   }));
 
   // Track only NEW items added this session (for saving to config at the end)
@@ -211,15 +223,20 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
 
         if (currentUrl === event.url) {
           // Already on the right page - send highlight job via event
-          pendingJob = { type: 'highlight', selector: event.selector };
+          pendingJob = { type: 'highlight', selector: event.selector, screenshotId: event.id };
           void currentPage.evaluate(`
             window.dispatchEvent(new CustomEvent('heroshot-job', {
-              detail: { type: 'highlight', selector: ${JSON.stringify(event.selector)} }
+              detail: { type: 'highlight', selector: ${JSON.stringify(event.selector)}, screenshotId: ${JSON.stringify(event.id)} }
             }));
           `);
         } else {
           // Navigate to the page - toolbar will get job on inject
-          pendingJob = { type: 'navigate-and-highlight', url: event.url, selector: event.selector };
+          pendingJob = {
+            type: 'navigate-and-highlight',
+            url: event.url,
+            selector: event.selector,
+            screenshotId: event.id,
+          };
           void currentPage.goto(event.url, { waitUntil: 'domcontentloaded' });
         }
         break;
@@ -299,6 +316,8 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
         url: element.url,
         selector: element.selector,
         filename,
+        ...(element.padding && { padding: element.padding }),
+        ...(element.scroll && { scroll: element.scroll }),
       };
 
       // Add or update screenshot

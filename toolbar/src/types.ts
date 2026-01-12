@@ -1,4 +1,22 @@
 /**
+ * Padding around element (expands capture area)
+ */
+export interface Padding {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+/**
+ * Scroll position at time of capture
+ */
+export interface ScrollPosition {
+  x: number;
+  y: number;
+}
+
+/**
  * Screenshot item stored in the toolbar
  */
 export interface ScreenshotItem {
@@ -7,6 +25,9 @@ export interface ScreenshotItem {
   url: string;
   selector: string;
   createdAt: number; // Unix timestamp for ordering (newest first)
+  padding?: Padding;
+  /** Scroll position to restore when capturing */
+  scroll?: ScrollPosition;
 }
 
 /**
@@ -21,8 +42,8 @@ export interface BrowserSettings {
  * Job types that CLI sends to toolbar
  */
 export type ToolbarJob =
-  | { type: 'highlight'; selector: string }
-  | { type: 'navigate-and-highlight'; url: string; selector: string };
+  | { type: 'highlight'; selector: string; screenshotId?: string }
+  | { type: 'navigate-and-highlight'; url: string; selector: string; screenshotId?: string };
 
 /**
  * Event types that toolbar sends to CLI

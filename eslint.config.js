@@ -292,15 +292,33 @@ export default tseslint.config(
       },
     },
     rules: {
-      // Svelte specific rules
+      // ===== Svelte Possible Errors =====
       'svelte/no-at-html-tags': 'error',
       'svelte/require-each-key': 'error',
       'svelte/valid-each-key': 'error',
-      // Disable rules that conflict with Svelte
+
+      // ===== Svelte Security =====
+      'svelte/no-target-blank': 'error',
+
+      // ===== Svelte Best Practices =====
+      'svelte/button-has-type': 'error',
+      'svelte/no-ignored-unsubscribe': 'error',
+      'svelte/require-stores-init': 'error',
+
+      // ===== Svelte Stylistic =====
+      'svelte/prefer-class-directive': 'warn', // Prefer class:active over ternary
+      'svelte/prefer-style-directive': 'off', // Too noisy for dynamic positioning
+      'svelte/shorthand-attribute': 'error',
+      'svelte/shorthand-directive': 'error',
+      'svelte/spaced-html-comment': 'error',
+      'svelte/sort-attributes': 'off', // Personal preference
+
+      // ===== Disable rules that conflict with Svelte =====
       'import/no-mutable-exports': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off', // Svelte bindings cause issues
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
+
       // Svelte uses PascalCase for component files
       'unicorn/filename-case': ['error', { case: 'pascalCase' }],
       // Allow Props abbreviation in Svelte - common pattern

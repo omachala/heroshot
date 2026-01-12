@@ -27,6 +27,20 @@ export const colorSchemeSchema = z.enum(['light', 'dark', 'both']);
 /** Output format for screenshots */
 export const outputFormatSchema = z.enum(['png', 'jpeg']).default('png');
 
+/** Padding around element (can expand capture area) */
+export const paddingSchema = z.object({
+  top: z.number().int().min(0).default(0),
+  right: z.number().int().min(0).default(0),
+  bottom: z.number().int().min(0).default(0),
+  left: z.number().int().min(0).default(0),
+});
+
+/** Scroll position to restore when capturing */
+export const scrollPositionSchema = z.object({
+  x: z.number().int().min(0).default(0),
+  y: z.number().int().min(0).default(0),
+});
+
 /** Single screenshot definition */
 export const screenshotSchema = z.object({
   id: z.string().min(1).default(generateUid),
@@ -34,6 +48,10 @@ export const screenshotSchema = z.object({
   url: z.url(),
   filename: z.string().min(1),
   selector: z.string().optional(),
+  /** Padding to expand capture area beyond element bounds */
+  padding: paddingSchema.optional(),
+  /** Scroll position to restore when capturing */
+  scroll: scrollPositionSchema.optional(),
 });
 
 /** Browser settings */

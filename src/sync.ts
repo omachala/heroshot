@@ -78,6 +78,35 @@ interface CaptureOptions {
 }
 
 /**
+ * Take a screenshot with the given options
+ */
+async function takeScreenshot(
+  target: Page | ElementHandle,
+  outputPath: string,
+  format: 'png' | 'jpeg',
+  quality: number,
+  clip?: { x: number; y: number; width: number; height: number }
+): Promise<void> {
+  const isPage = 'goto' in target;
+
+  if (format === 'jpeg') {
+    if (isPage && clip) {
+      await target.screenshot({ path: outputPath, type: 'jpeg', quality, clip });
+    } else if (isPage) {
+      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage: false });
+    } else {
+      await target.screenshot({ path: outputPath, type: 'jpeg', quality });
+    }
+  } else if (isPage && clip) {
+    await target.screenshot({ path: outputPath, type: 'png', clip });
+  } else if (isPage) {
+    await target.screenshot({ path: outputPath, type: 'png', fullPage: false });
+  } else {
+    await target.screenshot({ path: outputPath, type: 'png' });
+  }
+}
+
+/**
  * Capture a single screenshot
  */
 async function captureScreenshot(
@@ -87,22 +116,29 @@ async function captureScreenshot(
   captureOptions: CaptureOptions,
   filenameSuffix = ''
 ): Promise<{ success: boolean; error?: string }> {
-  const { name, url, selector, filename } = screenshot;
+  const { name, url, selector, filename, padding, scroll } = screenshot;
   const { format, quality } = captureOptions;
   const finalFilename = filenameSuffix ? addFilenameSuffix(filename, filenameSuffix) : filename;
 
   log.verbose(`  ${name}${filenameSuffix}...`);
 
-  // Navigate to URL and wait for network to settle
+  // Navigate to URL and wait for DOM to be ready
   try {
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30_000 });
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { success: false, error: `Failed to navigate: ${message}` };
   }
 
-  // Extra wait for dynamic content (web components, lazy loading)
-  await page.waitForTimeout(1000);
+  // Wait for page to stabilize (images, fonts, dynamic content)
+  await page.waitForTimeout(2000);
+
+  // Restore scroll position if saved
+  if (scroll) {
+    await page.evaluate(`window.scrollTo(${scroll.x}, ${scroll.y})`);
+    // Small wait for scroll to complete and any scroll-triggered content to load
+    await page.waitForTimeout(100);
+  }
 
   const outputPath = path.join(outputDirectory, finalFilename);
 
@@ -112,36 +148,46 @@ async function captureScreenshot(
     mkdirSync(outputDirectoryPath, { recursive: true });
   }
 
-  if (selector) {
-    // Find element with shadow-piercing selector
-    const element = await findElement(page, selector);
+  try {
+    if (selector) {
+      // Find element with shadow-piercing selector
+      const element = await findElement(page, selector);
 
-    if (!element) {
-      return {
-        success: false,
-        error: `Element not found: ${selector}`,
-      };
-    }
+      if (!element) {
+        return { success: false, error: `Element not found: ${selector}` };
+      }
 
-    // Screenshot the element
-    try {
-      await (format === 'jpeg'
-        ? element.screenshot({ path: outputPath, type: 'jpeg', quality })
-        : element.screenshot({ path: outputPath, type: 'png' }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { success: false, error: `Screenshot failed: ${message}` };
+      // Check if padding is specified
+      const hasPadding =
+        padding && (padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0);
+
+      if (hasPadding) {
+        // Get element bounding box and expand by padding
+        const box = await element.boundingBox();
+        if (!box) {
+          return { success: false, error: 'Could not get element bounding box' };
+        }
+
+        // Calculate expanded clip region
+        const clip = {
+          x: Math.max(0, box.x - padding.left),
+          y: Math.max(0, box.y - padding.top),
+          width: box.width + padding.left + padding.right,
+          height: box.height + padding.top + padding.bottom,
+        };
+
+        await takeScreenshot(page, outputPath, format, quality, clip);
+      } else {
+        // No padding - use element screenshot directly
+        await takeScreenshot(element, outputPath, format, quality);
+      }
+    } else {
+      // Full page screenshot
+      await takeScreenshot(page, outputPath, format, quality);
     }
-  } else {
-    // Full page screenshot
-    try {
-      await (format === 'jpeg'
-        ? page.screenshot({ path: outputPath, fullPage: false, type: 'jpeg', quality })
-        : page.screenshot({ path: outputPath, fullPage: false, type: 'png' }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      return { success: false, error: `Screenshot failed: ${message}` };
-    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { success: false, error: `Screenshot failed: ${message}` };
   }
 
   return { success: true };

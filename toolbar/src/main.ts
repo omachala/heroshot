@@ -58,7 +58,7 @@ export function initToolbar(): (() => void) | null {
 
   // Create a wrapper div for theme scoping
   const themeWrapper = document.createElement('div');
-  themeWrapper.dataset.theme = toolbarTheme;
+  themeWrapper.dataset['theme'] = toolbarTheme;
   shadow.append(themeWrapper);
 
   // Inject Tailwind styles into shadow root
