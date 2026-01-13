@@ -58,12 +58,14 @@ export const screenshotSchema = z.object({
 export const browserSchema = z.object({
   viewport: viewportSchema.optional(),
   colorScheme: colorSchemeSchema.optional(),
+  /** Device scale factor for retina screenshots (e.g., 2 for 2x) */
+  deviceScaleFactor: z.number().positive().optional(),
 });
 
 /** Global config */
 export const configSchema = z.object({
   /** Output directory for screenshots (relative to config file) */
-  outputDirectory: z.string().default('.'),
+  outputDirectory: z.string().default('heroshots'),
 
   /** Output format for screenshots (png or jpeg) */
   outputFormat: outputFormatSchema.optional(),

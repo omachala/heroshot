@@ -270,20 +270,6 @@
   }
 
   /**
-   * Get which side of the viewport the selected element is on
-   */
-  export function getSelectedElementSide(): 'left' | 'right' | null {
-    const element = selectedElement ?? currentElement;
-    if (!element) return null;
-
-    const rect = element.getBoundingClientRect();
-    const viewportCenter = globalThis.innerWidth / 2;
-    const elementCenter = rect.left + rect.width / 2;
-
-    return elementCenter < viewportCenter ? 'left' : 'right';
-  }
-
-  /**
    * Calculate overlay rectangles
    */
   function getOverlayRects(element: Element | null, _scrollX: number, _scrollY: number, padding?: Padding) {
