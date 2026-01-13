@@ -31,7 +31,13 @@
   --vp-home-hero-image-filter: blur(72px);
 }
 
-/* Hero name gradient */
+/* Hero name gradient - no transition */
+.VPHero .name,
+.VPHero .text,
+.VPHero .tagline {
+  transition: none;
+}
+
 .VPHero .name {
   background: linear-gradient(135deg, #7c3aed 0%, #f97316 100%);
   -webkit-background-clip: text;
