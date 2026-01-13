@@ -13,6 +13,10 @@ Screenshot automation CLI tool. See [IDEA.md](./IDEA.md) for project vision and 
   - `chore:` maintenance
   - **NEVER include AI attribution**: No "Generated with Claude", "Co-Authored-By: Claude", emojis like 🤖, or any AI/Claude mentions in commits. Ever.
   - **No proactive push**: Commits are fine anytime, but only push when user explicitly asks
+  - **Roadmap sync**: Before committing a `feat:` change, review [ROADMAP.md](./ROADMAP.md) and:
+    - If the feature exists in roadmap, mark it as done `[x]`
+    - If the feature is missing from roadmap, add it and mark as done
+    - This ensures roadmap always reflects actual implemented features
 
 - **Pull Requests**: Use conventional PR titles (same prefixes as commits)
 

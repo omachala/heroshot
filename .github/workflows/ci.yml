@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Lint toolbar
+        run: pnpm lint:toolbar
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Typecheck toolbar
+        run: pnpm typecheck:toolbar
+
+      - name: Knip (unused code)
+        run: pnpm knip
+
+      - name: Unit tests with coverage
+        run: pnpm vitest run --coverage
+
+      - name: Toolbar unit tests with coverage
+        run: pnpm test:toolbar:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info,./coverage/toolbar/lcov.info
+          fail_ci_if_error: false
+
+      - name: Changeset status
+        if: github.event_name == 'pull_request'
+        run: pnpm changeset status --since=origin/main
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build toolbar
+        run: pnpm build:toolbar
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium
+
+      - name: Run e2e tests
+        run: pnpm test:toolbar:e2e
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: toolbar/test-results/
+          retention-days: 7
