@@ -15,7 +15,7 @@ On **first run**, this opens an interactive browser where you can:
 3. Name your screenshots and adjust settings
 4. Close the browser when done
 
-Your screenshots are saved and a `.heroshot/config.json` is created automatically.
+Your screenshots are saved to `heroshots/` and a `.heroshot/config.json` is created automatically.
 
 ## Updating Screenshots
 
