@@ -37,7 +37,7 @@ To use heroshot in CI, add your session key as a secret:
 - run: npx heroshot --session-key=\${{ secrets.HEROSHOT_SESSION_KEY }}
 \`\`\`
 
-To get your session key, run: \`heroshot session-key\`
+To get your session key, run: \`npx heroshot session-key\`
 
 Learn more: https://heroshot.sh/docs
 `;

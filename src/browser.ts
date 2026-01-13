@@ -391,7 +391,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
     log('');
     log('Session encrypted and saved to .heroshot/session.enc');
     log('');
-    log('To print your session key, run: heroshot session-key');
+    log('To print your session key, run: npx heroshot session-key');
     log('');
     log('For CI, add HEROSHOT_SESSION_KEY as a repository secret.');
   }
