@@ -5,25 +5,25 @@
 <h1 align="center">heroshot</h1>
 
 <p align="center">
-  <strong>Define your screenshots once, keep them alive forever.</strong>
+  <strong>Keep your product screenshots always up to date.</strong><br>
+  No more stale images in docs, landing pages, or blog posts.
 </p>
 
-<p align="center">
-  <em>Work in progress</em>
-</p>
+**How it works:**
+
+1. Run `npx heroshot` - opens a browser with a visual picker
+2. Click on elements you want to screenshot
+3. Close browser - screenshots are captured automatically
+
+**Why heroshot?**
+
+- **Visual picker** - Point and click to select elements, no DevTools needed
+- **Zero config** - No YAML to write, config is auto-generated
+- **Element-precise** - Capture specific UI components, not just full pages
+- **One command** - Regenerate all screenshots anytime your UI changes
 
 ---
 
-- **Visual Fidelity** - Keep documentation screenshots faithful to your actual UI
-- **Zero Config** - Point-and-click picker, no YAML files to write
-- **Shadow DOM Support** - Works with web components (`>>> .inner`)
-- **Persistent Auth** - Log in once, reuse sessions for headless captures
-
-```bash
-npx heroshot        # setup - pick elements visually
-npx heroshot sync   # regenerate all screenshots
-```
-
----
+[![npm](https://img.shields.io/npm/v/heroshot)](https://www.npmjs.com/package/heroshot)
 
 **Status:** Early alpha. [See releases](https://github.com/omachala/heroshot/releases) for current version.
