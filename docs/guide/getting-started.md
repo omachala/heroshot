@@ -1,45 +1,57 @@
 # Getting Started
 
-## Installation
-
-```bash
-npm install -g heroshot
-```
-
-Or with pnpm:
-
-```bash
-pnpm add -g heroshot
-```
-
 ## Quick Start
 
-Capture a screenshot of any webpage:
+No installation needed. Just run:
 
 ```bash
-heroshot https://example.com
+npx heroshot
 ```
 
-This opens an interactive browser where you can:
+On **first run**, this opens an interactive browser where you can:
 
-1. Click on any element to select it
-2. Use the toolbar to adjust padding and settings
-3. Press capture to save the screenshot
+1. Navigate to any URL
+2. Click on elements you want to screenshot
+3. Name your screenshots and adjust settings
+4. Close the browser when done
 
-## Basic Usage
+Your screenshots are saved and a `.heroshot/config.json` is created automatically.
+
+## Updating Screenshots
+
+On **subsequent runs**, just run the same command:
 
 ```bash
-# Screenshot full page
-heroshot https://example.com
-
-# Screenshot with custom output
-heroshot https://example.com -o screenshot.png
-
-# Screenshot specific viewport
-heroshot https://example.com --width 1280 --height 720
+npx heroshot
 ```
+
+This regenerates all your screenshots based on the saved config. No browser opens - it runs headlessly and updates all images.
+
+## Reconfiguring
+
+Want to add new screenshots or modify existing ones? Run:
+
+```bash
+npx heroshot config
+```
+
+This opens the interactive browser again so you can:
+
+- Add new screenshots
+- Remove existing ones
+- Change selectors or settings
+
+## Output
+
+Screenshots are saved to `heroshots/` by default. The config file at `.heroshot/config.json` tracks:
+
+- URLs and element selectors
+- Output filenames
+- Screenshot settings (padding, format, etc.)
+
+Both folders are safe to commit to your repository.
 
 ## Next Steps
 
+- Set up [Automated Updates](/guide/automated-updates) in CI
 - Learn about the [CLI options](/api/cli)
-- Explore the element picker toolbar
