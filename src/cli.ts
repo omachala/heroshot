@@ -1,16 +1,25 @@
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
+import path from 'node:path';
 import { Command } from 'commander';
 import { getProfilePath, setup } from './browser';
 import { getConfigPath } from './configFile';
 import { log, setVerbose } from './logger';
 import { sync } from './sync';
 
+// Read version from package.json
+const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
+const packageJson: unknown = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+const version =
+  packageJson && typeof packageJson === 'object' && 'version' in packageJson
+    ? String(packageJson.version)
+    : '0.0.0';
+
 const program = new Command();
 
 program
   .name('heroshot')
   .description('Define your screenshots once, update them forever with one command')
-  .version('0.0.2-alpha.2')
+  .version(version)
   .option('-v, --verbose', 'Show detailed output')
   .hook('preAction', () => {
     const options = program.opts<{ verbose?: boolean }>();
