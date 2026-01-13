@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icon-128.svg" alt="heroshot logo" width="128" height="128">
+  <img src="https://github.com/omachala/heroshot/blob/main/assets/icon-128.svg?raw=true" alt="heroshot logo" width="128" height="128">
 </p>
 
 <h1 align="center">heroshot</h1>
