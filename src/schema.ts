@@ -58,8 +58,8 @@ export const screenshotSchema = z.object({
 export const browserSchema = z.object({
   viewport: viewportSchema.optional(),
   colorScheme: colorSchemeSchema.optional(),
-  /** Device scale factor for retina screenshots (e.g., 2 for 2x) */
-  deviceScaleFactor: z.number().positive().optional(),
+  /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
+  deviceScaleFactor: z.number().min(1).max(3).optional(),
 });
 
 /** Global config */

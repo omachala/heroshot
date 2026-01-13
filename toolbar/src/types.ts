@@ -36,6 +36,8 @@ export interface ScreenshotItem {
 export interface BrowserSettings {
   viewport: { width: number; height: number };
   colorScheme?: 'light' | 'dark' | 'both';
+  /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
+  deviceScaleFactor?: number;
 }
 
 /**
