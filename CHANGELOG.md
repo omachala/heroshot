@@ -1,6 +1,6 @@
 # heroshot
 
-## 0.0.7
+## 0.0.6
 
 ### Patch Changes
 
@@ -10,12 +10,7 @@
 - Add VitePress documentation site
 - Change default output directory to `heroshots/`
 - Move config from `heroshot.json` to `.heroshot/config.json`
-
-## 0.0.6
-
-### Patch Changes
-
-- 4d2af1b: Fix CLI --version to read from package.json dynamically
+- Fix CLI --version to read from package.json dynamically
 
 ## 0.0.5
 
