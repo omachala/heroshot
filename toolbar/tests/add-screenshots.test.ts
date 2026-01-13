@@ -9,6 +9,11 @@
  * 5. Edits the auto-generated name in the sidebar
  * 6. Clicks Done to save and close
  *
+ * Also tests resize handle functionality:
+ * - Dragging resize handles to add padding
+ * - Padding values saved with screenshot
+ * - Padding restored when revisiting screenshot
+ *
  * Events tested:
  * - screenshot-added: Emitted when element is confirmed
  * - screenshot-updated: Emitted when name is edited
@@ -21,6 +26,7 @@ import {
   clickConfirmButtonForElement,
   clickSidebarItem,
   clickToolbarButton,
+  getElementRect,
   getEventsByType,
   injectToolbar,
   TEST_PAGE_URL,
@@ -84,4 +90,41 @@ test('complete flow: pick element, confirm, edit name, click done', async ({ pag
   // Verify done event was emitted
   const doneEvents = await getEventsByType(page, 'done');
   expect(doneEvents.length).toBe(1);
+});
+
+test('corner resize handle adds proportional padding', async ({ page }) => {
+  await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
+  await injectToolbar(page);
+
+  // Activate picker and select an element
+  await activatePickerAndSelectElement(page, '#primary-btn');
+  await page.waitForTimeout(300);
+
+  // Get the element rect
+  const elementRect = await getElementRect(page, '#primary-btn');
+
+  // Find the bottom-right corner handle
+  const handleX = elementRect.left + elementRect.width;
+  const handleY = elementRect.top + elementRect.height;
+
+  // Drag the corner handle diagonally to add proportional padding
+  await page.mouse.move(handleX, handleY);
+  await page.mouse.down();
+  await page.mouse.move(handleX + 40, handleY + 40, { steps: 5 });
+  await page.mouse.up();
+  await page.waitForTimeout(200);
+
+  // Confirm to save the screenshot
+  await clickConfirmButtonForElement(page, '#primary-btn');
+  await page.waitForTimeout(300);
+
+  // Verify padding was added to all sides (proportional)
+  const addedEvents = await getEventsByType(page, 'screenshot-added');
+  expect(addedEvents.length).toBe(1);
+  const padding = addedEvents[0]?.data.padding;
+  expect(padding).toBeDefined();
+  // All sides should have the same padding value (proportional resize)
+  expect(padding?.top).toBe(padding?.bottom);
+  expect(padding?.left).toBe(padding?.right);
+  expect(padding?.top).toBeGreaterThan(0);
 });

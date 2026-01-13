@@ -19,12 +19,13 @@ export const TOOLBAR_SELECTORS = {
  * Sidebar selectors using data-testid attributes
  */
 export const SIDEBAR_SELECTORS = {
+  expandButton: '#heroshot-root >> button[title="Expand list"]',
   item: (index: number) =>
     `#heroshot-root >> [data-testid="sidebar-item"][data-item-index="${index}"]`,
   itemButton: (index: number) =>
     `#heroshot-root >> [data-testid="sidebar-item"][data-item-index="${index}"] button[title="Navigate to this element"]`,
   deleteButton: (index: number) =>
     `#heroshot-root >> [data-testid="sidebar-item"][data-item-index="${index}"] [data-testid="delete-button"]`,
-  itemName: (index: number) =>
-    `#heroshot-root >> [data-testid="sidebar-item"][data-item-index="${index}"] span.text-sm`,
+  itemNameSpan: (index: number) =>
+    `#heroshot-root >> [data-testid="sidebar-item"][data-item-index="${index}"] span.text-xs`,
 } as const;

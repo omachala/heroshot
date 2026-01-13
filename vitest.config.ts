@@ -6,9 +6,16 @@ export default defineConfig({
     include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      exclude: ['src/index.ts', 'src/types.ts', 'vitest.config.ts', 'eslint.config.js', 'dist/**'],
+      reporter: ['text', 'html', 'lcov'],
+      reportsDirectory: './coverage',
+      // Only cover pure logic files - browser/sync/cli have heavy side effects
+      include: ['src/schema.ts', 'src/config.ts', 'src/configFile.ts', 'src/logger.ts'],
+      exclude: ['src/tests/**'],
       thresholds: {
         lines: 90,
+        functions: 90,
+        branches: 90,
+        statements: 90,
       },
     },
   },
