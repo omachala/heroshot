@@ -1,0 +1,55 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+    - generic [ref=e3]:
+        - link "Skip to content" [ref=e4] [cursor=pointer]:
+            - /url: '#VPContent'
+        - banner:
+            - generic:
+                - generic:
+                    - generic:
+                        - link "Heroshot" [ref=e6] [cursor=pointer]:
+                            - /url: /
+                            - generic [ref=e7]: Heroshot
+                        - generic [ref=e8]:
+                            - navigation "Main Navigation" [ref=e9]:
+                                - generic [ref=e10]: Main Navigation
+                                - link "Guide" [ref=e11] [cursor=pointer]:
+                                    - /url: /guide/
+                                    - generic [ref=e12]: Guide
+                                - link "API" [ref=e13] [cursor=pointer]:
+                                    - /url: /api/cli.html
+                                    - generic [ref=e14]: API
+                            - switch "Switch to dark theme" [ref=e16] [cursor=pointer]
+                            - link "github" [ref=e22] [cursor=pointer]:
+                                - /url: https://github.com/AlteriusOmega/heroshot
+        - generic [ref=e25]:
+            - paragraph [ref=e26]: '404'
+            - heading "PAGE NOT FOUND" [level=1] [ref=e27]
+            - blockquote [ref=e29]: But if you don't change your direction, and if you keep looking, you may end up where you are heading.
+            - link "go to home" [ref=e31] [cursor=pointer]:
+                - /url: /
+                - text: Take me home
+        - contentinfo [ref=e32]:
+            - generic [ref=e33]:
+                - paragraph [ref=e34]: Released under the MIT License.
+                - paragraph [ref=e35]: Copyright © 2024-present
+    - generic [active]:
+        - generic:
+            - generic [ref=e36]:
+                - button "Pick element" [ref=e37] [cursor=pointer]:
+                    - img [ref=e38]
+                - button "Toggle screenshots sidebar" [ref=e41] [cursor=pointer]:
+                    - img [ref=e42]
+                - button "Settings" [ref=e44] [cursor=pointer]:
+                    - img [ref=e45]
+                - button "Done" [ref=e48] [cursor=pointer]
+            - complementary "Screenshots panel" [ref=e49]:
+                - generic [ref=e51]:
+                    - generic:
+                        - img
+                        - heading "Screenshots" [level=3]
+                    - button "Expand list" [ref=e52] [cursor=pointer]:
+                        - img [ref=e53]
+```

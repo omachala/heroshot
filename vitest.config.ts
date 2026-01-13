@@ -8,8 +8,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
-      // Only cover pure logic files - browser/sync/cli have heavy side effects
-      include: ['src/schema.ts', 'src/config.ts', 'src/configFile.ts', 'src/logger.ts'],
+      // Only cover pure logic files - browser/sync/cli/configFile have heavy side effects
+      include: ['src/schema.ts', 'src/config.ts', 'src/logger.ts'],
       exclude: ['src/tests/**'],
       thresholds: {
         lines: 90,
