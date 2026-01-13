@@ -14,6 +14,7 @@
   let width = $state(0);
   let height = $state(0);
   let colorScheme = $state<'light' | 'dark' | 'both' | undefined>();
+  let deviceScaleFactor = $state<number | undefined>();
 
   // Update local state when settings prop changes or modal opens
   $effect(() => {
@@ -21,6 +22,7 @@
       width = props.settings.viewport.width;
       height = props.settings.viewport.height;
       colorScheme = props.settings.colorScheme;
+      deviceScaleFactor = props.settings.deviceScaleFactor;
     }
   });
 
@@ -28,6 +30,7 @@
     props.onSave({
       viewport: { width, height },
       colorScheme,
+      deviceScaleFactor,
     });
     props.onClose();
   }
@@ -99,6 +102,35 @@
           />
           <span class="text-slate-500 text-sm">px</span>
         </div>
+      </div>
+
+      <!-- Scale Factor -->
+      <div class="mb-4">
+        <span class="block text-sm text-slate-400 mb-2">Scale (Retina)</span>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded text-sm transition-colors {deviceScaleFactor === undefined || deviceScaleFactor === 1 ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            onclick={() => deviceScaleFactor = undefined}
+          >
+            1x
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded text-sm transition-colors {deviceScaleFactor === 2 ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            onclick={() => deviceScaleFactor = 2}
+          >
+            2x
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded text-sm transition-colors {deviceScaleFactor === 3 ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            onclick={() => deviceScaleFactor = 3}
+          >
+            3x
+          </button>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Higher scale = sharper images, larger file size</p>
       </div>
 
       <!-- Color Scheme -->
