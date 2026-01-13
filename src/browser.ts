@@ -26,12 +26,13 @@ const BROWSER_CHANNELS: readonly string[] = ['chrome', 'chromium'];
  * Falls back to Playwright's bundled Chromium if Chrome isn't installed.
  */
 export async function launchPersistentBrowser(
-  options: { headless?: boolean; viewport?: Viewport } = {}
+  options: { headless?: boolean; viewport?: Viewport; deviceScaleFactor?: number } = {}
 ): Promise<BrowserContext> {
   const viewport = options.viewport ?? DEFAULT_VIEWPORT;
   const baseOptions = {
     headless: options.headless ?? false,
     viewport,
+    ...(options.deviceScaleFactor && { deviceScaleFactor: options.deviceScaleFactor }),
   };
 
   // Try each browser channel in order
