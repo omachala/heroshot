@@ -15,6 +15,8 @@ export default defineConfig({
   ],
 
   themeConfig: {
+    logo: '/nav-logo.svg',
+
     nav: [
       { text: 'Guide', link: '/guide/' },
       { text: 'API', link: '/api/cli' },
