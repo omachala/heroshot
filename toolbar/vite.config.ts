@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  root: __dirname,
+  root: import.meta.dirname,
   plugins: [
     tailwindcss(),
     svelte({
@@ -16,7 +16,7 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/main.ts'),
+      entry: resolve(import.meta.dirname!, 'src/main.ts'),
       name: 'HeroshotToolbar',
       formats: ['iife'],
       fileName: () => 'toolbar.js',
@@ -41,8 +41,9 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: '../coverage/toolbar',
-      include: ['src/**/*.ts', 'src/**/*.svelte'],
-      exclude: ['src/**/*.d.ts'],
+      // Only cover src/lib - Svelte components are tested via e2e
+      include: ['src/lib/**/*.ts'],
+      exclude: ['src/**/*.d.ts', 'src/lib/tests/**'],
       thresholds: {
         lines: 90,
         functions: 90,

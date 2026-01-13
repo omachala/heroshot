@@ -31,6 +31,7 @@ export {
   clickSidebarItem,
   clickSidebarItemName,
   clickToolbarButton,
+  expandSidebarList,
   getElementRect,
   openSidebar,
   waitForSidebar,

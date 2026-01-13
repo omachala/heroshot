@@ -34,6 +34,14 @@ export async function openSidebar(page: Page): Promise<void> {
 }
 
 /**
+ * Expand the sidebar list to show all items
+ */
+export async function expandSidebarList(page: Page): Promise<void> {
+  await page.locator(SIDEBAR_SELECTORS.expandButton).click();
+  await page.waitForTimeout(200);
+}
+
+/**
  * Click a sidebar item to select it
  */
 export async function clickSidebarItem(page: Page, index: number): Promise<void> {
@@ -53,7 +61,7 @@ export async function clickSidebarDeleteButton(page: Page, index: number): Promi
  * Click on the name to start editing a sidebar item
  */
 export async function clickSidebarItemName(page: Page, index: number): Promise<void> {
-  await page.locator(SIDEBAR_SELECTORS.itemName(index)).click();
+  await page.locator(SIDEBAR_SELECTORS.itemNameSpan(index)).click();
 }
 
 /**
