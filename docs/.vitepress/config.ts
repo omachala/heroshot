@@ -29,6 +29,10 @@ export default defineConfig({
             { text: 'Getting Started', link: '/guide/getting-started' },
           ],
         },
+        {
+          text: 'Guides',
+          items: [{ text: 'Automated Updates', link: '/guide/automated-updates' }],
+        },
       ],
       '/api/': [
         {
