@@ -27,3 +27,7 @@
 [![npm](https://img.shields.io/npm/v/heroshot)](https://www.npmjs.com/package/heroshot)
 
 **Status:** Early alpha. [See releases](https://github.com/omachala/heroshot/releases) for current version.
+
+## License
+
+MIT
