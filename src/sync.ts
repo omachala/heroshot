@@ -1,9 +1,10 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
-import type { ElementHandle, Page } from 'playwright';
-import { launchPersistentBrowser } from './browser';
+import type { BrowserContextOptions, ElementHandle, Page } from 'playwright';
+import { launchBrowser } from './browser';
 import { getConfigPath, loadConfig } from './configFile';
 import { log } from './logger';
+import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
 
 /**
@@ -238,6 +239,31 @@ async function captureAndLog(
 
 interface SyncOptions {
   id?: string;
+  configPath?: string;
+  sessionKey?: string;
+}
+
+/**
+ * Load encrypted session if available
+ */
+// eslint-disable-next-line sonarjs/function-return-type -- union return is intentional
+function loadEncryptedSession(
+  sessionKeyOption?: string
+): BrowserContextOptions['storageState'] | undefined {
+  const sessionKey = getSessionKey(sessionKeyOption);
+  if (!sessionKey || !sessionExists()) {
+    return undefined;
+  }
+
+  const state = loadSession(sessionKey);
+  if (state) {
+    log.verbose('Using encrypted session.');
+    // eslint-disable-next-line no-restricted-syntax -- deserialized session data
+    return state as BrowserContextOptions['storageState'];
+  }
+
+  log.verbose('Failed to decrypt session - using fresh browser.');
+  return undefined;
 }
 
 interface SyncResult {
@@ -251,7 +277,7 @@ interface SyncResult {
  * Sync all screenshots defined in config
  */
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
-  const configPath = getConfigPath();
+  const configPath = options.configPath ?? getConfigPath();
   const config: Config = loadConfig(configPath);
 
   if (config.screenshots.length === 0) {
@@ -272,15 +298,22 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   log.verbose(`Syncing ${screenshots.length} screenshot(s)...`);
 
-  // Get output directory (relative to config file location)
+  // Get output directory (relative to project root, which is parent of .heroshot/)
   const configDirectory = path.dirname(configPath);
-  const outputDirectory = path.resolve(configDirectory, config.outputDirectory);
+  const projectRoot = path.dirname(configDirectory);
+  const outputDirectory = path.resolve(projectRoot, config.outputDirectory);
 
-  // Launch browser with persistent profile (reuses auth sessions)
+  // Try to load encrypted session if available
+  const storageState = loadEncryptedSession(options.sessionKey);
+
+  // Launch browser with optional session state
   const viewport = config.browser?.viewport ?? { width: 1280, height: 800 };
-  const context = await launchPersistentBrowser({
+  const deviceScaleFactor = config.browser?.deviceScaleFactor;
+  const { browser, context } = await launchBrowser({
     headless: true,
     viewport,
+    deviceScaleFactor,
+    storageState,
   });
 
   const page = await context.newPage();
@@ -319,7 +352,7 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     }
   }
 
-  await context.close();
+  await browser.close();
 
   const { length: totalCount } = results;
   const successfulResults = results.filter(({ success }) => success);

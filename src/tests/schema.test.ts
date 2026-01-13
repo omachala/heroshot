@@ -221,7 +221,7 @@ describe('browserSchema', () => {
 describe('configSchema', () => {
   it('accepts minimal config', () => {
     const result = configSchema.parse({});
-    expect(result.outputDirectory).toBe('.');
+    expect(result.outputDirectory).toBe('heroshots');
     expect(result.jpegQuality).toBe(80);
     expect(result.screenshots).toEqual([]);
   });

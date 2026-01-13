@@ -12,8 +12,6 @@
     editingId: string | null;
     draftId: string | null;
     selectedId: string | null;
-    /** Position of selected element (to determine which side to show sidebar) */
-    selectedElementPosition: 'left' | 'right' | null;
     onToggle: () => void;
     onSelect: (screenshot: ScreenshotItem) => void;
     onRemove: (id: string) => void;
@@ -28,7 +26,6 @@
     editingId,
     draftId,
     selectedId,
-    selectedElementPosition,
     onToggle,
     onSelect,
     onRemove,
@@ -36,11 +33,6 @@
     onEditingComplete,
     onDraftConfirm,
   }: Props = $props();
-
-  // Determine which side to show sidebar (opposite of element position, default to right)
-  let side = $derived<'left' | 'right'>(
-    selectedElementPosition === 'right' ? 'left' : 'right'
-  );
 
   let localEditingId = $state<string | null>(null);
   let editValue = $state('');
@@ -198,17 +190,13 @@
     return 'bg-slate-700/50 hover:bg-slate-600';
   }
 
-  // Position styles based on side and drag offset
+  // Position styles with drag offset
   let dragTransform = $derived(
     dragOffsetX !== 0 || dragOffsetY !== 0
       ? `transform: translate(${dragOffsetX}px, ${dragOffsetY}px);`
       : ''
   );
-  let positionStyle = $derived(
-    side === 'right'
-      ? `right: 16px; left: auto; ${dragTransform}`
-      : `left: 16px; right: auto; ${dragTransform}`
-  );
+  let positionStyle = $derived(`right: 16px; left: auto; ${dragTransform}`);
 </script>
 
 <!-- Floating sidebar panel -->

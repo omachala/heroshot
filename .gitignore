@@ -8,5 +8,5 @@ coverage
 !docs/.vitepress
 !docs/.gitignore
 ha-dashboard.png
-heroshot.json
+heroshots/
 toolbar/test-results/

@@ -7,19 +7,19 @@ import path from 'node:path';
 import { getConfigPath, loadConfig, saveConfig } from '../configFile';
 
 describe('getConfigPath', () => {
-  it('returns path with heroshot.json in specified directory', () => {
+  it('returns path with .heroshot/config.json in specified directory', () => {
     const result = getConfigPath('/some/directory');
-    expect(result).toBe('/some/directory/heroshot.json');
+    expect(result).toBe('/some/directory/.heroshot/config.json');
   });
 
-  it('returns path with heroshot.json in current directory when no arg', () => {
+  it('returns path with .heroshot/config.json in current directory when no arg', () => {
     const result = getConfigPath();
-    expect(result).toBe(path.join(process.cwd(), 'heroshot.json'));
+    expect(result).toBe(path.join(process.cwd(), '.heroshot', 'config.json'));
   });
 
   it('handles relative paths', () => {
     const result = getConfigPath('./subdir');
-    expect(result).toBe('subdir/heroshot.json');
+    expect(result).toBe('subdir/.heroshot/config.json');
   });
 });
 
@@ -39,7 +39,7 @@ describe('loadConfig', () => {
 
   it('returns default config when file does not exist', () => {
     const result = loadConfig(path.join(testDir, 'nonexistent.json'));
-    expect(result.outputDirectory).toBe('.');
+    expect(result.outputDirectory).toBe('heroshots');
     expect(result.jpegQuality).toBe(80);
     expect(result.screenshots).toEqual([]);
   });
@@ -76,7 +76,7 @@ describe('loadConfig', () => {
     writeFileSync(configPath, JSON.stringify(config));
 
     const result = loadConfig(configPath);
-    expect(result.outputDirectory).toBe('.');
+    expect(result.outputDirectory).toBe('heroshots');
     expect(result.jpegQuality).toBe(80);
   });
 

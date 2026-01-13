@@ -40,7 +40,6 @@
   let editingId = $state<string | null>(null);
   let draftId = $state<string | null>(null); // ID of draft item (not yet saved)
   let selectedScreenshotId = $state<string | null>(props.initialSelectedId ?? null);
-  let selectedElementPosition = $state<'left' | 'right' | null>(null);
 
   // Reference to ElementPicker for calling methods
   let elementPicker: ElementPicker;
@@ -78,7 +77,6 @@
     draftId = id;
     sidebarExpanded = true;
     editingId = id; // Focus the name input
-    selectedElementPosition = elementPicker.getSelectedElementSide();
   }
 
   /**
@@ -128,7 +126,6 @@
       editingId = null;
     }
     selectedScreenshotId = null;
-    selectedElementPosition = null;
   }
 
   /**
@@ -136,7 +133,6 @@
    */
   function handleDeselect(): void {
     selectedScreenshotId = null;
-    selectedElementPosition = null;
   }
 
   /**
@@ -199,10 +195,6 @@
     if (screenshot.url === currentUrl) {
       // Same page - highlight directly
       elementPicker.highlightElement(screenshot.selector, screenshot.id);
-      // Update position after element is found (give time for scrollIntoView)
-      globalThis.setTimeout(() => {
-        selectedElementPosition = elementPicker.getSelectedElementSide();
-      }, 200);
     } else {
       // Different page - tell CLI to navigate
       emit({
@@ -219,10 +211,6 @@
    */
   function executePendingJob(job: ToolbarJob): void {
     elementPicker.highlightElement(job.selector, job.screenshotId);
-    // Update position after element is found
-    globalThis.setTimeout(() => {
-      selectedElementPosition = elementPicker.getSelectedElementSide();
-    }, 200);
     emit({ type: 'job-complete' });
   }
 
@@ -348,7 +336,6 @@
   {editingId}
   {draftId}
   selectedId={selectedScreenshotId}
-  {selectedElementPosition}
   onToggle={() => sidebarExpanded = !sidebarExpanded}
   onSelect={handleSelectScreenshot}
   onRemove={handleRemoveScreenshot}

@@ -1,17 +1,25 @@
 import { readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import path from 'node:path';
-import { type BrowserContext, type Page, chromium } from 'playwright';
-import { getConfigPath, loadConfig, saveConfig } from './configFile';
+import {
+  type Browser,
+  type BrowserContext,
+  type BrowserContextOptions,
+  type Page,
+  chromium,
+} from 'playwright';
+import { ensureHeroshotDirectory, getConfigPath, loadConfig, saveConfig } from './configFile';
 import { log } from './logger';
+import {
+  generateSessionKey,
+  loadLocalKey,
+  loadSession,
+  saveLocalKey,
+  saveSession,
+  sessionExists,
+} from './session';
 import type { Screenshot, Viewport } from './types';
 
-const PROFILE_DIR = path.join(homedir(), '.heroshot', 'browser-profile');
 const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
-
-export function getProfilePath(): string {
-  return PROFILE_DIR;
-}
 
 const DEFAULT_VIEWPORT: Viewport = { width: 1280, height: 800 };
 
@@ -21,49 +29,62 @@ const DEFAULT_VIEWPORT: Viewport = { width: 1280, height: 800 };
  */
 const BROWSER_CHANNELS: readonly string[] = ['chrome', 'chromium'];
 
+interface LaunchOptions {
+  headless?: boolean;
+  viewport?: Viewport;
+  deviceScaleFactor?: number;
+  storageState?: BrowserContextOptions['storageState'];
+}
+
 /**
- * Launch browser with persistent profile, trying system Chrome first.
- * Falls back to Playwright's bundled Chromium if Chrome isn't installed.
+ * Launch browser and create context with optional storage state.
+ * Tries system Chrome first, falls back to Playwright's bundled Chromium.
  */
-export async function launchPersistentBrowser(
-  options: { headless?: boolean; viewport?: Viewport } = {}
-): Promise<BrowserContext> {
+export async function launchBrowser(
+  options: LaunchOptions = {}
+): Promise<{ browser: Browser; context: BrowserContext }> {
   const viewport = options.viewport ?? DEFAULT_VIEWPORT;
-  const baseOptions = {
-    headless: options.headless ?? false,
-    viewport,
-  };
 
   // Try each browser channel in order
+  let browser: Browser | null = null;
   for (const channel of BROWSER_CHANNELS) {
     try {
-      const context = await chromium.launchPersistentContext(PROFILE_DIR, {
-        ...baseOptions,
+      browser = await chromium.launch({
+        headless: options.headless ?? false,
         channel,
       });
-      return context;
+      break;
     } catch {
       // This channel failed, try next one
       continue;
     }
   }
 
-  // All channels failed - throw error with helpful message
-  const message = [
-    '',
-    'Error: No browser found.',
-    '',
-    'Heroshot needs a browser to capture screenshots. Options:',
-    '',
-    '  1. Install Chrome (recommended):',
-    '     https://www.google.com/chrome/',
-    '',
-    '  2. Or install Playwright browsers:',
-    '     npx playwright install chromium',
-    '',
-  ].join('\n');
+  if (!browser) {
+    const message = [
+      '',
+      'Error: No browser found.',
+      '',
+      'Heroshot needs a browser to capture screenshots. Options:',
+      '',
+      '  1. Install Chrome (recommended):',
+      '     https://www.google.com/chrome/',
+      '',
+      '  2. Or install Playwright browsers:',
+      '     npx playwright install chromium',
+      '',
+    ].join('\n');
+    throw new Error(message);
+  }
 
-  throw new Error(message);
+  // Create context with viewport and optional storage state
+  const context = await browser.newContext({
+    viewport,
+    ...(options.deviceScaleFactor && { deviceScaleFactor: options.deviceScaleFactor }),
+    ...(options.storageState && { storageState: options.storageState }),
+  });
+
+  return { browser, context };
 }
 
 interface ScreenshotData {
@@ -161,11 +182,32 @@ async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise
 
 export async function setup(): Promise<{ hasScreenshots: boolean }> {
   log.verbose('Opening browser...');
-  log.verbose(`Profile: ${PROFILE_DIR}`);
+
+  // Ensure .heroshot directory exists with README
+  ensureHeroshotDirectory();
 
   const configPath = getConfigPath();
   const config = loadConfig(configPath);
   const viewport = config.browser?.viewport ?? DEFAULT_VIEWPORT;
+
+  // Get or generate session key
+  let sessionKey = loadLocalKey();
+  const isNewKey = !sessionKey;
+  if (!sessionKey) {
+    sessionKey = generateSessionKey();
+    saveLocalKey(sessionKey);
+  }
+
+  // Load existing session if available
+  let storageState: BrowserContextOptions['storageState'] | undefined;
+  if (sessionExists()) {
+    const state = loadSession(sessionKey);
+    if (state) {
+      // eslint-disable-next-line no-restricted-syntax -- deserialized session data
+      storageState = state as BrowserContextOptions['storageState'];
+      log.verbose('Loaded existing session.');
+    }
+  }
 
   // Convert config screenshots to toolbar format - this is the running list
   // that includes both original config items AND newly added items
@@ -187,7 +229,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
   let selectedId: string | null = null;
   let sidebarExpanded = false;
 
-  const context = await launchPersistentBrowser({ headless: false, viewport });
+  const { browser, context } = await launchBrowser({ headless: false, viewport, storageState });
 
   // Handle events from toolbar
   const handleEvent = (event: ToolbarEvent) => {
@@ -248,7 +290,17 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
       }
 
       case 'done': {
-        void context.close();
+        // Capture storage state before closing (for encrypted session)
+        void (async () => {
+          try {
+            const currentStorageState = await context.storageState();
+            saveSession(currentStorageState, sessionKey);
+            log.verbose('Session saved.');
+          } catch {
+            // Ignore errors - session save is best-effort
+          }
+          await browser.close();
+        })();
         break;
       }
     }
@@ -292,47 +344,56 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
 
   // Wait for browser to close (either via Done button or manual close)
   await new Promise<void>(resolve => {
-    context.once('close', () => resolve());
+    browser.once('disconnected', () => resolve());
   });
 
-  if (newlyAddedIds.size > 0) {
-    // Reload config in case it was modified while browser was open
-    const latestConfig = loadConfig(configPath);
+  // Reload config in case it was modified while browser was open
+  const latestConfig = loadConfig(configPath);
 
-    // Only save newly added items (not items that were already in config)
-    for (const element of allScreenshots) {
-      if (!newlyAddedIds.has(element.id)) continue;
+  // Save newly added items to config
+  for (const element of allScreenshots) {
+    if (!newlyAddedIds.has(element.id)) continue;
 
-      // Slugify name for output filename (just filename, no path)
-      const filename =
-        element.name
-          .toLowerCase()
-          .replaceAll(/[^a-z0-9]+/g, '-')
-          .replaceAll(/(?:^-|-$)/g, '') + '.png';
+    // Slugify name for output filename (just filename, no path)
+    const filename =
+      element.name
+        .toLowerCase()
+        .replaceAll(/[^a-z0-9]+/g, '-')
+        .replaceAll(/(?:^-|-$)/g, '') + '.png';
 
-      const screenshot: Screenshot = {
-        id: element.id,
-        name: element.name,
-        url: element.url,
-        selector: element.selector,
-        filename,
-        ...(element.padding && { padding: element.padding }),
-        ...(element.scroll && { scroll: element.scroll }),
-      };
+    const screenshot: Screenshot = {
+      id: element.id,
+      name: element.name,
+      url: element.url,
+      selector: element.selector,
+      filename,
+      ...(element.padding && { padding: element.padding }),
+      ...(element.scroll && { scroll: element.scroll }),
+    };
 
-      // Add or update screenshot
-      const existingIndex = latestConfig.screenshots.findIndex(item => item.id === element.id);
-      if (existingIndex === -1) {
-        latestConfig.screenshots.push(screenshot);
-        log.verbose(`+ ${element.name}`);
-      } else {
-        latestConfig.screenshots[existingIndex] = screenshot;
-        log.verbose(`~ ${element.name} (updated)`);
-      }
+    // Add or update screenshot
+    const existingIndex = latestConfig.screenshots.findIndex(item => item.id === element.id);
+    if (existingIndex === -1) {
+      latestConfig.screenshots.push(screenshot);
+      log.verbose(`+ ${element.name}`);
+    } else {
+      latestConfig.screenshots[existingIndex] = screenshot;
+      log.verbose(`~ ${element.name} (updated)`);
     }
+  }
 
-    saveConfig(configPath, latestConfig);
-    log.verbose(`Config saved: ${configPath}`);
+  // Always save config (ensures config file exists)
+  saveConfig(configPath, latestConfig);
+  log.verbose(`Config saved: ${configPath}`);
+
+  // Display session key info for CI setup
+  if (isNewKey) {
+    log('');
+    log('Session encrypted and saved to .heroshot/session.enc');
+    log('');
+    log('To print your session key, run: heroshot session-key');
+    log('');
+    log('For CI, add HEROSHOT_SESSION_KEY as a repository secret.');
   }
 
   // Return whether there are screenshots to sync

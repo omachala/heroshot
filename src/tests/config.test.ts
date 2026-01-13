@@ -7,7 +7,7 @@ import { parseConfig } from '../config';
 describe('parseConfig', () => {
   it('parses minimal config', () => {
     const result = parseConfig({});
-    expect(result.outputDirectory).toBe('.');
+    expect(result.outputDirectory).toBe('heroshots');
     expect(result.jpegQuality).toBe(80);
     expect(result.screenshots).toEqual([]);
   });
@@ -48,7 +48,7 @@ describe('parseConfig', () => {
         },
       ],
     });
-    expect(result.outputDirectory).toBe('.');
+    expect(result.outputDirectory).toBe('heroshots');
     expect(result.jpegQuality).toBe(80);
     expect(result.screenshots[0]?.id).toBeDefined();
   });
