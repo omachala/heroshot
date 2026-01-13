@@ -15,6 +15,9 @@ export default defineConfig({
   // Update snapshots with: npx playwright test --update-snapshots
   updateSnapshots: 'none',
 
+  // Skip visual regression on CI (Chromium renders differently than local Chrome)
+  ignoreSnapshots: !!process.env.CI,
+
   use: {
     baseURL: 'https://heroshot.sh',
     trace: 'on-first-retry',

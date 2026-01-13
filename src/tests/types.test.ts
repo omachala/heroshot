@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Config, Screenshot } from '../src/types.js';
+import type { Config, Screenshot } from '../types';
 
 describe('types', () => {
   it('should allow valid screenshot definition', () => {
