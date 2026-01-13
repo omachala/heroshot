@@ -4,7 +4,71 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { existsSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { getConfigPath, loadConfig, saveConfig } from '../configFile';
+import {
+  ensureHeroshotDirectory,
+  getConfigPath,
+  getHeroshotDirectory,
+  loadConfig,
+  saveConfig,
+} from '../configFile';
+
+describe('getHeroshotDirectory', () => {
+  it('returns .heroshot path in specified directory', () => {
+    const result = getHeroshotDirectory('/some/directory');
+    expect(result).toBe('/some/directory/.heroshot');
+  });
+});
+
+describe('ensureHeroshotDirectory', () => {
+  const testDir = '/tmp/heroshot-ensure-test-' + Date.now();
+
+  afterEach(() => {
+    if (existsSync(testDir)) {
+      rmSync(testDir, { recursive: true });
+    }
+  });
+
+  it('creates .heroshot directory when it does not exist', () => {
+    const heroshotPath = ensureHeroshotDirectory(testDir);
+
+    expect(existsSync(heroshotPath)).toBe(true);
+    expect(heroshotPath).toBe(path.join(testDir, '.heroshot'));
+  });
+
+  it('creates README.md when directory is created', () => {
+    ensureHeroshotDirectory(testDir);
+
+    const readmePath = path.join(testDir, '.heroshot', 'README.md');
+    expect(existsSync(readmePath)).toBe(true);
+
+    const content = readFileSync(readmePath, 'utf8');
+    expect(content).toContain('# Heroshot');
+    expect(content).toContain('session.enc');
+  });
+
+  it('creates README.md when directory exists but README does not', () => {
+    const heroshotPath = path.join(testDir, '.heroshot');
+    mkdirSync(heroshotPath, { recursive: true });
+
+    ensureHeroshotDirectory(testDir);
+
+    const readmePath = path.join(heroshotPath, 'README.md');
+    expect(existsSync(readmePath)).toBe(true);
+  });
+
+  it('does not overwrite existing README', () => {
+    const heroshotPath = path.join(testDir, '.heroshot');
+    mkdirSync(heroshotPath, { recursive: true });
+
+    const readmePath = path.join(heroshotPath, 'README.md');
+    writeFileSync(readmePath, 'Custom README content');
+
+    ensureHeroshotDirectory(testDir);
+
+    const content = readFileSync(readmePath, 'utf8');
+    expect(content).toBe('Custom README content');
+  });
+});
 
 describe('getConfigPath', () => {
   it('returns path with .heroshot/config.json in specified directory', () => {
@@ -151,5 +215,18 @@ describe('saveConfig', () => {
     const parsed = JSON.parse(content);
     expect(parsed.outputDirectory).toBe('./new');
     expect(parsed.old).toBeUndefined();
+  });
+
+  it('creates parent directory if it does not exist', () => {
+    const nestedPath = path.join(testDir, 'nested', '.heroshot', 'config.json');
+    const config = {
+      outputDirectory: '.',
+      jpegQuality: 80,
+      screenshots: [],
+    };
+
+    saveConfig(nestedPath, config as any);
+
+    expect(existsSync(nestedPath)).toBe(true);
   });
 });

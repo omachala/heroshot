@@ -3,14 +3,14 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     globals: true,
-    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
+    include: ['src/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
-      // Only cover pure logic files - browser/sync/cli/configFile have heavy side effects
-      include: ['src/schema.ts', 'src/config.ts', 'src/logger.ts'],
-      exclude: ['src/tests/**'],
+      include: ['src/**/*.ts'],
+      // Exclude: tests, types (no runtime code), and integration-test files (covered by e2e)
+      exclude: ['src/tests/**', 'src/types.ts', 'src/browser.ts', 'src/cli.ts', 'src/sync.ts'],
       thresholds: {
         lines: 90,
         functions: 90,
