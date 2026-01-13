@@ -42,7 +42,7 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/AlteriusOmega/heroshot' }],
+    socialLinks: [{ icon: 'github', link: 'https://github.com/omachala/heroshot' }],
 
     footer: {
       message: 'Released under the MIT License.',

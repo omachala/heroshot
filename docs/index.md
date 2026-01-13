@@ -14,7 +14,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/AlteriusOmega/heroshot
+      link: https://github.com/omachala/heroshot
 
 features:
   - title: Interactive Element Picker
