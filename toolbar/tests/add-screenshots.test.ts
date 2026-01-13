@@ -114,6 +114,9 @@ test('corner resize handle adds proportional padding', async ({ page }) => {
   await page.mouse.up();
   await page.waitForTimeout(200);
 
+  // Visual regression: element with padding after resize
+  await expect(page).toHaveScreenshot('element-with-padding-after-resize.png');
+
   // Confirm to save the screenshot
   await clickConfirmButtonForElement(page, '#primary-btn');
   await page.waitForTimeout(300);
