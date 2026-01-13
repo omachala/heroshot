@@ -4,7 +4,15 @@ export default defineConfig({
   title: 'Heroshot',
   description: 'Screenshot automation CLI tool',
 
-  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }]],
+  head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+    ['script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-3MGBYS1GNM' }],
+    [
+      'script',
+      {},
+      `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-3MGBYS1GNM');`,
+    ],
+  ],
 
   themeConfig: {
     nav: [
