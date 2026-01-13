@@ -29,4 +29,5 @@ jobs:
           title: 'chore: release'
           commit: 'chore: release'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use PAT to trigger CI on release PR (GITHUB_TOKEN can't trigger workflows)
+          GITHUB_TOKEN: ${{ secrets.PAT }}
