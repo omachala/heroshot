@@ -64,7 +64,9 @@
     dragStartY = event.clientY;
     dragStartOffsetX = dragOffsetX;
     dragStartOffsetY = dragOffsetY;
-    (event.target as HTMLElement).setPointerCapture(event.pointerId);
+    if (event.target instanceof HTMLElement) {
+      event.target.setPointerCapture(event.pointerId);
+    }
   }
 
   /**
@@ -81,7 +83,9 @@
    */
   function handleDragEnd(event: PointerEvent): void {
     isDragging = false;
-    (event.target as HTMLElement).releasePointerCapture(event.pointerId);
+    if (event.target instanceof HTMLElement) {
+      event.target.releasePointerCapture(event.pointerId);
+    }
   }
 
   // Sort screenshots by createdAt (newest first)
@@ -219,7 +223,6 @@
   aria-label="Screenshots panel"
 >
   <div class="w-64 max-h-[calc(100vh-32px)] bg-slate-800 rounded-xl shadow-2xl font-sans text-white flex flex-col overflow-hidden">
-    <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="flex items-center justify-between px-3 py-2 {expanded ? 'border-b border-slate-700' : ''}"
       style="cursor: {isDragging ? 'grabbing' : 'grab'}; user-select: none; touch-action: none;"
