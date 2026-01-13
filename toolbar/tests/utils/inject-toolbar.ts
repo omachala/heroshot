@@ -24,6 +24,16 @@ export interface ScreenshotItem {
   url: string;
   selector: string;
   createdAt: number;
+  padding?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+  scroll?: {
+    x: number;
+    y: number;
+  };
 }
 
 /**
