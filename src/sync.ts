@@ -278,9 +278,11 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   // Launch browser with persistent profile (reuses auth sessions)
   const viewport = config.browser?.viewport ?? { width: 1280, height: 800 };
+  const deviceScaleFactor = config.browser?.deviceScaleFactor;
   const context = await launchPersistentBrowser({
     headless: true,
     viewport,
+    deviceScaleFactor,
   });
 
   const page = await context.newPage();
