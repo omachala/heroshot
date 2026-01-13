@@ -4,6 +4,7 @@ coverage
 *.log
 .*
 !.github
+!.changeset
 ha-dashboard.png
 heroshot.json
 toolbar/test-results/
