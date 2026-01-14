@@ -5,8 +5,8 @@
 <h1 align="center">heroshot</h1>
 
 <p align="center">
-  <strong>Define once, regenerate forever.</strong><br>
-  Screenshots that stay in sync with your UI - automatically.
+  <strong>Screenshot automation for docs, landing pages, and more.</strong><br>
+  Point and click to define. One command to regenerate when your UI changes.
 </p>
 
 <p align="center">
