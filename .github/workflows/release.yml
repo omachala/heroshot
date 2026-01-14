@@ -20,13 +20,21 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Create Release PR
+      - name: Build
+        run: pnpm build && pnpm build:toolbar
+
+      - name: Create Release PR or Publish
         uses: changesets/action@v1
         with:
           title: 'chore: release'
           commit: 'chore: release'
+          publish: pnpm changeset publish
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
