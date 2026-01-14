@@ -1,15 +1,22 @@
 <p align="center">
-  <img src="https://github.com/omachala/heroshot/blob/main/assets/icon-128.svg?raw=true" alt="heroshot logo" width="128" height="128">
+  <img src="https://github.com/omachala/heroshot/blob/main/assets/logo.svg?raw=true" alt="heroshot logo" height="80">
 </p>
 
 <h1 align="center">heroshot</h1>
 
 <p align="center">
-  <strong>Keep your product screenshots always up to date.</strong><br>
-  No more stale images in docs, landing pages, or blog posts.
+  <strong>Define once, regenerate forever.</strong><br>
+  Screenshots that stay in sync with your UI - automatically.
 </p>
 
-[![npm](https://img.shields.io/npm/v/heroshot)](https://www.npmjs.com/package/heroshot)
+<p align="center">
+  <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/v/heroshot" alt="npm"></a>
+  <a href="https://heroshot.sh"><img src="https://img.shields.io/badge/docs-heroshot.sh-blue" alt="docs"></a>
+</p>
+
+<p align="center">
+  <img src="https://github.com/omachala/heroshot/blob/main/toolbar/tests/snapshots/manage-screenshots.test.ts/after-rename.png?raw=true" alt="heroshot toolbar demo" width="800">
+</p>
 
 ## Get Started
 

@@ -53,7 +53,7 @@ test('rename and delete screenshots', async ({ page }) => {
   await expandSidebarList(page);
 
   // Visual regression: initial sidebar state
-  // await expect(page).toHaveScreenshot('sidebar-initial.png');
+  await expect(page).toHaveScreenshot('sidebar-initial.png');
 
   // Step 1: Select the item first (item 1 = "Old Name" - older item)
   await clickSidebarItem(page, 1);
@@ -74,7 +74,7 @@ test('rename and delete screenshots', async ({ page }) => {
   expect(updatedEvents.length).toBeGreaterThanOrEqual(1);
 
   // Visual regression: after rename
-  // await expect(page).toHaveScreenshot('after-rename.png');
+  await expect(page).toHaveScreenshot('after-rename.png');
 
   // Step 2: Delete the first item (item 0 = "To Be Deleted" - newer item)
   await clickSidebarDeleteButton(page, 0);
@@ -85,5 +85,5 @@ test('rename and delete screenshots', async ({ page }) => {
   expect(removedEvents.length).toBe(1);
 
   // Visual regression: after delete (only one item remains)
-  // await expect(page).toHaveScreenshot('after-delete.png');
+  await expect(page).toHaveScreenshot('after-delete.png');
 });

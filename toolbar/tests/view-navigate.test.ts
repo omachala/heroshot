@@ -58,7 +58,7 @@ test('load existing screenshots and select one for navigation', async ({ page })
   await injectToolbar(page, { screenshots: existingScreenshots });
 
   // Visual regression: toolbar with badge showing count "3"
-  // await expect(page).toHaveScreenshot('toolbar-with-badge.png');
+  await expect(page).toHaveScreenshot('toolbar-with-badge.png');
 
   // Step 1: Open sidebar
   await openSidebar(page);
@@ -67,7 +67,7 @@ test('load existing screenshots and select one for navigation', async ({ page })
   await expandSidebarList(page);
 
   // Visual regression: sidebar with all 3 items
-  // await expect(page).toHaveScreenshot('sidebar-with-items.png');
+  await expect(page).toHaveScreenshot('sidebar-with-items.png');
 
   // Step 2: Click on an item to select it
   await clickSidebarItem(page, 0);
@@ -94,7 +94,7 @@ test('pending job highlights element on load', async ({ page }) => {
   await page.waitForTimeout(500);
 
   // Visual regression: hero element highlighted
-  // await expect(page).toHaveScreenshot('pending-job-highlight.png');
+  await expect(page).toHaveScreenshot('pending-job-highlight.png');
 
   // Verify job-complete event was emitted
   const completeEvents = await getEventsByType(page, 'job-complete');
@@ -136,7 +136,7 @@ test('selected item is highlighted in sidebar', async ({ page }) => {
   await expect(selectedItem).toHaveClass(/ring|border-blue|bg-blue/);
 
   // Visual regression: sidebar with selected item highlighted
-  // await expect(page).toHaveScreenshot('sidebar-item-selected.png');
+  await expect(page).toHaveScreenshot('sidebar-item-selected.png');
 });
 
 test('sidebar button shows blue when screenshots exist', async ({ page }) => {
@@ -155,7 +155,7 @@ test('sidebar button shows blue when screenshots exist', async ({ page }) => {
   await expect(sidebarButton).toHaveClass(/bg-blue-600/);
 
   // Visual regression: toolbar with badge and blue button (sidebar closed)
-  // await expect(page).toHaveScreenshot('toolbar-sidebar-closed-with-badge.png');
+  await expect(page).toHaveScreenshot('toolbar-sidebar-closed-with-badge.png');
 });
 
 test('cross-URL navigation preserves sidebar state and selected item', async ({ page }) => {
@@ -205,7 +205,7 @@ test('cross-URL navigation preserves sidebar state and selected item', async ({ 
   await expect(selectedItem).toHaveClass(/ring|bg-blue/);
 
   // Visual regression: sidebar open with selected item after cross-URL navigation
-  // await expect(page).toHaveScreenshot('cross-url-navigation-sidebar.png');
+  await expect(page).toHaveScreenshot('cross-url-navigation-sidebar.png');
 
   // Verify job-complete event was emitted (highlight worked)
   const completeEvents = await getEventsByType(page, 'job-complete');
