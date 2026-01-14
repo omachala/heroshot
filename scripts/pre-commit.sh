@@ -19,18 +19,21 @@ echo "Running pre-commit checks in parallel..."
 
 pnpm lint > .pre-commit-logs/lint.log 2>&1 &
 P1=$!
-pnpm typecheck > .pre-commit-logs/typecheck.log 2>&1 &
+pnpm lint:toolbar > .pre-commit-logs/lint-toolbar.log 2>&1 &
 P2=$!
-pnpm knip > .pre-commit-logs/knip.log 2>&1 &
+pnpm typecheck > .pre-commit-logs/typecheck.log 2>&1 &
 P3=$!
-pnpm test:run > .pre-commit-logs/tests.log 2>&1 &
+pnpm knip > .pre-commit-logs/knip.log 2>&1 &
 P4=$!
+pnpm test:run > .pre-commit-logs/tests.log 2>&1 &
+P5=$!
 
 # Wait for all jobs
 wait $P1; R1=$?
 wait $P2; R2=$?
 wait $P3; R3=$?
 wait $P4; R4=$?
+wait $P5; R5=$?
 
 # Check results and show output only on failure
 FAILED=0
@@ -42,18 +45,24 @@ if [ $R1 -ne 0 ]; then
 fi
 
 if [ $R2 -ne 0 ]; then
+  echo "FAIL: Toolbar ESLint check failed:"
+  cat .pre-commit-logs/lint-toolbar.log
+  FAILED=1
+fi
+
+if [ $R3 -ne 0 ]; then
   echo "FAIL: TypeScript check failed:"
   cat .pre-commit-logs/typecheck.log
   FAILED=1
 fi
 
-if [ $R3 -ne 0 ]; then
+if [ $R4 -ne 0 ]; then
   echo "FAIL: Knip check failed:"
   cat .pre-commit-logs/knip.log
   FAILED=1
 fi
 
-if [ $R4 -ne 0 ]; then
+if [ $R5 -ne 0 ]; then
   echo "FAIL: Tests failed:"
   cat .pre-commit-logs/tests.log
   FAILED=1

@@ -17,8 +17,8 @@ export function getBackgroundColor(element: Element): string {
     // transparent = 'rgba(0, 0, 0, 0)' or 'transparent'
     if (bgColor && bgColor !== 'transparent' && !bgColor.startsWith('rgba(0, 0, 0, 0)')) {
       // Convert rgb to hex
-      const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-      if (rgbMatch && rgbMatch[1] && rgbMatch[2] && rgbMatch[3]) {
+      const rgbMatch = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(bgColor);
+      if (rgbMatch?.[1] && rgbMatch[2] && rgbMatch[3]) {
         const red = parseInt(rgbMatch[1], 10);
         const green = parseInt(rgbMatch[2], 10);
         const blue = parseInt(rgbMatch[3], 10);
@@ -29,11 +29,7 @@ export function getBackgroundColor(element: Element): string {
 
     // Move up: if at shadow root boundary, pierce to host
     const root = current.getRootNode();
-    if (root instanceof ShadowRoot) {
-      current = root.host;
-    } else {
-      current = current.parentElement;
-    }
+    current = root instanceof ShadowRoot ? root.host : current.parentElement;
   }
 
   // Fallback to white if nothing found

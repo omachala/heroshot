@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { deepElementFromPoint, getSelector, getBackgroundColor } from '../lib/dom';
+  import { deepElementFromPoint, getBackgroundColor, getSelector } from '../lib/dom';
   import { findElementBySelector } from '../lib/selector';
   import type { Padding, ScreenshotItem, ScrollPosition } from '../types';
 
@@ -229,18 +229,7 @@
   }
 
   /**
-   * Handle padding area mouse enter - show tooltip
-   */
-  function handlePaddingMouseEnter(event: MouseEvent): void {
-    tooltipData = {
-      padding: maskPadding ? 'masked' : 'transparent',
-    };
-    tooltipX = event.clientX;
-    tooltipY = event.clientY;
-  }
-
-  /**
-   * Handle padding area mouse move - update tooltip position and content
+   * Handle padding area mouse enter/move - show and update tooltip
    */
   function handlePaddingMouseMove(event: MouseEvent): void {
     tooltipData = {
@@ -452,7 +441,7 @@
     const deltaY = event.clientY - dragStartY;
 
     const newPadding = { ...dragStartPadding };
-    let paddingStr: string;
+    let paddingString: string;
 
     const shiftHeld = event.shiftKey;
 
@@ -499,7 +488,7 @@
       const allSame = newPadding.top === newPadding.right &&
                       newPadding.right === newPadding.bottom &&
                       newPadding.bottom === newPadding.left;
-      paddingStr = allSame
+      paddingString = allSame
         ? `${newPadding.top}`
         : `${newPadding.top} ${newPadding.right} ${newPadding.bottom} ${newPadding.left}`;
     } else {
@@ -521,13 +510,8 @@
         }
       }
 
-      // Edge: show both values if symmetric, single if shift
-      if (shiftHeld) {
-        paddingStr = `${newPadding[dragHandle as keyof Padding]}`;
-      } else {
-        const value = newPadding[dragHandle as keyof Padding];
-        paddingStr = `${value}`;
-      }
+      // Edge: show the value (same for both symmetric and single)
+      paddingString = `${newPadding[edge.key]}`;
     }
 
     // Calculate total size (element + padding)
@@ -537,7 +521,7 @@
 
     tooltipData = {
       size: `${totalWidth} x ${totalHeight}`,
-      padding: paddingStr,
+      padding: paddingString,
     };
 
     // Update tooltip position
@@ -623,7 +607,7 @@
             class="fixed pointer-events-auto cursor-pointer"
             style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
             onclick={handlePaddingClick}
-            onmouseenter={handlePaddingMouseEnter}
+            onmouseenter={handlePaddingMouseMove}
             onmousemove={handlePaddingMouseMove}
             onmouseleave={handlePaddingMouseLeave}
           ></div>
@@ -634,7 +618,7 @@
             class="fixed pointer-events-auto cursor-pointer"
             style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
             onclick={handlePaddingClick}
-            onmouseenter={handlePaddingMouseEnter}
+            onmouseenter={handlePaddingMouseMove}
             onmousemove={handlePaddingMouseMove}
             onmouseleave={handlePaddingMouseLeave}
           ></div>
@@ -645,7 +629,7 @@
             class="fixed pointer-events-auto cursor-pointer"
             style="top:{overlayRects.highlight.top}px;left:{expandedRect.left}px;width:{selectedPadding.left}px;height:{overlayRects.highlight.height}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
             onclick={handlePaddingClick}
-            onmouseenter={handlePaddingMouseEnter}
+            onmouseenter={handlePaddingMouseMove}
             onmousemove={handlePaddingMouseMove}
             onmouseleave={handlePaddingMouseLeave}
           ></div>
@@ -656,7 +640,7 @@
             class="fixed pointer-events-auto cursor-pointer"
             style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left + overlayRects.highlight.width}px;width:{selectedPadding.right}px;height:{overlayRects.highlight.height}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
             onclick={handlePaddingClick}
-            onmouseenter={handlePaddingMouseEnter}
+            onmouseenter={handlePaddingMouseMove}
             onmousemove={handlePaddingMouseMove}
             onmouseleave={handlePaddingMouseLeave}
           ></div>

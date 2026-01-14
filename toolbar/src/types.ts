@@ -64,7 +64,7 @@ export type ToolbarEvent =
 /**
  * Utility functions exposed for sync script
  */
-export interface HeroshotUtils {
+export interface HeroshotUtilities {
   getBackgroundColor: (element: Element) => string;
 }
 
@@ -82,7 +82,7 @@ export interface HeroshotGlobal {
   sidebarVisible: boolean;
   emit: (event: ToolbarEvent) => void;
   /** Utility functions for sync script */
-  utils?: HeroshotUtils;
+  utils?: HeroshotUtilities;
 }
 
 /**
