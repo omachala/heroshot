@@ -52,6 +52,54 @@
       .subtitle {
         font-size: 1.1rem;
         color: #6b7280;
+        margin-bottom: 1.25rem;
+      }
+      .url-bar {
+        display: flex;
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      .url-bar input {
+        flex: 1;
+        padding: 0.875rem 1rem;
+        border: none;
+        font-size: 1rem;
+        font-family: ui-monospace, monospace;
+        color: #374151;
+        outline: none;
+      }
+      .url-bar input::placeholder {
+        color: #9ca3af;
+      }
+      .url-bar button {
+        padding: 0.875rem 1.5rem;
+        background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: opacity 0.15s;
+      }
+      .url-bar button:hover {
+        opacity: 0.9;
+      }
+      .url-hint {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        color: #9ca3af;
+      }
+      .url-hint kbd {
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+        border-radius: 3px;
+        padding: 1px 5px;
+        font-family: ui-monospace, monospace;
+        font-size: 0.75rem;
       }
       .main {
         flex: 1;
@@ -190,8 +238,27 @@
     <div class="header">
       <img src="/logo.svg" alt="Heroshot" class="logo" />
       <h1>Welcome back!</h1>
-      <p class="subtitle">Enter your app URL in the address bar to start</p>
+      <p class="subtitle">Enter your app URL to get started</p>
+      <div class="url-bar">
+        <input type="url" id="url-input" placeholder="https://your-app.com" autofocus />
+        <button type="button" onclick="navigateToUrl()">Go</button>
+      </div>
+      <p class="url-hint">Press <kbd>Enter</kbd> or use the browser address bar</p>
     </div>
+    <script>
+      function navigateToUrl() {
+        const input = document.getElementById('url-input');
+        let url = input.value.trim();
+        if (!url) return;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+        window.location.href = url;
+      }
+      document.getElementById('url-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') navigateToUrl();
+      });
+    </script>
 
     <div class="main">
       <div class="card">
