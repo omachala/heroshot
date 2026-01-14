@@ -1,64 +1,88 @@
 /* ===========================================
-   Heroshot Theme - Violet & Orange
+   Heroshot Theme - Navy & Orange
+   Palette defined in /public/palette.css
    =========================================== */
 
-:root {
-  --vp-c-brand-1: #7c3aed;
-  --vp-c-brand-2: #8b5cf6;
-  --vp-c-brand-3: #a78bfa;
-  --vp-c-brand-soft: rgba(124, 58, 237, 0.14);
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
 
-  /* Hero image glow */
-  --vp-home-hero-image-background-image: linear-gradient(
-    135deg,
-    rgba(124, 58, 237, 0.5) 0%,
-    rgba(249, 115, 22, 0.4) 100%
-  );
-  --vp-home-hero-image-filter: blur(72px);
+:root {
+  /* Brand palette - must match /public/palette.css */
+  --brand-dark: #c2410c;
+  --brand-main: #ea580c;
+  --brand-light: #fb923c;
+  --navy-darkest: #0f1d2f;
+  --navy-dark: #162d4a;
+  --navy-base: #2a5580;
+  --navy-light: #3d6a99;
+
+  /* VitePress brand colors - using palette */
+  --vp-c-brand-1: var(--brand-dark);
+  --vp-c-brand-2: #9a3412;
+  --vp-c-brand-3: var(--brand-main);
+  --vp-c-brand-soft: rgba(194, 65, 12, 0.14);
+
+  /* VitePress text colors - using palette */
+  --vp-c-text-1: var(--navy-darkest);
+  --vp-c-text-2: var(--navy-base);
+  --vp-c-text-3: var(--navy-light);
 }
 
 .dark {
-  --vp-c-brand-1: #a78bfa;
-  --vp-c-brand-2: #8b5cf6;
-  --vp-c-brand-3: #7c3aed;
-  --vp-c-brand-soft: rgba(167, 139, 250, 0.16);
+  /* Brand colors - lighter orange for dark mode */
+  --vp-c-brand-1: #fb923c;
+  --vp-c-brand-2: #ea580c;
+  --vp-c-brand-3: #c2410c;
+  --vp-c-brand-soft: rgba(251, 146, 60, 0.16);
 
-  --vp-home-hero-image-background-image: linear-gradient(
-    135deg,
-    rgba(124, 58, 237, 0.6) 0%,
-    rgba(249, 115, 22, 0.5) 100%
-  );
-  --vp-home-hero-image-filter: blur(72px);
+  /* Text colors - light navy for dark mode */
+  --vp-c-text-1: #e2e8f0; /* very light */
+  --vp-c-text-2: #94a3b8; /* muted light navy */
+  --vp-c-text-3: #64748b; /* darker muted */
 }
 
-/* Hero name gradient - no transition */
+/* Hero name - solid orange from logo */
 .VPHero .name,
 .VPHero .text,
 .VPHero .tagline {
   transition: none;
 }
 
-.VPHero .name {
-  color: #ea580c;
+.VPHero .name,
+.VPHero .text {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 700;
+  font-style: italic;
 }
 
-/* Make the glow bigger */
+.VPHero .text {
+  color: var(--navy-base);
+}
+
+.VPHero .tagline {
+  font-family: 'Nunito Sans', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.VPHero .name {
+  font-size: 3.5rem;
+  background: linear-gradient(135deg, var(--brand-main) 0%, var(--brand-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hide glow */
 .VPHero .image-bg {
-  transform: scale(1.8);
+  display: none;
+}
+
+/* Hide nav title on home page (redundant with hero) */
+:has(.VPContent.is-home) .VPNavBarTitle {
+  display: none;
 }
 
 .VPHero .image-src {
   max-width: 320px;
   max-height: 320px;
-}
-
-/* Brand button */
-.VPButton.brand {
-  background: #7c3aed;
-  border-color: #7c3aed;
-}
-
-.VPButton.brand:hover {
-  background: #8b5cf6;
-  border-color: #8b5cf6;
 }

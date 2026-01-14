@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: Heroshot
-  text: Screenshot Automation CLI
-  tagline: Capture perfect screenshots with interactive element selection. Point, click, done.
+  name: HeroShot
+  text: Screen Capture Automation CLI
+  tagline: Define once, regenerate forever. Screenshots that stay in sync with your UI - automatically.
   image:
     src: /logo.svg
     alt: Heroshot Logo
@@ -17,10 +17,16 @@ hero:
       link: https://github.com/omachala/heroshot
 
 features:
-  - title: Interactive Element Picker
-    details: Click to select any element on the page with a visual toolbar for precise screenshot control.
-  - title: Playwright Powered
-    details: Built on Playwright for reliable, headless browser automation.
-  - title: CLI First
-    details: Simple command-line interface that fits into your workflow and CI/CD pipelines.
+  - icon:
+      src: /icons/refresh.svg
+    title: Never Outdated
+    details: Screenshots regenerate when your UI changes. Documentation that stays true to your product, automatically.
+  - icon:
+      src: /icons/target.svg
+    title: Point and Click
+    details: Visual picker generates the config. No YAML files, no DevTools, no manual CSS selectors.
+  - icon:
+      src: /icons/rocket.svg
+    title: CI/CD Ready
+    details: Run heroshot sync in your pipeline. Screenshots update on every deploy.
 ---
