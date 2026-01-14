@@ -116,6 +116,23 @@
   }
 
   /**
+   * Handle maskPadding update for existing screenshot
+   */
+  function handleMaskPaddingUpdate(id: string, mask: boolean): void {
+    screenshots = screenshots.map((screenshot) =>
+      screenshot.id === id
+        ? { ...screenshot, maskPadding: mask || undefined }
+        : screenshot
+    );
+
+    const updated = screenshots.find((screenshot) => screenshot.id === id);
+    if (updated && id !== draftId) {
+      // Only emit for non-draft items
+      emit({ type: 'screenshot-updated', data: updated });
+    }
+  }
+
+  /**
    * Handle cancel - remove draft if exists
    */
   function handleElementCancel(): void {
@@ -140,14 +157,15 @@
    */
   function handleDraftConfirm(id: string): void {
     if (id === draftId) {
-      // Get current padding and scroll from picker and update the screenshot
+      // Get current padding, scroll, and maskPadding from picker and update the screenshot
       const padding = elementPicker.getCurrentPadding();
       const scroll = elementPicker.getCurrentScroll();
+      const mask = elementPicker.getCurrentMaskPadding();
       const hasPadding = padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0;
 
       screenshots = screenshots.map((screenshot) =>
         screenshot.id === id
-          ? { ...screenshot, padding: hasPadding ? { ...padding } : undefined, scroll: { ...scroll } }
+          ? { ...screenshot, padding: hasPadding ? { ...padding } : undefined, scroll: { ...scroll }, maskPadding: mask || undefined }
           : screenshot
       );
 
@@ -283,6 +301,7 @@
   onNewElement={handleNewElement}
   onPaddingUpdate={handlePaddingUpdate}
   onScrollUpdate={handleScrollUpdate}
+  onMaskPaddingUpdate={handleMaskPaddingUpdate}
   onCancel={handleElementCancel}
   onDeselect={handleDeselect}
 />

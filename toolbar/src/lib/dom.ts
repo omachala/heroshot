@@ -3,6 +3,44 @@
  */
 
 /**
+ * Get the visible background color of an element by walking up the DOM tree.
+ * Returns the first non-transparent background color found, or white as fallback.
+ */
+export function getBackgroundColor(element: Element): string {
+  let current: Element | null = element.parentElement; // Start from parent, not element itself
+
+  while (current) {
+    const style = globalThis.getComputedStyle(current);
+    const bgColor = style.backgroundColor;
+
+    // Check if background is non-transparent
+    // transparent = 'rgba(0, 0, 0, 0)' or 'transparent'
+    if (bgColor && bgColor !== 'transparent' && !bgColor.startsWith('rgba(0, 0, 0, 0)')) {
+      // Convert rgb to hex
+      const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (rgbMatch && rgbMatch[1] && rgbMatch[2] && rgbMatch[3]) {
+        const red = parseInt(rgbMatch[1], 10);
+        const green = parseInt(rgbMatch[2], 10);
+        const blue = parseInt(rgbMatch[3], 10);
+        return `#${red.toString(16).padStart(2, '0')}${green.toString(16).padStart(2, '0')}${blue.toString(16).padStart(2, '0')}`;
+      }
+      return bgColor;
+    }
+
+    // Move up: if at shadow root boundary, pierce to host
+    const root = current.getRootNode();
+    if (root instanceof ShadowRoot) {
+      current = root.host;
+    } else {
+      current = current.parentElement;
+    }
+  }
+
+  // Fallback to white if nothing found
+  return '#ffffff';
+}
+
+/**
  * Get element from point, piercing shadow DOMs
  */
 export function deepElementFromPoint(x: number, y: number): Element | null {

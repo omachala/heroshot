@@ -8,6 +8,7 @@
 import { mount, unmount } from 'svelte';
 import Toolbar from './components/Toolbar.svelte';
 import styles from './styles.css?inline';
+import { getBackgroundColor } from './lib/dom';
 
 /**
  * Initialize the toolbar
@@ -25,7 +26,13 @@ export function initToolbar(): (() => void) | null {
       emit: () => {
         // No-op if not injected by CLI
       },
+      utils: {
+        getBackgroundColor,
+      },
     };
+  } else {
+    // Ensure utils is always available
+    globalThis.__heroshot.utils = { getBackgroundColor };
   }
 
   const heroshot = globalThis.__heroshot;
