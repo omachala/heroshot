@@ -28,6 +28,8 @@ export interface ScreenshotItem {
   padding?: Padding;
   /** Scroll position to restore when capturing */
   scroll?: ScrollPosition;
+  /** Fill padding area with detected background color */
+  maskPadding?: boolean;
 }
 
 /**
@@ -60,6 +62,13 @@ export type ToolbarEvent =
   | { type: 'done' };
 
 /**
+ * Utility functions exposed for sync script
+ */
+export interface HeroshotUtilities {
+  getBackgroundColor: (element: Element) => string;
+}
+
+/**
  * Global heroshot namespace
  */
 export interface HeroshotGlobal {
@@ -72,6 +81,8 @@ export interface HeroshotGlobal {
   /** Whether sidebar should be open on init */
   sidebarVisible: boolean;
   emit: (event: ToolbarEvent) => void;
+  /** Utility functions for sync script */
+  utils?: HeroshotUtilities;
 }
 
 /**

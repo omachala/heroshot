@@ -103,6 +103,7 @@ interface ScreenshotData {
     x: number;
     y: number;
   };
+  maskPadding?: boolean;
 }
 
 // Job types that CLI can send to toolbar
@@ -220,10 +221,13 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
     createdAt: index,
     ...(screenshot.padding && { padding: screenshot.padding }),
     ...(screenshot.scroll && { scroll: screenshot.scroll }),
+    ...(screenshot.maskPadding && { maskPadding: screenshot.maskPadding }),
   }));
 
   // Track only NEW items added this session (for saving to config at the end)
   const newlyAddedIds = new Set<string>();
+  // Track deleted items this session
+  const deletedIds = new Set<string>();
   let pendingJob: ToolbarJob | null = null;
   // Track selected screenshot and sidebar state for cross-URL navigation
   let selectedId: string | null = null;
@@ -248,6 +252,18 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
           // Mark as newly added so it gets saved
           newlyAddedIds.add(event.data.id);
           log.verbose(`Renamed: ${event.data.name}`);
+        }
+        break;
+      }
+
+      case 'screenshot-removed': {
+        const index = allScreenshots.findIndex(item => item.id === event.id);
+        if (index !== -1) {
+          const [removed] = allScreenshots.splice(index, 1);
+          deletedIds.add(event.id);
+          // If it was newly added this session, no need to track deletion
+          newlyAddedIds.delete(event.id);
+          log.verbose(`Removed: ${removed?.name ?? event.id}`);
         }
         break;
       }
@@ -369,6 +385,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
       filename,
       ...(element.padding && { padding: element.padding }),
       ...(element.scroll && { scroll: element.scroll }),
+      ...(element.maskPadding && { maskPadding: element.maskPadding }),
     };
 
     // Add or update screenshot
@@ -379,6 +396,15 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
     } else {
       latestConfig.screenshots[existingIndex] = screenshot;
       log.verbose(`~ ${element.name} (updated)`);
+    }
+  }
+
+  // Remove deleted items from config
+  for (const id of deletedIds) {
+    const index = latestConfig.screenshots.findIndex(item => item.id === id);
+    if (index !== -1) {
+      const [removed] = latestConfig.screenshots.splice(index, 1);
+      log.verbose(`- ${removed?.name ?? id} (deleted)`);
     }
   }
 

@@ -52,6 +52,8 @@ export const screenshotSchema = z.object({
   padding: paddingSchema.optional(),
   /** Scroll position to restore when capturing */
   scroll: scrollPositionSchema.optional(),
+  /** Fill padding area with detected background color */
+  maskPadding: z.boolean().optional(),
 });
 
 /** Browser settings */

@@ -14,7 +14,6 @@
       gtag('js', new Date());
       gtag('config', 'G-3MGBYS1GNM');
     </script>
-    <link rel="stylesheet" href="/palette.css" />
     <style>
       * {
         margin: 0;
@@ -27,12 +26,8 @@
           -apple-system,
           sans-serif;
         min-height: 100vh;
-        background: linear-gradient(
-          135deg,
-          var(--bg-gradient-start) 0%,
-          var(--bg-gradient-end) 100%
-        );
-        color: var(--text-primary);
+        background: linear-gradient(135deg, #faf5ff 0%, #fff7ed 100%);
+        color: #374151;
         display: flex;
         flex-direction: column;
       }
@@ -48,7 +43,7 @@
       h1 {
         font-size: 2rem;
         font-weight: 600;
-        background: linear-gradient(135deg, var(--brand-main) 0%, var(--brand-light) 100%);
+        background: linear-gradient(135deg, #7c3aed 0%, #f97316 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -56,16 +51,16 @@
       }
       .subtitle {
         font-size: 1.1rem;
-        color: var(--text-secondary);
+        color: #6b7280;
         margin-bottom: 1.25rem;
       }
       .url-bar {
         display: flex;
         max-width: 600px;
         margin: 0 auto;
-        background: var(--input-bg);
+        background: white;
         border-radius: 8px;
-        box-shadow: 0 2px 8px var(--shadow-color-strong);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         overflow: hidden;
       }
       .url-bar input {
@@ -74,16 +69,15 @@
         border: none;
         font-size: 1rem;
         font-family: ui-monospace, monospace;
-        background: var(--input-bg);
-        color: var(--text-primary);
+        color: #374151;
         outline: none;
       }
       .url-bar input::placeholder {
-        color: var(--text-muted);
+        color: #9ca3af;
       }
       .url-bar button {
         padding: 0.875rem 1.5rem;
-        background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand-main) 100%);
+        background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
         border: none;
         color: white;
         font-weight: 600;
@@ -97,16 +91,15 @@
       .url-hint {
         margin-top: 0.5rem;
         font-size: 0.8rem;
-        color: var(--text-muted);
+        color: #9ca3af;
       }
       .url-hint kbd {
-        background: var(--kbd-bg);
-        border: 1px solid var(--border-color);
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
         border-radius: 3px;
         padding: 1px 5px;
         font-family: ui-monospace, monospace;
         font-size: 0.75rem;
-        color: var(--text-primary);
       }
       .main {
         flex: 1;
@@ -119,17 +112,17 @@
         width: 100%;
       }
       .card {
-        background: var(--bg-card);
+        background: white;
         border-radius: 12px;
         padding: 1.25rem;
-        box-shadow: 0 1px 3px var(--shadow-color);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
       }
       .card-title {
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: var(--text-muted);
+        color: #9ca3af;
         margin-bottom: 1rem;
       }
       .shortcut-list {
@@ -143,19 +136,19 @@
         gap: 0.75rem;
       }
       .shortcut kbd {
-        background: var(--kbd-bg);
-        border: 1px solid var(--border-color);
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
         border-radius: 4px;
         padding: 3px 8px;
         font-family: ui-monospace, monospace;
         font-size: 0.8rem;
-        color: var(--text-primary);
+        color: #374151;
         min-width: 70px;
         text-align: center;
       }
       .shortcut span {
         font-size: 0.9rem;
-        color: var(--text-secondary);
+        color: #6b7280;
       }
       .cmd-list {
         display: flex;
@@ -170,12 +163,12 @@
       .cmd code {
         font-family: ui-monospace, monospace;
         font-size: 0.85rem;
-        color: var(--navy-base);
+        color: #7c3aed;
         font-weight: 500;
       }
       .cmd span {
         font-size: 0.8rem;
-        color: var(--text-muted);
+        color: #9ca3af;
       }
       .action-list {
         display: flex;
@@ -191,18 +184,15 @@
         width: 20px;
         height: 20px;
         flex-shrink: 0;
-        color: var(--brand-main);
+        color: #f97316;
       }
       .action-text {
         font-size: 0.9rem;
-        color: var(--text-secondary);
+        color: #6b7280;
         line-height: 1.4;
       }
       .action-text strong {
-        color: var(--text-primary);
-      }
-      .action-text code {
-        color: var(--navy-base);
+        color: #374151;
       }
       .links {
         display: flex;
@@ -213,14 +203,14 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: var(--navy-base);
+        color: #7c3aed;
         text-decoration: none;
         font-size: 0.9rem;
         padding: 0.4rem 0;
         transition: color 0.15s;
       }
       .links a:hover {
-        color: var(--navy-light);
+        color: #5b21b6;
       }
       .links svg {
         width: 16px;
@@ -230,7 +220,7 @@
         text-align: center;
         padding: 1rem;
         font-size: 0.75rem;
-        color: var(--text-muted);
+        color: #9ca3af;
       }
       @media (max-width: 900px) {
         .main {

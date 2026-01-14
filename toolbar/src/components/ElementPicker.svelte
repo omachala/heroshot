@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { deepElementFromPoint, getSelector } from '../lib/dom';
+  import { deepElementFromPoint, getBackgroundColor, getSelector } from '../lib/dom';
   import { findElementBySelector } from '../lib/selector';
   import type { Padding, ScreenshotItem, ScrollPosition } from '../types';
 
@@ -16,13 +16,15 @@
     onPaddingUpdate: (id: string, padding: Padding) => void;
     /** Callback when existing screenshot scroll position is updated */
     onScrollUpdate: (id: string, scroll: ScrollPosition) => void;
+    /** Callback when existing screenshot maskPadding is updated */
+    onMaskPaddingUpdate: (id: string, maskPadding: boolean) => void;
     /** Callback when draft/edit is cancelled */
     onCancel: () => void;
     /** Callback when selection is cleared (clicking outside) */
     onDeselect: () => void;
   }
 
-  const { active, screenshots, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onCancel, onDeselect }: Props = $props();
+  const { active, screenshots, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onMaskPaddingUpdate, onCancel, onDeselect }: Props = $props();
 
   // Default padding
   const defaultPadding: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -36,6 +38,11 @@
   let selectedScroll = $state<ScrollPosition>({ ...defaultScroll });
   let editingScreenshotId = $state<string | null>(null); // ID if editing existing screenshot
   let isNewElement = $state(false); // True if this is a new pick (not editing existing)
+  let maskPadding = $state(false); // Whether to fill padding with background color
+  let originalMaskPadding = $state(false); // For revert on Esc
+
+  // Detected background color for the selected element (computed when element changes)
+  let detectedBgColor = $derived(selectedElement ? getBackgroundColor(selectedElement) : '#ffffff');
 
   // Scroll tracking for overlay repositioning
   let scrollY = $state(globalThis.scrollY ?? 0);
@@ -53,6 +60,13 @@
     document.body.style.cursor = active ? 'crosshair' : '';
   });
 
+  // Clear tooltip when picker mode deactivates
+  $effect(() => {
+    if (!active) {
+      tooltipData = null;
+    }
+  });
+
   /**
    * Handle mouse movement - highlight element under cursor
    */
@@ -67,6 +81,14 @@
       !element.closest('#heroshot-overlay')
     ) {
       currentElement = element;
+      // Update tooltip with size + path
+      const rect = element.getBoundingClientRect();
+      tooltipData = {
+        size: `${Math.round(rect.width)} x ${Math.round(rect.height)}`,
+        path: getSelector(element),
+      };
+      tooltipX = event.clientX;
+      tooltipY = event.clientY;
     }
   }
 
@@ -93,7 +115,10 @@
       selectedScroll = { x: globalThis.scrollX, y: globalThis.scrollY };
       editingScreenshotId = null;
       isNewElement = true;
+      maskPadding = false;
+      originalMaskPadding = false;
       currentElement = null;
+      tooltipData = null; // Clear tooltip
 
       // Deactivate picker mode and notify parent of new element
       onToggle();
@@ -111,8 +136,9 @@
           // Cancel new element - remove draft
           handleCancel();
         } else if (editingScreenshotId) {
-          // Revert to original padding for existing screenshot
+          // Revert to original padding and maskPadding for existing screenshot
           onPaddingUpdate(editingScreenshotId, originalPadding);
+          onMaskPaddingUpdate(editingScreenshotId, originalMaskPadding);
           clearSelection();
         }
       } else if (active) {
@@ -150,6 +176,8 @@
     selectedScroll = { ...defaultScroll };
     editingScreenshotId = null;
     isNewElement = false;
+    maskPadding = false;
+    originalMaskPadding = false;
     currentElement = null;
     onCancel();
   }
@@ -181,6 +209,44 @@
   }
 
   /**
+   * Handle padding area click - toggle mask mode
+   */
+  function handlePaddingClick(event: MouseEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    maskPadding = !maskPadding;
+
+    // Update tooltip immediately
+    tooltipData = {
+      padding: maskPadding ? 'masked' : 'transparent',
+    };
+
+    // Auto-save for existing screenshots (not new drafts)
+    if (editingScreenshotId && !isNewElement) {
+      onMaskPaddingUpdate(editingScreenshotId, maskPadding);
+    }
+  }
+
+  /**
+   * Handle padding area mouse enter/move - show and update tooltip
+   */
+  function handlePaddingMouseMove(event: MouseEvent): void {
+    tooltipData = {
+      padding: maskPadding ? 'masked' : 'transparent',
+    };
+    tooltipX = event.clientX;
+    tooltipY = event.clientY;
+  }
+
+  /**
+   * Handle padding area mouse leave - hide tooltip
+   */
+  function handlePaddingMouseLeave(): void {
+    tooltipData = null;
+  }
+
+  /**
    * Highlight element by selector (for sidebar selection)
    */
   export function highlightElement(selector: string, screenshotId?: string, attempt = 1): void {
@@ -189,9 +255,10 @@
 
     if (element) {
       if (screenshotId) {
-        // Editing existing screenshot - load saved padding and scroll
+        // Editing existing screenshot - load saved padding, scroll, and maskPadding
         const screenshot = screenshots.find(item => item.id === screenshotId);
         const padding = screenshot?.padding ? { ...screenshot.padding } : { ...defaultPadding };
+        const mask = screenshot?.maskPadding ?? false;
 
         // Restore saved scroll position, or scroll element into view if none saved
         if (screenshot?.scroll) {
@@ -206,6 +273,8 @@
         selectedScroll = screenshot?.scroll ? { ...screenshot.scroll } : { x: globalThis.scrollX, y: globalThis.scrollY };
         editingScreenshotId = screenshotId;
         isNewElement = false;
+        maskPadding = mask;
+        originalMaskPadding = mask;
         currentElement = null;
       } else {
         // Just highlighting (no edit mode) - scroll element into view
@@ -234,6 +303,8 @@
     selectedScroll = { ...defaultScroll };
     editingScreenshotId = null;
     isNewElement = false;
+    maskPadding = false;
+    originalMaskPadding = false;
     currentElement = null;
   }
 
@@ -245,6 +316,7 @@
       editingScreenshotId = screenshotId;
       isNewElement = false;
       originalPadding = { ...selectedPadding };
+      originalMaskPadding = maskPadding;
     }
   }
 
@@ -267,6 +339,13 @@
    */
   export function isEditingNewElement(): boolean {
     return isNewElement;
+  }
+
+  /**
+   * Get current maskPadding for draft items
+   */
+  export function getCurrentMaskPadding(): boolean {
+    return maskPadding;
   }
 
   /**
@@ -302,6 +381,16 @@
   let dragStartX = $state(0);
   let dragStartY = $state(0);
   let dragStartPadding = $state<Padding>({ top: 0, right: 0, bottom: 0, left: 0 });
+
+  // Cursor tooltip state
+  interface TooltipData {
+    size?: string;    // e.g., "300 x 400"
+    path?: string;    // e.g., "div.container >>> ha-card"
+    padding?: string; // e.g., "24" or "24 24 24 24"
+  }
+  let tooltipData = $state<TooltipData | null>(null);
+  let tooltipX = $state(0);
+  let tooltipY = $state(0);
 
   // Handle sizes
   const edgeLong = 20;
@@ -346,48 +435,98 @@
    * Handle mouse move during resize drag
    */
   function handleResizeMouseMove(event: MouseEvent): void {
-    if (!isDragging || !dragHandle) return;
+    if (!isDragging || !dragHandle || !selectedElement) return;
 
     const deltaX = event.clientX - dragStartX;
     const deltaY = event.clientY - dragStartY;
 
     const newPadding = { ...dragStartPadding };
+    let paddingString: string;
+
+    const shiftHeld = event.shiftKey;
 
     if (dragHandle.includes('-')) {
-      // Corner handle - proportional resize
+      // Corner handle
       const [vertical, horizontal] = dragHandle.split('-');
-      let expansion = 0;
 
-      if (vertical === 'top') {
-        expansion = -deltaY;
-      } else if (vertical === 'bottom') {
-        expansion = deltaY;
+      if (shiftHeld) {
+        // Shift: only resize the 2 paddings of this corner
+        if (vertical === 'top') {
+          newPadding.top = Math.max(0, dragStartPadding.top - deltaY);
+        } else if (vertical === 'bottom') {
+          newPadding.bottom = Math.max(0, dragStartPadding.bottom + deltaY);
+        }
+
+        if (horizontal === 'left') {
+          newPadding.left = Math.max(0, dragStartPadding.left - deltaX);
+        } else if (horizontal === 'right') {
+          newPadding.right = Math.max(0, dragStartPadding.right + deltaX);
+        }
+      } else {
+        // Default: proportional resize (all 4 sides equally)
+        let expansion = 0;
+
+        if (vertical === 'top') {
+          expansion = -deltaY;
+        } else if (vertical === 'bottom') {
+          expansion = deltaY;
+        }
+
+        if (horizontal === 'left') {
+          expansion = Math.max(expansion, -deltaX);
+        } else if (horizontal === 'right') {
+          expansion = Math.max(expansion, deltaX);
+        }
+
+        newPadding.top = Math.max(0, dragStartPadding.top + expansion);
+        newPadding.right = Math.max(0, dragStartPadding.right + expansion);
+        newPadding.bottom = Math.max(0, dragStartPadding.bottom + expansion);
+        newPadding.left = Math.max(0, dragStartPadding.left + expansion);
       }
 
-      if (horizontal === 'left') {
-        expansion = Math.max(expansion, -deltaX);
-      } else if (horizontal === 'right') {
-        expansion = Math.max(expansion, deltaX);
-      }
-
-      newPadding.top = Math.max(0, dragStartPadding.top + expansion);
-      newPadding.right = Math.max(0, dragStartPadding.right + expansion);
-      newPadding.bottom = Math.max(0, dragStartPadding.bottom + expansion);
-      newPadding.left = Math.max(0, dragStartPadding.left + expansion);
+      // Corner: show single number if all same, otherwise all 4
+      const allSame = newPadding.top === newPadding.right &&
+                      newPadding.right === newPadding.bottom &&
+                      newPadding.bottom === newPadding.left;
+      paddingString = allSame
+        ? `${newPadding.top}`
+        : `${newPadding.top} ${newPadding.right} ${newPadding.bottom} ${newPadding.left}`;
     } else {
-      // Edge handle - single direction
-      const edgeDeltas: Record<string, { key: keyof Padding; delta: number }> = {
-        top: { key: 'top', delta: -deltaY },
-        bottom: { key: 'bottom', delta: deltaY },
-        left: { key: 'left', delta: -deltaX },
-        right: { key: 'right', delta: deltaX },
+      // Edge handle
+      const edgeDeltas: Record<string, { key: keyof Padding; opposite: keyof Padding; delta: number }> = {
+        top: { key: 'top', opposite: 'bottom', delta: -deltaY },
+        bottom: { key: 'bottom', opposite: 'top', delta: deltaY },
+        left: { key: 'left', opposite: 'right', delta: -deltaX },
+        right: { key: 'right', opposite: 'left', delta: deltaX },
       };
 
       const edge = edgeDeltas[dragHandle];
       if (edge) {
         newPadding[edge.key] = Math.max(0, dragStartPadding[edge.key] + edge.delta);
+
+        if (!shiftHeld) {
+          // Default: symmetric resize (both opposite sides)
+          newPadding[edge.opposite] = Math.max(0, dragStartPadding[edge.opposite] + edge.delta);
+        }
       }
+
+      // Edge: show the value (same for both symmetric and single)
+      paddingString = `${newPadding[edge.key]}`;
     }
+
+    // Calculate total size (element + padding)
+    const rect = selectedElement.getBoundingClientRect();
+    const totalWidth = Math.round(rect.width + newPadding.left + newPadding.right);
+    const totalHeight = Math.round(rect.height + newPadding.top + newPadding.bottom);
+
+    tooltipData = {
+      size: `${totalWidth} x ${totalHeight}`,
+      padding: paddingString,
+    };
+
+    // Update tooltip position
+    tooltipX = event.clientX;
+    tooltipY = event.clientY;
 
     handlePaddingChange(newPadding);
   }
@@ -398,6 +537,7 @@
   function handleResizeMouseUp(): void {
     isDragging = false;
     dragHandle = null;
+    tooltipData = null; // Clear tooltip
     globalThis.removeEventListener('mousemove', handleResizeMouseMove);
     globalThis.removeEventListener('mouseup', handleResizeMouseUp);
   }
@@ -459,39 +599,51 @@
     {#if selectedElement !== null && expandedRect}
       <!-- Selected mode: padding overlays and resize handles -->
 
-      <!-- Padding area overlays -->
+      <!-- Padding area overlays (clickable to toggle mask mode) -->
       {#if hasPadding}
+        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         {#if selectedPadding.top > 0}
           <div
-            class="fixed bg-heroshot-primary/25 pointer-events-none flex items-center justify-center"
-            style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;"
-          >
-            <span class="text-xs font-mono font-bold" style="color:#22c55e;">{selectedPadding.top}</span>
-          </div>
+            class="fixed pointer-events-auto cursor-pointer"
+            style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
+            onclick={handlePaddingClick}
+            onmouseenter={handlePaddingMouseMove}
+            onmousemove={handlePaddingMouseMove}
+            onmouseleave={handlePaddingMouseLeave}
+          ></div>
         {/if}
+        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         {#if selectedPadding.bottom > 0}
           <div
-            class="fixed bg-heroshot-primary/25 pointer-events-none flex items-center justify-center"
-            style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;"
-          >
-            <span class="text-xs font-mono font-bold" style="color:#22c55e;">{selectedPadding.bottom}</span>
-          </div>
+            class="fixed pointer-events-auto cursor-pointer"
+            style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
+            onclick={handlePaddingClick}
+            onmouseenter={handlePaddingMouseMove}
+            onmousemove={handlePaddingMouseMove}
+            onmouseleave={handlePaddingMouseLeave}
+          ></div>
         {/if}
+        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         {#if selectedPadding.left > 0}
           <div
-            class="fixed bg-heroshot-primary/25 pointer-events-none flex items-center justify-center"
-            style="top:{overlayRects.highlight.top}px;left:{expandedRect.left}px;width:{selectedPadding.left}px;height:{overlayRects.highlight.height}px;"
-          >
-            <span class="text-xs font-mono font-bold" style="color:#22c55e;">{selectedPadding.left}</span>
-          </div>
+            class="fixed pointer-events-auto cursor-pointer"
+            style="top:{overlayRects.highlight.top}px;left:{expandedRect.left}px;width:{selectedPadding.left}px;height:{overlayRects.highlight.height}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
+            onclick={handlePaddingClick}
+            onmouseenter={handlePaddingMouseMove}
+            onmousemove={handlePaddingMouseMove}
+            onmouseleave={handlePaddingMouseLeave}
+          ></div>
         {/if}
+        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         {#if selectedPadding.right > 0}
           <div
-            class="fixed bg-heroshot-primary/25 pointer-events-none flex items-center justify-center"
-            style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left + overlayRects.highlight.width}px;width:{selectedPadding.right}px;height:{overlayRects.highlight.height}px;"
-          >
-            <span class="text-xs font-mono font-bold" style="color:#22c55e;">{selectedPadding.right}</span>
-          </div>
+            class="fixed pointer-events-auto cursor-pointer"
+            style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left + overlayRects.highlight.width}px;width:{selectedPadding.right}px;height:{overlayRects.highlight.height}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
+            onclick={handlePaddingClick}
+            onmouseenter={handlePaddingMouseMove}
+            onmousemove={handlePaddingMouseMove}
+            onmouseleave={handlePaddingMouseLeave}
+          ></div>
         {/if}
 
         <!-- Original element border edges -->
@@ -579,6 +731,24 @@
         class="fixed border-[3px] pointer-events-none box-border border-heroshot-primary bg-heroshot-primary/10"
         style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left}px;width:{overlayRects.highlight.width}px;height:{overlayRects.highlight.height}px;"
       ></div>
+    {/if}
+  </div>
+{/if}
+
+<!-- Cursor tooltip -->
+{#if tooltipData}
+  <div
+    class="fixed z-[2147483647] pointer-events-none bg-black/85 text-xs font-mono px-2 py-1.5 rounded flex flex-col gap-0.5"
+    style="left:{tooltipX}px;top:{tooltipY - 10}px;transform:translateX(-50%) translateY(-100%);"
+  >
+    {#if tooltipData.size}
+      <span style="color:#fbbf24;">{tooltipData.size}</span>
+    {/if}
+    {#if tooltipData.path}
+      <span style="color:#67e8f9;">{tooltipData.path}</span>
+    {/if}
+    {#if tooltipData.padding}
+      <span style="color:#22c55e;">{tooltipData.padding}</span>
     {/if}
   </div>
 {/if}

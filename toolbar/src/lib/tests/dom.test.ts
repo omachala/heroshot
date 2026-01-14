@@ -3,9 +3,89 @@ import {
   createOverlay,
   createToolbar,
   deepElementFromPoint,
+  getBackgroundColor,
   getSelector,
   updateOverlay,
 } from '../dom';
+
+describe('getBackgroundColor', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('should return white when no background found', () => {
+    const div = document.createElement('div');
+    document.body.append(div);
+    expect(getBackgroundColor(div)).toBe('#ffffff');
+  });
+
+  it('should return parent background color as hex', () => {
+    const parent = document.createElement('div');
+    parent.style.backgroundColor = 'rgb(255, 0, 0)';
+    const child = document.createElement('span');
+    parent.append(child);
+    document.body.append(parent);
+
+    expect(getBackgroundColor(child)).toBe('#ff0000');
+  });
+
+  it('should walk up tree to find non-transparent background', () => {
+    const grandparent = document.createElement('div');
+    grandparent.style.backgroundColor = 'rgb(0, 128, 255)';
+    const parent = document.createElement('div');
+    parent.style.backgroundColor = 'transparent';
+    const child = document.createElement('span');
+    parent.append(child);
+    grandparent.append(parent);
+    document.body.append(grandparent);
+
+    expect(getBackgroundColor(child)).toBe('#0080ff');
+  });
+
+  it('should handle rgba transparent background', () => {
+    const grandparent = document.createElement('div');
+    grandparent.style.backgroundColor = 'rgb(100, 100, 100)';
+    const parent = document.createElement('div');
+    parent.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+    const child = document.createElement('span');
+    parent.append(child);
+    grandparent.append(parent);
+    document.body.append(grandparent);
+
+    expect(getBackgroundColor(child)).toBe('#646464');
+  });
+
+  it('should return raw color if not rgb format', () => {
+    const parent = document.createElement('div');
+    // Mock getComputedStyle to return a non-rgb color
+    const originalGetComputedStyle = globalThis.getComputedStyle;
+    globalThis.getComputedStyle = vi.fn().mockReturnValue({
+      backgroundColor: 'red',
+    });
+
+    const child = document.createElement('span');
+    parent.append(child);
+    document.body.append(parent);
+
+    expect(getBackgroundColor(child)).toBe('red');
+
+    globalThis.getComputedStyle = originalGetComputedStyle;
+  });
+
+  it('should pierce shadow DOM when walking up', () => {
+    const host = document.createElement('div');
+    host.style.backgroundColor = 'rgb(0, 255, 0)';
+    const shadow = host.attachShadow({ mode: 'open' });
+    const shadowParent = document.createElement('div');
+    shadowParent.style.backgroundColor = 'transparent';
+    const inner = document.createElement('span');
+    shadowParent.append(inner);
+    shadow.append(shadowParent);
+    document.body.append(host);
+
+    expect(getBackgroundColor(inner)).toBe('#00ff00');
+  });
+});
 
 describe('deepElementFromPoint', () => {
   let originalElementFromPoint: typeof document.elementFromPoint;
