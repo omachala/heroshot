@@ -19,6 +19,7 @@ Screenshot automation CLI tool. See [IDEA.md](./IDEA.md) for project vision and 
     - This ensures roadmap always reflects actual implemented features
 
 - **Pull Requests**: Use conventional PR titles (same prefixes as commits)
+  - **Description**: Bullet points only, no fluff - just what matters
 
 - **Code Style**:
   - Use descriptive variable names, never single characters (e.g., `screenshot` not `s`, `event` not `e`)
