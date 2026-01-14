@@ -8,7 +8,6 @@ import {
   chromium,
 } from 'playwright';
 import { ensureHeroshotDirectory, getConfigPath, loadConfig, saveConfig } from './configFile';
-import { log } from './logger';
 import {
   generateSessionKey,
   loadLocalKey,
@@ -18,6 +17,7 @@ import {
   sessionExists,
 } from './session';
 import type { Screenshot, Viewport } from './types';
+import { info, note, spinner, success, verbose } from './ui';
 
 const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
 
@@ -181,8 +181,10 @@ async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise
   await page.addScriptTag({ content: script });
 }
 
+// eslint-disable-next-line complexity -- main entry point, complexity is acceptable
 export async function setup(): Promise<{ hasScreenshots: boolean }> {
-  log.verbose('Opening browser...');
+  const setupSpinner = spinner();
+  setupSpinner.start('Launching browser...');
 
   // Ensure .heroshot directory exists with README
   ensureHeroshotDirectory();
@@ -206,7 +208,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
     if (state) {
       // eslint-disable-next-line no-restricted-syntax -- deserialized session data
       storageState = state as BrowserContextOptions['storageState'];
-      log.verbose('Loaded existing session.');
+      verbose('Loaded existing session');
     }
   }
 
@@ -235,13 +237,16 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
 
   const { browser, context } = await launchBrowser({ headless: false, viewport, storageState });
 
+  setupSpinner.stop('Browser ready');
+  info('Pick elements to screenshot. Close browser or click Done when finished.');
+
   // Handle events from toolbar
   const handleEvent = (event: ToolbarEvent) => {
     switch (event.type) {
       case 'screenshot-added': {
         allScreenshots.push(event.data);
         newlyAddedIds.add(event.data.id);
-        log.verbose(`Added: ${event.data.name}`);
+        verbose(`Added: ${event.data.name}`);
         break;
       }
 
@@ -251,7 +256,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
           allScreenshots[index] = event.data;
           // Mark as newly added so it gets saved
           newlyAddedIds.add(event.data.id);
-          log.verbose(`Renamed: ${event.data.name}`);
+          verbose(`Updated: ${event.data.name}`);
         }
         break;
       }
@@ -263,7 +268,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
           deletedIds.add(event.id);
           // If it was newly added this session, no need to track deletion
           newlyAddedIds.delete(event.id);
-          log.verbose(`Removed: ${removed?.name ?? event.id}`);
+          verbose(`Removed: ${removed?.name ?? event.id}`);
         }
         break;
       }
@@ -311,7 +316,7 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
           try {
             const currentStorageState = await context.storageState();
             saveSession(currentStorageState, sessionKey);
-            log.verbose('Session saved.');
+            verbose('Session saved');
           } catch {
             // Ignore errors - session save is best-effort
           }
@@ -356,8 +361,6 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
   // Navigate to heroshot.sh welcome page
   await page.goto('https://heroshot.sh/welcome', { waitUntil: 'domcontentloaded' });
 
-  log('Pick elements to screenshot. Close browser or click Done when finished.');
-
   // Wait for browser to close (either via Done button or manual close)
   await new Promise<void>(resolve => {
     browser.once('disconnected', () => resolve());
@@ -392,10 +395,10 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
     const existingIndex = latestConfig.screenshots.findIndex(item => item.id === element.id);
     if (existingIndex === -1) {
       latestConfig.screenshots.push(screenshot);
-      log.verbose(`+ ${element.name}`);
+      verbose(`+ ${element.name}`);
     } else {
       latestConfig.screenshots[existingIndex] = screenshot;
-      log.verbose(`~ ${element.name} (updated)`);
+      verbose(`~ ${element.name} (updated)`);
     }
   }
 
@@ -404,22 +407,30 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
     const index = latestConfig.screenshots.findIndex(item => item.id === id);
     if (index !== -1) {
       const [removed] = latestConfig.screenshots.splice(index, 1);
-      log.verbose(`- ${removed?.name ?? id} (deleted)`);
+      verbose(`- ${removed?.name ?? id} (deleted)`);
     }
   }
 
   // Always save config (ensures config file exists)
   saveConfig(configPath, latestConfig);
-  log.verbose(`Config saved: ${configPath}`);
+  verbose(`Config saved: ${configPath}`);
 
   // Display session key info for CI setup
   if (isNewKey) {
-    log('');
-    log('Session encrypted and saved to .heroshot/session.enc');
-    log('');
-    log('To print your session key, run: npx heroshot session-key');
-    log('');
-    log('For CI, add HEROSHOT_SESSION_KEY as a repository secret.');
+    note(
+      'To print your session key:\n  npx heroshot session-key\n\nFor CI, add HEROSHOT_SESSION_KEY as a repository secret.',
+      'Session encrypted'
+    );
+  }
+
+  // Show config saved message
+  if (newlyAddedIds.size > 0 || deletedIds.size > 0) {
+    const { size: addedCount } = newlyAddedIds;
+    const { size: deletedCount } = deletedIds;
+    const parts: string[] = [];
+    if (addedCount > 0) parts.push(`${addedCount} added`);
+    if (deletedCount > 0) parts.push(`${deletedCount} removed`);
+    success(`Config updated: ${parts.join(', ')}`);
   }
 
   // Return whether there are screenshots to sync

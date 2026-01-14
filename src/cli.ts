@@ -3,9 +3,9 @@ import path from 'node:path';
 import { Command } from 'commander';
 import { setup } from './browser';
 import { getConfigPath } from './configFile';
-import { log, setVerbose } from './logger';
 import { getSessionPath, loadLocalKey } from './session';
 import { sync } from './sync';
+import { error, intro, log, outro, setVerbose, verbose } from './ui';
 
 // Read version from package.json
 const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
@@ -33,6 +33,7 @@ program
   .hook('preAction', () => {
     const options = program.opts<GlobalOptions>();
     setVerbose(options.verbose ?? false);
+    intro(version);
   });
 
 // Default command: check for config, run setup if missing, otherwise sync
@@ -52,14 +53,13 @@ program
     } else {
       if (options.config) {
         // User specified a config that doesn't exist
-        log(`Config file not found: ${configPath}`);
+        error(`Config file not found: ${configPath}`);
         process.exitCode = 1;
         return;
       }
       // No config - run setup, then auto-sync if there are screenshots
       const { hasScreenshots } = await setup();
       if (hasScreenshots) {
-        log('');
         const result = await sync({});
         if (result.failed > 0) {
           process.exitCode = 1;
@@ -80,12 +80,11 @@ program
       const sessionPath = getSessionPath();
       if (existsSync(sessionPath)) {
         rmSync(sessionPath);
-        log.verbose('Session cleared.');
+        verbose('Session cleared.');
       }
     }
     const { hasScreenshots } = await setup();
     if (hasScreenshots && !commandOptions.only) {
-      log('');
       const configPath = globalOptions.config ? path.resolve(globalOptions.config) : undefined;
       const result = await sync({ configPath, sessionKey: globalOptions.sessionKey });
       if (result.failed > 0) {
@@ -100,9 +99,11 @@ program
   .action(() => {
     const sessionKey = loadLocalKey();
     if (sessionKey) {
+      // Plain output for easy copy/paste in CI
       log(sessionKey);
+      outro('Copy this key to your CI secrets');
     } else {
-      log('No session key found. Run "heroshot config" first to generate one.');
+      error('No session key found. Run "heroshot config" first to generate one.');
       process.exitCode = 1;
     }
   });

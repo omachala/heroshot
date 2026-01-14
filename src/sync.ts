@@ -3,9 +3,9 @@ import path from 'node:path';
 import type { BrowserContextOptions, ElementHandle, Page } from 'playwright';
 import { launchBrowser } from './browser';
 import { getConfigPath, loadConfig } from './configFile';
-import { log } from './logger';
 import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
+import { colors, error as logError, outro, spinner, verbose, warn } from './ui';
 
 /**
  * Get the visible background color of an element by walking up the DOM tree.
@@ -222,7 +222,7 @@ async function captureScreenshot(
   const { format, quality } = captureOptions;
   const finalFilename = filenameSuffix ? addFilenameSuffix(filename, filenameSuffix) : filename;
 
-  log.verbose(`  ${name}${filenameSuffix}...`);
+  verbose(`Capturing: ${name}${filenameSuffix}`);
 
   // Navigate to URL and wait for DOM to be ready
   try {
@@ -338,10 +338,9 @@ async function captureAndLog(
   const filename = suffix ? addFilenameSuffix(screenshot.filename, suffix) : screenshot.filename;
 
   if (result.success) {
-    log.verbose(`    Saved: ${filename}`);
-  } else {
-    log.error(`  ${screenshot.name}${suffix}: ${result.error ?? 'Unknown error'}`);
+    verbose(`Saved: ${filename}`);
   }
+  // Error logging is handled by the main sync loop
 
   return {
     id: `${screenshot.id}${suffix}`,
@@ -371,12 +370,12 @@ function loadEncryptedSession(
 
   const state = loadSession(sessionKey);
   if (state) {
-    log.verbose('Using encrypted session.');
+    verbose('Using encrypted session');
     // eslint-disable-next-line no-restricted-syntax -- deserialized session data
     return state as BrowserContextOptions['storageState'];
   }
 
-  log.verbose('Failed to decrypt session - using fresh browser.');
+  verbose('Failed to decrypt session - using fresh browser');
   return undefined;
 }
 
@@ -390,12 +389,14 @@ interface SyncResult {
 /**
  * Sync all screenshots defined in config
  */
+// eslint-disable-next-line complexity -- main entry point, complexity is acceptable
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const configPath = options.configPath ?? getConfigPath();
   const config: Config = loadConfig(configPath);
 
   if (config.screenshots.length === 0) {
-    log('No screenshots defined.');
+    warn('No screenshots defined.');
+    outro('Run "heroshot config" to add screenshots');
     return { total: 0, success: 0, failed: 0, results: [] };
   }
 
@@ -406,11 +407,9 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     : config.screenshots;
 
   if (filterId && screenshots.length === 0) {
-    log(`No screenshot found with ID: ${filterId}`);
+    logError(`No screenshot found with ID: ${filterId}`);
     return { total: 0, success: 0, failed: 0, results: [] };
   }
-
-  log.verbose(`Syncing ${screenshots.length} screenshot(s)...`);
 
   // Get output directory (relative to project root, which is parent of .heroshot/)
   const configDirectory = path.dirname(configPath);
@@ -419,6 +418,10 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   // Try to load encrypted session if available
   const storageState = loadEncryptedSession(options.sessionKey);
+
+  // Start the capture spinner
+  const captureSpinner = spinner();
+  captureSpinner.start('Launching browser...');
 
   // Launch browser with optional session state
   const viewport = config.browser?.viewport ?? { width: 1280, height: 800 };
@@ -443,17 +446,25 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   };
 
   const results: ScreenshotResult[] = [];
+  const totalToCapture = screenshots.length * Math.max(1, schemes.length);
+  let capturedCount = 0;
 
   for (const screenshot of screenshots) {
     if (schemes.length === 0) {
       // No color scheme specified - capture once with browser default
+      capturedCount++;
+      captureSpinner.message(`Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}`);
       const result = await captureAndLog(page, screenshot, outputDirectory, captureOptions, '');
       results.push(result);
     } else {
       // Capture for each color scheme
       for (const scheme of schemes) {
-        await page.emulateMedia({ colorScheme: scheme });
+        capturedCount++;
         const suffix = schemes.length > 1 ? `-${scheme}` : '';
+        captureSpinner.message(
+          `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
+        );
+        await page.emulateMedia({ colorScheme: scheme });
         const result = await captureAndLog(
           page,
           screenshot,
@@ -466,6 +477,8 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     }
   }
 
+  captureSpinner.stop('Screenshots captured');
+
   await browser.close();
 
   const { length: totalCount } = results;
@@ -473,10 +486,19 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const { length: successCount } = successfulResults;
   const failedCount = totalCount - successCount;
 
+  // Show results
   if (failedCount > 0) {
-    log(`Done: ${successCount}/${totalCount} screenshots (${failedCount} failed)`);
+    // Show failed screenshots
+    for (const result of results) {
+      if (!result.success) {
+        logError(`${result.name}: ${result.error ?? 'Unknown error'}`);
+      }
+    }
+    outro(`${colors.red(`${failedCount} failed`)}, ${successCount} captured`);
   } else {
-    log(`Done: ${successCount} screenshot${successCount === 1 ? '' : 's'} captured`);
+    outro(
+      `${successCount} screenshot${successCount === 1 ? '' : 's'} saved to ${colors.dim(config.outputDirectory + '/')}`
+    );
   }
 
   return {
