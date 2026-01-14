@@ -1,5 +1,15 @@
 # heroshot
 
+## 0.1.0
+
+### Minor Changes
+
+- 23e48a0: Add toolbar improvements: cursor tooltip showing selector while hovering, mask padding option to fill padding areas with detected background color, symmetric resize for padding controls, and redesigned welcome page with URL input bar.
+
+### Patch Changes
+
+- ec788fd: Update branding colors, documentation content, and add CSS palette with light/dark mode support.
+
 ## 0.0.6
 
 ### Patch Changes
