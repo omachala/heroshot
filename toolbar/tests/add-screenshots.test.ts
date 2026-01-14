@@ -40,14 +40,14 @@ test('complete flow: pick element, confirm, edit name, click done', async ({ pag
   await activatePickerAndSelectElement(page, '#hero');
 
   // Visual regression: element selected with confirm/cancel buttons
-  // await expect(page).toHaveScreenshot('element-selected.png');
+  await expect(page).toHaveScreenshot('element-selected.png');
 
   // Step 2: Click confirm button (saves immediately, NOT in edit mode)
   await clickConfirmButtonForElement(page, '#hero');
   await page.waitForTimeout(500);
 
   // Visual regression: sidebar open with new item saved
-  // await expect(page).toHaveScreenshot('sidebar-open-editing.png');
+  await expect(page).toHaveScreenshot('sidebar-open-editing.png');
 
   // Step 3: Verify screenshot-added event was emitted
   const addedEvents = await getEventsByType(page, 'screenshot-added');
@@ -81,7 +81,7 @@ test('complete flow: pick element, confirm, edit name, click done', async ({ pag
   expect(lastEvent?.data.name).toBe('My Hero Section');
 
   // Visual regression: item renamed in sidebar
-  // await expect(page).toHaveScreenshot('item-renamed.png');
+  await expect(page).toHaveScreenshot('item-renamed.png');
 
   // Step 5: Click Done button
   await clickToolbarButton(page, 'done');

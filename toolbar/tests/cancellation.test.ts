@@ -57,14 +57,14 @@ test('ESC key closes sidebar', async ({ page }) => {
   await openSidebar(page);
 
   // Visual regression: sidebar open
-  // await expect(page).toHaveScreenshot('sidebar-open.png');
+  await expect(page).toHaveScreenshot('sidebar-open.png');
 
   // Press ESC
   await page.keyboard.press('Escape');
   await waitForSidebar(page, false);
 
   // Visual regression: sidebar closed
-  // await expect(page).toHaveScreenshot('sidebar-closed.png');
+  await expect(page).toHaveScreenshot('sidebar-closed.png');
 });
 
 test('ESC key cancels picker mode', async ({ page }) => {
