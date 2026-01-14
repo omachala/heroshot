@@ -8,6 +8,107 @@ import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
 
 /**
+ * Get the visible background color of an element by walking up the DOM tree.
+ * Returns the first non-transparent background color found, or white as fallback.
+ * Must be executed in browser context via page.evaluate().
+ */
+const GET_BACKGROUND_COLOR_SCRIPT = String.raw`
+  (element) => {
+    let current = element.parentElement;
+    while (current) {
+      const style = globalThis.getComputedStyle(current);
+      const bgColor = style.backgroundColor;
+      if (bgColor && bgColor !== 'transparent' && !bgColor.startsWith('rgba(0, 0, 0, 0)')) {
+        const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+        if (rgbMatch && rgbMatch[1] && rgbMatch[2] && rgbMatch[3]) {
+          const red = parseInt(rgbMatch[1], 10);
+          const green = parseInt(rgbMatch[2], 10);
+          const blue = parseInt(rgbMatch[3], 10);
+          return '#' + red.toString(16).padStart(2, '0') + green.toString(16).padStart(2, '0') + blue.toString(16).padStart(2, '0');
+        }
+        return bgColor;
+      }
+      const root = current.getRootNode();
+      if (root instanceof ShadowRoot) {
+        current = root.host;
+      } else {
+        current = current.parentElement;
+      }
+    }
+    return '#ffffff';
+  }
+`;
+
+/**
+ * Inject temporary mask divs to fill padding areas with background color.
+ * Script runs in browser context via page.evaluate().
+ */
+async function injectPaddingMask(
+  page: Page,
+  element: ElementHandle,
+  padding: { top: number; right: number; bottom: number; left: number },
+  bgColor: string
+): Promise<void> {
+  const box = await element.boundingBox();
+  if (!box) return;
+
+  // Inject mask using string-based evaluate (browser context)
+  await page.evaluate(`
+    (() => {
+      const box = ${JSON.stringify(box)};
+      const padding = ${JSON.stringify(padding)};
+      const bgColor = ${JSON.stringify(bgColor)};
+      const maskId = 'heroshot-padding-mask';
+
+      // Remove any existing mask
+      document.querySelector('#' + maskId)?.remove();
+
+      const container = document.createElement('div');
+      container.id = maskId;
+      container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483646;';
+
+      // Top mask
+      if (padding.top > 0) {
+        const top = document.createElement('div');
+        top.style.cssText = 'position:absolute;top:' + (box.y - padding.top) + 'px;left:' + (box.x - padding.left) + 'px;width:' + (box.width + padding.left + padding.right) + 'px;height:' + padding.top + 'px;background:' + bgColor + ';';
+        container.append(top);
+      }
+
+      // Bottom mask
+      if (padding.bottom > 0) {
+        const bottom = document.createElement('div');
+        bottom.style.cssText = 'position:absolute;top:' + (box.y + box.height) + 'px;left:' + (box.x - padding.left) + 'px;width:' + (box.width + padding.left + padding.right) + 'px;height:' + padding.bottom + 'px;background:' + bgColor + ';';
+        container.append(bottom);
+      }
+
+      // Left mask
+      if (padding.left > 0) {
+        const left = document.createElement('div');
+        left.style.cssText = 'position:absolute;top:' + box.y + 'px;left:' + (box.x - padding.left) + 'px;width:' + padding.left + 'px;height:' + box.height + 'px;background:' + bgColor + ';';
+        container.append(left);
+      }
+
+      // Right mask
+      if (padding.right > 0) {
+        const right = document.createElement('div');
+        right.style.cssText = 'position:absolute;top:' + box.y + 'px;left:' + (box.x + box.width) + 'px;width:' + padding.right + 'px;height:' + box.height + 'px;background:' + bgColor + ';';
+        container.append(right);
+      }
+
+      document.body.append(container);
+    })()
+  `);
+}
+
+/**
+ * Remove injected padding mask.
+ * Script runs in browser context via page.evaluate().
+ */
+async function removePaddingMask(page: Page): Promise<void> {
+  await page.evaluate(`document.querySelector('#heroshot-padding-mask')?.remove()`);
+}
+
+/**
  * Find element using shadow-piercing selector with retries
  * The >>> syntax pierces shadow DOM boundaries
  */
@@ -117,7 +218,7 @@ async function captureScreenshot(
   captureOptions: CaptureOptions,
   filenameSuffix = ''
 ): Promise<{ success: boolean; error?: string }> {
-  const { name, url, selector, filename, padding, scroll } = screenshot;
+  const { name, url, selector, filename, padding, scroll, maskPadding } = screenshot;
   const { format, quality } = captureOptions;
   const finalFilename = filenameSuffix ? addFilenameSuffix(filename, filenameSuffix) : filename;
 
@@ -169,6 +270,14 @@ async function captureScreenshot(
           return { success: false, error: 'Could not get element bounding box' };
         }
 
+        // If maskPadding is enabled, inject temporary divs to fill padding with background color
+        if (maskPadding) {
+          // Detect background color from element's ancestors
+          const bgColorResult = await element.evaluate(GET_BACKGROUND_COLOR_SCRIPT);
+          const bgColor = typeof bgColorResult === 'string' ? bgColorResult : '#ffffff';
+          await injectPaddingMask(page, element, padding, bgColor);
+        }
+
         // Calculate expanded clip region
         const clip = {
           x: Math.max(0, box.x - padding.left),
@@ -178,6 +287,11 @@ async function captureScreenshot(
         };
 
         await takeScreenshot(page, outputPath, format, quality, clip);
+
+        // Clean up mask after screenshot
+        if (maskPadding) {
+          await removePaddingMask(page);
+        }
       } else {
         // No padding - use element screenshot directly
         await takeScreenshot(element, outputPath, format, quality);
