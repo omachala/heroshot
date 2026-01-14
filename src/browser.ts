@@ -111,12 +111,20 @@ type ToolbarJob =
   | { type: 'highlight'; selector: string; screenshotId?: string }
   | { type: 'navigate-and-highlight'; url: string; selector: string; screenshotId?: string };
 
+// Browser settings from toolbar
+interface BrowserSettings {
+  viewport: { width: number; height: number };
+  colorScheme?: 'light' | 'dark' | 'both';
+  deviceScaleFactor?: number;
+}
+
 // Events that toolbar sends to CLI
 type ToolbarEvent =
   | { type: 'screenshot-added'; data: ScreenshotData }
   | { type: 'screenshot-updated'; data: ScreenshotData }
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
+  | { type: 'settings-updated'; data: BrowserSettings }
   | { type: 'job-complete' }
   | { type: 'done' };
 
@@ -234,6 +242,8 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
   // Track selected screenshot and sidebar state for cross-URL navigation
   let selectedId: string | null = null;
   let sidebarExpanded = false;
+  // Track updated browser settings
+  let updatedBrowserSettings: BrowserSettings | null = null;
 
   const { browser, context } = await launchBrowser({ headless: false, viewport, storageState });
 
@@ -302,6 +312,12 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
           };
           void currentPage.goto(event.url, { waitUntil: 'domcontentloaded' });
         }
+        break;
+      }
+
+      case 'settings-updated': {
+        updatedBrowserSettings = event.data;
+        verbose(`Settings updated: ${JSON.stringify(event.data)}`);
         break;
       }
 
@@ -411,6 +427,21 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
     }
   }
 
+  // Update browser settings if changed
+  // eslint-disable-next-line no-restricted-syntax -- callback assignment breaks TS narrowing
+  const finalSettings = updatedBrowserSettings as BrowserSettings | null;
+  if (finalSettings) {
+    latestConfig.browser = {
+      ...latestConfig.browser,
+      viewport: finalSettings.viewport,
+      ...(finalSettings.colorScheme && { colorScheme: finalSettings.colorScheme }),
+      ...(finalSettings.deviceScaleFactor && {
+        deviceScaleFactor: finalSettings.deviceScaleFactor,
+      }),
+    };
+    verbose('Browser settings saved');
+  }
+
   // Always save config (ensures config file exists)
   saveConfig(configPath, latestConfig);
   verbose(`Config saved: ${configPath}`);
@@ -424,12 +455,13 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
   }
 
   // Show config saved message
-  if (newlyAddedIds.size > 0 || deletedIds.size > 0) {
+  if (newlyAddedIds.size > 0 || deletedIds.size > 0 || finalSettings) {
     const { size: addedCount } = newlyAddedIds;
     const { size: deletedCount } = deletedIds;
     const parts: string[] = [];
     if (addedCount > 0) parts.push(`${addedCount} added`);
     if (deletedCount > 0) parts.push(`${deletedCount} removed`);
+    if (finalSettings) parts.push('settings updated');
     success(`Config updated: ${parts.join(', ')}`);
   }
 
