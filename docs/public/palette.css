@@ -1,0 +1,46 @@
+/* Heroshot Brand Palette
+   Shared between docs theme and standalone pages
+   ============================================== */
+
+:root {
+  /* Brand colors - Orange (from logo bolt gradient) */
+  --brand-dark: #c2410c;
+  --brand-main: #ea580c;
+  --brand-light: #fb923c;
+
+  /* Navy colors (from logo circle gradient: #2a5580 → #3d6a99) */
+  --navy-darkest: #0f1d2f;
+  --navy-dark: #162d4a;
+  --navy-base: #2a5580;
+  --navy-light: #3d6a99;
+
+  /* Theme colors - Light mode */
+  --bg-gradient-start: #f8fafc;
+  --bg-gradient-end: #ffffff;
+  --bg-card: #ffffff;
+  --text-primary: var(--navy-darkest);
+  --text-secondary: var(--navy-base);
+  --text-muted: #6b7280;
+  --border-color: #e2e8f0;
+  --kbd-bg: #f1f5f9;
+  --input-bg: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.06);
+  --shadow-color-strong: rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Theme colors - Dark mode (using navy palette) */
+    --bg-gradient-start: var(--navy-darkest);
+    --bg-gradient-end: var(--navy-dark);
+    --bg-card: var(--navy-dark);
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: var(--navy-base);
+    --kbd-bg: var(--navy-base);
+    --input-bg: var(--navy-dark);
+    --shadow-color: rgba(0, 0, 0, 0.2);
+    --shadow-color-strong: rgba(0, 0, 0, 0.3);
+  }
+}

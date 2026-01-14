@@ -18,8 +18,11 @@ export default defineConfig({
     logo: '/nav-logo.svg',
 
     nav: [
-      { text: 'Guide', link: '/guide/' },
-      { text: 'API', link: '/api/cli' },
+      { text: 'Docs', link: '/guide/' },
+      { text: 'Guides', link: '/guide/automated-updates' },
+      { text: 'CLI', link: '/api/cli' },
+      { text: 'GitHub', link: 'https://github.com/omachala/heroshot', target: '_blank' },
+      { text: 'NPM', link: 'https://www.npmjs.com/package/heroshot', target: '_blank' },
     ],
 
     sidebar: {
@@ -44,11 +47,10 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [{ icon: 'github', link: 'https://github.com/omachala/heroshot' }],
+    socialLinks: [],
 
     footer: {
-      message: 'Released under the MIT License.',
-      copyright: 'Copyright © 2024-present',
+      copyright: '© 2026 Heroshot',
     },
   },
 });
