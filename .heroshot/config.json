@@ -1,19 +1,26 @@
 {
   "outputDirectory": "docs/public/screenshots",
   "outputFormat": "png",
+  "jpegQuality": 80,
   "browser": {
     "deviceScaleFactor": 2
   },
   "screenshots": [
     {
-      "id": "hero",
-      "name": "Hero Section",
-      "url": "https://heroshot.sh",
+      "id": "5dytme8m",
+      "name": "Hero",
+      "url": "https://heroshot.sh/",
       "filename": "hero.png",
-      "selector": ".VPHero .container",
-      "padding": { "top": 32, "right": 32, "bottom": 32, "left": 32 },
-      "maskPadding": true,
-      "viewports": ["desktop", "tablet", "mobile"]
+      "selector": "#VPContent > div.VPHome > div.VPHero.has-image:nth-of-type(1)",
+      "scroll": {
+        "x": 0,
+        "y": 0
+      },
+      "viewports": [
+        "mobile",
+        "tablet",
+        "desktop"
+      ]
     }
   ]
 }

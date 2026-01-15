@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { BrowserSettings } from '../types';
+  import type { BrowserSettings, ColorScheme } from '../types';
 
   interface Props {
     visible: boolean;
@@ -13,7 +13,7 @@
   // Local state for editing - initialized from derived values
   let width = $state(0);
   let height = $state(0);
-  let colorScheme = $state<'auto' | 'light' | 'dark' | undefined>();
+  let colorScheme = $state<ColorScheme | undefined>();
   let deviceScaleFactor = $state<number | undefined>();
 
   // Update local state when settings prop changes or modal opens
@@ -41,17 +41,12 @@
     }
   }
 
-  // Apply color scheme to page for preview
-  function applyColorScheme(scheme: 'light' | 'dark' | undefined): void {
-    document.documentElement.style.colorScheme = scheme || '';
+  // Set color scheme and preview on page
+  function setColorScheme(scheme: ColorScheme | undefined): void {
+    colorScheme = scheme;
+    const preview = scheme === 'light' || scheme === 'dark' ? scheme : '';
+    document.documentElement.style.colorScheme = preview;
   }
-
-  // Preview color scheme when changed (only for explicit light/dark)
-  $effect(() => {
-    if (props.visible && (colorScheme === 'light' || colorScheme === 'dark')) {
-      applyColorScheme(colorScheme);
-    }
-  });
 </script>
 
 <svelte:document onkeydown={handleKeyDown} />
@@ -140,7 +135,7 @@
           <button
             type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === undefined ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
-            onclick={() => { colorScheme = undefined; applyColorScheme(); }}
+            onclick={() => setColorScheme(undefined)}
             title="Capture both light and dark versions (default)"
           >
             Both
@@ -148,7 +143,7 @@
           <button
             type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === 'auto' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
-            onclick={() => { colorScheme = 'auto'; applyColorScheme(); }}
+            onclick={() => setColorScheme('auto')}
             title="Use browser's color scheme preference"
           >
             Auto
@@ -156,14 +151,14 @@
           <button
             type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === 'light' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
-            onclick={() => { colorScheme = 'light'; applyColorScheme('light'); }}
+            onclick={() => setColorScheme('light')}
           >
             Light
           </button>
           <button
             type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === 'dark' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
-            onclick={() => { colorScheme = 'dark'; applyColorScheme('dark'); }}
+            onclick={() => setColorScheme('dark')}
           >
             Dark
           </button>

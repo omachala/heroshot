@@ -33,12 +33,17 @@ export interface ScreenshotItem {
 }
 
 /**
+ * Color scheme for light/dark mode
+ * 'auto' = browser default, 'light'/'dark' = explicit, undefined = capture both
+ */
+export type ColorScheme = 'auto' | 'light' | 'dark';
+
+/**
  * Browser settings
- * colorScheme: 'auto' = browser default, 'light'/'dark' = explicit, undefined = both
  */
 export interface BrowserSettings {
   viewport: { width: number; height: number };
-  colorScheme?: 'auto' | 'light' | 'dark';
+  colorScheme?: ColorScheme;
   /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
   deviceScaleFactor?: number;
 }
