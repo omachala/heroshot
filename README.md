@@ -45,11 +45,15 @@ npx heroshot config
 
 ## Why heroshot?
 
+Heroshot automates **documentation screenshots** - not visual regression testing. Define once, generate everywhere.
+
+**The math:** 3 components × 5 pages × 3 viewports × 2 color schemes = **90 screenshots** from one config.
+
 - **Visual picker** - Point and click to select elements, no DevTools needed
-- **Zero config** - No YAML to write, config is auto-generated
-- **Element-precise** - Capture specific UI components, not just full pages
-- **Light & Dark mode** - Capture both color schemes in one run, pixel-perfect
-- **One command** - Regenerate all screenshots anytime your UI changes
+- **Viewport variants** - Desktop, tablet, mobile from a single definition
+- **Light & Dark mode** - Both color schemes captured automatically
+- **Pixel-perfect** - Element-precise capture with masked padding
+- **One command** - Regenerate all screenshots when your UI changes
 - **CI ready** - Automate updates with encrypted session support
 
 ## Automated Updates

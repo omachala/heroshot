@@ -4,7 +4,7 @@ layout: home
 hero:
   name: HeroShot
   text: Screenshots that stay true
-  tagline: Your UI evolves. Your screenshots follow - automatically.
+  tagline: Documentation screenshot automation. Define once, regenerate forever.
   image:
     src: /logo.svg
     alt: Heroshot Logo
