@@ -66,10 +66,16 @@ for (const target of targets) {
   const bunTarget = `bun-${target.os}-${target.arch}`;
 
   // Build standalone binary
+  // Note: Some Playwright optional dependencies (electron, chromium-bidi) are marked external
+  // as they're not needed for basic Chrome/Chromium automation
   await Bun.build({
     entrypoints: ['./src/cli.ts'],
     sourcemap: 'none',
     minify: true,
+    external: [
+      'electron', // Optional Playwright dependency for Electron automation
+      'chromium-bidi', // Optional BiDi protocol support (not needed for CDP)
+    ],
     compile: {
       target: bunTarget as
         | 'bun-linux-arm64'

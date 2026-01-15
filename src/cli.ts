@@ -7,13 +7,29 @@ import { getSessionPath, loadLocalKey } from './session';
 import { sync } from './sync';
 import { error, intro, log, outro, setVerbose, verbose } from './ui';
 
-// Read version from package.json
-const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
-const packageJson: unknown = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-const version =
-  packageJson && typeof packageJson === 'object' && 'version' in packageJson
-    ? String(packageJson.version)
-    : '0.0.0';
+// Version is injected at build time for standalone binaries, or read from package.json for development
+declare const HEROSHOT_VERSION: string | undefined;
+
+function getVersion(): string {
+  // Use build-time injected version if available (standalone binary)
+  if (HEROSHOT_VERSION !== undefined) {
+    return HEROSHOT_VERSION;
+  }
+
+  // Fall back to reading package.json (development)
+  try {
+    const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
+    const packageJson: unknown = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+    if (packageJson && typeof packageJson === 'object' && 'version' in packageJson) {
+      return String(packageJson.version);
+    }
+  } catch {
+    // Ignore errors
+  }
+  return '0.0.0';
+}
+
+const version = getVersion();
 
 const program = new Command();
 

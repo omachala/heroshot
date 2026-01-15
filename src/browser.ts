@@ -75,6 +75,53 @@ function installPlaywrightChromium(): boolean {
 }
 
 /**
+ * Check if npx is available (Node.js installed)
+ */
+function isNpxAvailable(): boolean {
+  try {
+    // eslint-disable-next-line sonarjs/no-os-command-from-path -- checking if npx exists
+    execSync('which npx', { stdio: 'pipe' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Prompt user to install browser when none found
+ */
+async function promptBrowserInstall(headless: boolean): Promise<Browser | null> {
+  log('');
+  log('No browser found.');
+  log('');
+  log('Heroshot needs a Chromium-based browser to capture screenshots.');
+  log('');
+
+  if (isNpxAvailable()) {
+    log('Options:');
+    log('  1. Install Chromium now (recommended, ~150MB download)');
+    log('  2. Install Chrome manually: https://www.google.com/chrome/');
+    log('');
+
+    const shouldInstall = await confirm('Install Chromium now?');
+
+    if (shouldInstall && installPlaywrightChromium()) {
+      // Try launching again with Playwright Chromium
+      return chromium.launch({ headless });
+    }
+  } else {
+    // No npx - standalone binary without Node
+    log('Please install a browser:');
+    log('');
+    log('  Chrome: https://www.google.com/chrome/');
+    log('  Edge:   https://www.microsoft.com/edge');
+    log('');
+  }
+
+  return null;
+}
+
+/**
  * Launch browser and create context with optional storage state.
  * Detects system browsers (Chrome, Edge, Chromium) or prompts to install Chromium.
  */
@@ -82,6 +129,7 @@ export async function launchBrowser(
   options: LaunchOptions = {}
 ): Promise<{ browser: Browser; context: BrowserContext }> {
   const viewport = options.viewport ?? DEFAULT_VIEWPORT;
+  log.verbose(`Launching browser (headless: ${options.headless ?? false})...`);
 
   // Detect available system browsers
   const systemBrowsers = detectSystemBrowsers();
@@ -112,56 +160,18 @@ export async function launchBrowser(
         log.verbose('Using Playwright Chromium');
       }
       break;
-    } catch {
+    } catch (error) {
       // This channel failed, try next one
+      log.verbose(
+        `Failed to launch ${channel ?? 'playwright-chromium'}: ${error instanceof Error ? error.message : String(error)}`
+      );
       continue;
     }
   }
 
   // If no browser found, prompt to install Chromium
   if (!browser) {
-    log('');
-    log('No browser found.');
-    log('');
-    log('Heroshot needs a Chromium-based browser to capture screenshots.');
-    log('');
-
-    // Check if we can use npx (Node available)
-    let hasNpx = false;
-    try {
-      // eslint-disable-next-line sonarjs/no-os-command-from-path -- checking if npx exists
-      execSync('which npx', { stdio: 'pipe' });
-      hasNpx = true;
-    } catch {
-      // npx not available
-    }
-
-    if (hasNpx) {
-      log('Options:');
-      log('  1. Install Chromium now (recommended, ~150MB download)');
-      log('  2. Install Chrome manually: https://www.google.com/chrome/');
-      log('');
-
-      const shouldInstall = await confirm('Install Chromium now?');
-
-      if (shouldInstall) {
-        const success = installPlaywrightChromium();
-        if (success) {
-          // Try launching again with Playwright Chromium
-          browser = await chromium.launch({
-            headless: options.headless ?? false,
-          });
-        }
-      }
-    } else {
-      // No npx - standalone binary without Node
-      log('Please install a browser:');
-      log('');
-      log('  Chrome: https://www.google.com/chrome/');
-      log('  Edge:   https://www.microsoft.com/edge');
-      log('');
-    }
-
+    browser = await promptBrowserInstall(options.headless ?? false);
     if (!browser) {
       throw new Error('No browser available. Please install Chrome or Edge and try again.');
     }
