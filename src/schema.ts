@@ -21,8 +21,8 @@ export const viewportSchema = z.object({
   height: z.number().int().positive().default(800),
 });
 
-/** Color scheme for light/dark mode ('both' captures two screenshots) */
-export const colorSchemeSchema = z.enum(['light', 'dark', 'both']);
+/** Color scheme for light/dark mode (undefined = both, captures two screenshots) */
+export const colorSchemeSchema = z.enum(['auto', 'light', 'dark']);
 
 /** Output format for screenshots */
 export const outputFormatSchema = z.enum(['png', 'jpeg']).default('png');
@@ -41,11 +41,27 @@ export const scrollPositionSchema = z.object({
   y: z.number().int().min(0).default(0),
 });
 
+/** Viewport variant - preset name or custom "WIDTHxHEIGHT" format */
+export const viewportVariantSchema = z.string().refine(
+  value => {
+    // Check if it's a preset
+    if (['desktop', 'tablet', 'mobile'].includes(value)) return true;
+    // Check if it's custom format "WIDTHxHEIGHT"
+    const match = /^(\d+)x(\d+)$/.exec(value);
+    if (!match) return false;
+    const width = parseInt(match[1] ?? '0', 10);
+    const height = parseInt(match[2] ?? '0', 10);
+    return width > 0 && height > 0;
+  },
+  { message: 'Must be "desktop", "tablet", "mobile", or "WIDTHxHEIGHT" (e.g., "400x500")' }
+);
+
 /** Single screenshot definition */
 export const screenshotSchema = z.object({
   id: z.string().min(1).default(generateUid),
   name: z.string().min(1),
   url: z.url(),
+  /** Base filename - suffixes like -light, -mobile are appended automatically */
   filename: z.string().min(1),
   selector: z.string().optional(),
   /** Padding to expand capture area beyond element bounds */
@@ -54,6 +70,8 @@ export const screenshotSchema = z.object({
   scroll: scrollPositionSchema.optional(),
   /** Fill padding area with detected background color */
   maskPadding: z.boolean().optional(),
+  /** Viewport variants - generates screenshot for each (e.g., ["desktop", "mobile", "400x500"]) */
+  viewports: z.array(viewportVariantSchema).optional(),
 });
 
 /** Browser settings */

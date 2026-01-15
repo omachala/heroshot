@@ -87,6 +87,7 @@
     "vitest": "^4.0.17"
   },
   "dependencies": {
+    "@clack/prompts": "^0.11.0",
     "commander": "^12.1.0",
     "playwright": "^1.49.0",
     "sharp": "^0.33.0",

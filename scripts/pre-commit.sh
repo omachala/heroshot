@@ -1,5 +1,11 @@
 #!/bin/sh
 
+# Block AI config directories
+if git diff --cached --name-only | grep -qE '^\.(claude|opencode|cursor|aider|copilot)/'; then
+  echo "AI config directories are gitignored"
+  exit 1
+fi
+
 # Create temp directory for outputs (gitignored via .* pattern)
 mkdir -p .pre-commit-logs
 

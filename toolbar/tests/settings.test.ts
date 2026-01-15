@@ -163,10 +163,10 @@ test('change color scheme to Both (captures light and dark variants)', async ({ 
   await page.locator(SETTINGS_SELECTORS.saveButton).click();
   await page.waitForTimeout(300);
 
-  // Verify settings-updated event with both color scheme
+  // Verify settings-updated event with both color scheme (undefined means "both")
   const settingsEvents = await getEventsByType(page, 'settings-updated');
   expect(settingsEvents.length).toBe(1);
-  expect(settingsEvents[0]?.data.colorScheme).toBe('both');
+  expect(settingsEvents[0]?.data.colorScheme).toBeUndefined();
 });
 
 test('cancel settings does not emit event', async ({ page }) => {

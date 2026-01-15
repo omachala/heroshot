@@ -2,7 +2,8 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'Heroshot',
-  description: 'Screenshot automation CLI tool',
+  description: 'Screenshots that stay true. Your UI evolves, your screenshots follow.',
+  sitemap: { hostname: 'https://heroshot.sh' },
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
@@ -42,7 +43,10 @@ export default defineConfig({
       '/api/': [
         {
           text: 'Reference',
-          items: [{ text: 'CLI', link: '/api/cli' }],
+          items: [
+            { text: 'CLI', link: '/api/cli' },
+            { text: 'Configuration', link: '/api/config' },
+          ],
         },
       ],
     },

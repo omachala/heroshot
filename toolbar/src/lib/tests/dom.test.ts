@@ -19,6 +19,13 @@ describe('getBackgroundColor', () => {
     expect(getBackgroundColor(div)).toBe('#ffffff');
   });
 
+  it('should return element own background color', () => {
+    const div = document.createElement('div');
+    div.style.backgroundColor = 'rgb(30, 30, 30)';
+    document.body.append(div);
+    expect(getBackgroundColor(div)).toBe('#1e1e1e');
+  });
+
   it('should return parent background color as hex', () => {
     const parent = document.createElement('div');
     parent.style.backgroundColor = 'rgb(255, 0, 0)';
