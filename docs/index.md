@@ -26,6 +26,10 @@ features:
     title: Point and Click
     details: Visual picker generates the config. No YAML files, no DevTools, no manual CSS selectors.
   - icon:
+      src: /icons/moon.svg
+    title: Light & Dark Mode
+    details: Capture both color schemes in one run. Pixel-perfect backgrounds that match your UI theme.
+  - icon:
       src: /icons/rocket.svg
     title: CI/CD Ready
     details: Run heroshot sync in your pipeline. Screenshots update on every deploy.
