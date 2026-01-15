@@ -366,7 +366,12 @@ interface ScreenshotResult {
 }
 
 /**
- * Capture screenshot and log result
+ * Retry delays in milliseconds (exponential backoff up to 5s)
+ */
+const RETRY_DELAYS = [500, 1000, 2000, 3000, 5000];
+
+/**
+ * Capture screenshot and log result (with retries)
  */
 async function captureAndLog(
   page: Page,
@@ -375,12 +380,29 @@ async function captureAndLog(
   captureOptions: CaptureOptions,
   suffix: string
 ): Promise<ScreenshotResult> {
-  const result = await captureScreenshot(page, screenshot, outputDirectory, captureOptions, suffix);
   const filename = suffix ? addFilenameSuffix(screenshot.filename, suffix) : screenshot.filename;
+  const { length: maxRetries } = RETRY_DELAYS;
+  let result: { success: boolean; error?: string } = { success: false };
 
-  if (result.success) {
-    verbose(`Saved: ${filename}`);
+  // Try up to 5 times with exponential backoff
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    result = await captureScreenshot(page, screenshot, outputDirectory, captureOptions, suffix);
+
+    if (result.success) {
+      verbose(`Saved: ${filename}`);
+      break;
+    }
+
+    // Wait before next retry (if not last attempt)
+    if (attempt < maxRetries - 1) {
+      const delay = RETRY_DELAYS[attempt] ?? 1000;
+      verbose(
+        `Retry ${String(attempt + 1)}/${String(maxRetries)} for ${filename} in ${String(delay)}ms...`
+      );
+      await page.waitForTimeout(delay);
+    }
   }
+
   // Error logging is handled by the main sync loop
 
   return {
