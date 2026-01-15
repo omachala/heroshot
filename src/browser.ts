@@ -114,9 +114,10 @@ type ToolbarJob =
   | { type: 'navigate-and-highlight'; url: string; selector: string; screenshotId?: string };
 
 // Browser settings from toolbar
+// colorScheme: 'auto' = browser default, 'light'/'dark' = explicit, undefined = both
 interface BrowserSettings {
   viewport: { width: number; height: number };
-  colorScheme?: 'light' | 'dark' | 'both';
+  colorScheme?: 'auto' | 'light' | 'dark';
   deviceScaleFactor?: number;
 }
 

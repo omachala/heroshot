@@ -34,10 +34,11 @@ export interface ScreenshotItem {
 
 /**
  * Browser settings
+ * colorScheme: 'auto' = browser default, 'light'/'dark' = explicit, undefined = both
  */
 export interface BrowserSettings {
   viewport: { width: number; height: number };
-  colorScheme?: 'light' | 'dark' | 'both';
+  colorScheme?: 'auto' | 'light' | 'dark';
   /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
   deviceScaleFactor?: number;
 }

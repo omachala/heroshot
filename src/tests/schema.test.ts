@@ -50,12 +50,12 @@ describe('colorSchemeSchema', () => {
     expect(colorSchemeSchema.parse('dark')).toBe('dark');
   });
 
-  it('accepts both', () => {
-    expect(colorSchemeSchema.parse('both')).toBe('both');
+  it('accepts auto', () => {
+    expect(colorSchemeSchema.parse('auto')).toBe('auto');
   });
 
   it('rejects invalid value', () => {
-    expect(() => colorSchemeSchema.parse('auto')).toThrow();
+    expect(() => colorSchemeSchema.parse('both')).toThrow();
   });
 });
 

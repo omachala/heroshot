@@ -13,7 +13,7 @@
   // Local state for editing - initialized from derived values
   let width = $state(0);
   let height = $state(0);
-  let colorScheme = $state<'light' | 'dark' | 'both' | undefined>();
+  let colorScheme = $state<'auto' | 'light' | 'dark' | undefined>();
   let deviceScaleFactor = $state<number | undefined>();
 
   // Update local state when settings prop changes or modal opens
@@ -46,9 +46,9 @@
     document.documentElement.style.colorScheme = scheme || '';
   }
 
-  // Preview color scheme when changed
+  // Preview color scheme when changed (only for explicit light/dark)
   $effect(() => {
-    if (props.visible && colorScheme && colorScheme !== 'both') {
+    if (props.visible && (colorScheme === 'light' || colorScheme === 'dark')) {
       applyColorScheme(colorScheme);
     }
   });
@@ -141,6 +141,15 @@
             type="button"
             class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === undefined ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
             onclick={() => { colorScheme = undefined; applyColorScheme(); }}
+            title="Capture both light and dark versions (default)"
+          >
+            Both
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === 'auto' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            onclick={() => { colorScheme = 'auto'; applyColorScheme(); }}
+            title="Use browser's color scheme preference"
           >
             Auto
           </button>
@@ -158,16 +167,8 @@
           >
             Dark
           </button>
-          <button
-            type="button"
-            class="px-3 py-1.5 rounded text-sm transition-colors {colorScheme === 'both' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
-            onclick={() => colorScheme = 'both'}
-            title="Capture both light and dark versions"
-          >
-            Both
-          </button>
         </div>
-        {#if colorScheme === 'both'}
+        {#if colorScheme === undefined}
           <p class="text-xs text-slate-500 mt-2">Will capture two screenshots: -light and -dark variants</p>
         {/if}
       </div>

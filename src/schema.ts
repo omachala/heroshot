@@ -21,8 +21,8 @@ export const viewportSchema = z.object({
   height: z.number().int().positive().default(800),
 });
 
-/** Color scheme for light/dark mode ('both' captures two screenshots) */
-export const colorSchemeSchema = z.enum(['light', 'dark', 'both']);
+/** Color scheme for light/dark mode (undefined = both, captures two screenshots) */
+export const colorSchemeSchema = z.enum(['auto', 'light', 'dark']);
 
 /** Output format for screenshots */
 export const outputFormatSchema = z.enum(['png', 'jpeg']).default('png');

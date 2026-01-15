@@ -351,11 +351,17 @@ async function captureScreenshot(
 
 /**
  * Get array of color schemes to capture based on config setting
+ * - 'auto' = use browser default (no explicit scheme)
+ * - 'light' = light only
+ * - 'dark' = dark only
+ * - undefined/null/anything else = both (light and dark)
  */
-function getColorSchemes(setting?: 'light' | 'dark' | 'both'): ('light' | 'dark')[] {
-  if (setting === 'both') return ['light', 'dark'];
-  if (setting) return [setting];
-  return [];
+function getColorSchemes(setting?: 'auto' | 'light' | 'dark'): ('light' | 'dark')[] {
+  if (setting === 'auto') return [];
+  if (setting === 'light') return ['light'];
+  if (setting === 'dark') return ['dark'];
+  // Default: capture both
+  return ['light', 'dark'];
 }
 
 interface ScreenshotResult {
