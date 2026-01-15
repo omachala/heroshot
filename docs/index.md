@@ -167,6 +167,9 @@ features:
   font-size: 20px;
   color: #f8f8f8;
   letter-spacing: 0.5px;
+  background: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
 }
 .terminal-body .prompt {
   color: #27ca40;
