@@ -57,6 +57,9 @@ const rootDir = path.resolve(import.meta.dirname, '..');
 process.chdir(rootDir);
 
 const singleFlag = process.argv.includes('--single');
+// --target flag allows cross-compilation (e.g., --target=darwin-x64)
+const targetArg = process.argv.find(arg => arg.startsWith('--target='));
+const explicitTarget = targetArg?.split('=')[1];
 
 // Target platforms for distribution
 const allTargets: Array<{
@@ -70,10 +73,20 @@ const allTargets: Array<{
   { os: 'win32', arch: 'x64' },
 ];
 
-// Filter to current platform if --single flag
-const targets = singleFlag
-  ? allTargets.filter(item => item.os === process.platform && item.arch === process.arch)
-  : allTargets;
+// Determine which targets to build
+let targets: typeof allTargets;
+if (explicitTarget) {
+  // Cross-compile for explicit target (e.g., darwin-x64)
+  const [os, arch] = explicitTarget.split('-');
+  const osMap: Record<string, string> = { linux: 'linux', darwin: 'darwin', windows: 'win32' };
+  targets = allTargets.filter(item => item.os === (osMap[os] ?? os) && item.arch === arch);
+} else if (singleFlag) {
+  // Build for current platform only
+  targets = allTargets.filter(item => item.os === process.platform && item.arch === process.arch);
+} else {
+  // Build all platforms
+  targets = allTargets;
+}
 
 if (targets.length === 0) {
   console.error(

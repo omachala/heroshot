@@ -23,8 +23,9 @@ jobs:
             target: linux-arm64
           - os: macos-latest
             target: darwin-arm64
-          - os: macos-13
+          - os: macos-latest
             target: darwin-x64
+            cross_compile: true # Cross-compile x64 from ARM runner
           - os: windows-latest
             target: windows-x64
 
@@ -50,7 +51,13 @@ jobs:
       - run: pnpm install --no-frozen-lockfile
 
       - name: Build binary
-        run: bun run scripts/build-binary.ts --single
+        run: |
+          if [ "${{ matrix.cross_compile }}" = "true" ]; then
+            bun run scripts/build-binary.ts --target=${{ matrix.target }}
+          else
+            bun run scripts/build-binary.ts --single
+          fi
+        shell: bash
 
       - name: Upload binary artifact
         uses: actions/upload-artifact@v4
