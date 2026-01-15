@@ -11,7 +11,57 @@
 
 import path from 'path';
 import { $ } from 'bun';
+import type { BunPlugin } from 'bun';
 import pkg from '../package.json';
+
+/**
+ * Bun plugin to patch Playwright's package.json resolution
+ * Replaces require.resolve calls with inline values
+ */
+const playwrightPatchPlugin: BunPlugin = {
+  name: 'playwright-patch',
+  setup(build) {
+    // Intercept playwright-core files that read package.json
+    build.onLoad({ filter: /playwright-core.*nodePlatform\.js$/ }, async args => {
+      let contents = await Bun.file(args.path).text();
+
+      // Replace: require.resolve("../../../package.json")
+      // With a path that will work in the bundle
+      contents = contents.replace(
+        /require\.resolve\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)/g,
+        '"/playwright-core-pkg"' // Placeholder path
+      );
+
+      // Replace the coreDir calculation with a fixed value
+      contents = contents.replace(
+        /const coreDir = .*dirname.*package\.json.*/g,
+        'const coreDir = "/@playwright-core";'
+      );
+
+      return { contents, loader: 'js' };
+    });
+
+    // Patch userAgent.js
+    build.onLoad({ filter: /playwright-core.*userAgent\.js$/ }, async args => {
+      let contents = await Bun.file(args.path).text();
+      contents = contents.replace(
+        /require\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)\.version/g,
+        '"1.57.0"'
+      );
+      return { contents, loader: 'js' };
+    });
+
+    // Patch dependencies.js
+    build.onLoad({ filter: /playwright-core.*dependencies\.js$/ }, async args => {
+      let contents = await Bun.file(args.path).text();
+      contents = contents.replace(
+        /require\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)\.version/g,
+        '"1.57.0"'
+      );
+      return { contents, loader: 'js' };
+    });
+  },
+};
 
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const rootDir = path.resolve(__dirname, '..');
@@ -72,6 +122,7 @@ for (const target of targets) {
     entrypoints: ['./src/cli.ts'],
     sourcemap: 'none',
     minify: true,
+    plugins: [playwrightPatchPlugin],
     external: [
       'electron', // Optional Playwright dependency for Electron automation
       'chromium-bidi', // Optional BiDi protocol support (not needed for CDP)
