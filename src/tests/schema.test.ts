@@ -8,6 +8,7 @@ import {
   outputFormatSchema,
   paddingSchema,
   scrollPositionSchema,
+  viewportVariantSchema,
   screenshotSchema,
   browserSchema,
   configSchema,
@@ -114,6 +115,48 @@ describe('scrollPositionSchema', () => {
 
   it('rejects negative y', () => {
     expect(() => scrollPositionSchema.parse({ x: 0, y: -10 })).toThrow();
+  });
+});
+
+describe('viewportVariantSchema', () => {
+  it('accepts desktop preset', () => {
+    expect(viewportVariantSchema.parse('desktop')).toBe('desktop');
+  });
+
+  it('accepts tablet preset', () => {
+    expect(viewportVariantSchema.parse('tablet')).toBe('tablet');
+  });
+
+  it('accepts mobile preset', () => {
+    expect(viewportVariantSchema.parse('mobile')).toBe('mobile');
+  });
+
+  it('accepts custom WIDTHxHEIGHT format', () => {
+    expect(viewportVariantSchema.parse('400x500')).toBe('400x500');
+  });
+
+  it('accepts large custom dimensions', () => {
+    expect(viewportVariantSchema.parse('1920x1080')).toBe('1920x1080');
+  });
+
+  it('rejects invalid preset name', () => {
+    expect(() => viewportVariantSchema.parse('laptop')).toThrow();
+  });
+
+  it('rejects invalid format without x separator', () => {
+    expect(() => viewportVariantSchema.parse('400-500')).toThrow();
+  });
+
+  it('rejects zero width', () => {
+    expect(() => viewportVariantSchema.parse('0x500')).toThrow();
+  });
+
+  it('rejects zero height', () => {
+    expect(() => viewportVariantSchema.parse('400x0')).toThrow();
+  });
+
+  it('rejects non-numeric dimensions', () => {
+    expect(() => viewportVariantSchema.parse('abcxdef')).toThrow();
   });
 });
 
