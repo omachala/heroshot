@@ -34,6 +34,7 @@ interface LaunchOptions {
   viewport?: Viewport;
   deviceScaleFactor?: number;
   storageState?: BrowserContextOptions['storageState'];
+  colorScheme?: 'light' | 'dark';
 }
 
 /**
@@ -82,6 +83,7 @@ export async function launchBrowser(
     viewport,
     ...(options.deviceScaleFactor && { deviceScaleFactor: options.deviceScaleFactor }),
     ...(options.storageState && { storageState: options.storageState }),
+    ...(options.colorScheme && { colorScheme: options.colorScheme }),
   });
 
   return { browser, context };
@@ -189,8 +191,13 @@ async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise
   await page.addScriptTag({ content: script });
 }
 
+export interface SetupOptions {
+  /** Force browser color scheme (light/dark) for testing */
+  colorScheme?: 'light' | 'dark';
+}
+
 // eslint-disable-next-line complexity -- main entry point, complexity is acceptable
-export async function setup(): Promise<{ hasScreenshots: boolean }> {
+export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshots: boolean }> {
   const setupSpinner = spinner();
   setupSpinner.start('Launching browser...');
 
@@ -245,7 +252,12 @@ export async function setup(): Promise<{ hasScreenshots: boolean }> {
   // Track updated browser settings
   let updatedBrowserSettings: BrowserSettings | null = null;
 
-  const { browser, context } = await launchBrowser({ headless: false, viewport, storageState });
+  const { browser, context } = await launchBrowser({
+    headless: false,
+    viewport,
+    storageState,
+    colorScheme: options.colorScheme,
+  });
 
   setupSpinner.stop('Browser ready');
   info('Pick elements to screenshot. Close browser or click Done when finished.');

@@ -73,25 +73,40 @@ program
   .description('Open browser to add/edit screenshot definitions')
   .option('--reset', 'Clear existing session and start fresh')
   .option('--only', 'Only run config, skip sync afterwards')
-  .action(async (commandOptions: { reset?: boolean; only?: boolean }) => {
-    const globalOptions = program.opts<GlobalOptions>();
+  .option('--light', 'Force light mode (prefers-color-scheme: light)')
+  .option('--dark', 'Force dark mode (prefers-color-scheme: dark)')
+  .action(
+    async (commandOptions: {
+      reset?: boolean;
+      only?: boolean;
+      light?: boolean;
+      dark?: boolean;
+    }) => {
+      const globalOptions = program.opts<GlobalOptions>();
 
-    if (commandOptions.reset) {
-      const sessionPath = getSessionPath();
-      if (existsSync(sessionPath)) {
-        rmSync(sessionPath);
-        verbose('Session cleared.');
+      if (commandOptions.reset) {
+        const sessionPath = getSessionPath();
+        if (existsSync(sessionPath)) {
+          rmSync(sessionPath);
+          verbose('Session cleared.');
+        }
+      }
+
+      // Determine color scheme: explicit flag > system default
+      let colorScheme: 'light' | 'dark' | undefined;
+      if (commandOptions.light) colorScheme = 'light';
+      else if (commandOptions.dark) colorScheme = 'dark';
+
+      const { hasScreenshots } = await setup({ colorScheme });
+      if (hasScreenshots && !commandOptions.only) {
+        const configPath = globalOptions.config ? path.resolve(globalOptions.config) : undefined;
+        const result = await sync({ configPath, sessionKey: globalOptions.sessionKey });
+        if (result.failed > 0) {
+          process.exitCode = 1;
+        }
       }
     }
-    const { hasScreenshots } = await setup();
-    if (hasScreenshots && !commandOptions.only) {
-      const configPath = globalOptions.config ? path.resolve(globalOptions.config) : undefined;
-      const result = await sync({ configPath, sessionKey: globalOptions.sessionKey });
-      if (result.failed > 0) {
-        process.exitCode = 1;
-      }
-    }
-  });
+  );
 
 program
   .command('session-key')

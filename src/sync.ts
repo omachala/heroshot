@@ -14,20 +14,29 @@ import { colors, error as logError, outro, spinner, verbose, warn } from './ui';
  */
 const GET_BACKGROUND_COLOR_SCRIPT = String.raw`
   (element) => {
-    let current = element.parentElement;
+    const toHex = (bgColor) => {
+      const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (rgbMatch && rgbMatch[1] && rgbMatch[2] && rgbMatch[3]) {
+        const red = parseInt(rgbMatch[1], 10);
+        const green = parseInt(rgbMatch[2], 10);
+        const blue = parseInt(rgbMatch[3], 10);
+        return '#' + red.toString(16).padStart(2, '0') + green.toString(16).padStart(2, '0') + blue.toString(16).padStart(2, '0');
+      }
+      return bgColor;
+    };
+
+    const isOpaque = (bgColor) => bgColor && bgColor !== 'transparent' && !bgColor.startsWith('rgba(0, 0, 0, 0)');
+
+    // Walk up DOM tree from element
+    let current = element;
     while (current) {
       const style = globalThis.getComputedStyle(current);
       const bgColor = style.backgroundColor;
-      if (bgColor && bgColor !== 'transparent' && !bgColor.startsWith('rgba(0, 0, 0, 0)')) {
-        const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-        if (rgbMatch && rgbMatch[1] && rgbMatch[2] && rgbMatch[3]) {
-          const red = parseInt(rgbMatch[1], 10);
-          const green = parseInt(rgbMatch[2], 10);
-          const blue = parseInt(rgbMatch[3], 10);
-          return '#' + red.toString(16).padStart(2, '0') + green.toString(16).padStart(2, '0') + blue.toString(16).padStart(2, '0');
-        }
-        return bgColor;
+
+      if (isOpaque(bgColor)) {
+        return toHex(bgColor);
       }
+
       const root = current.getRootNode();
       if (root instanceof ShadowRoot) {
         current = root.host;
@@ -35,6 +44,14 @@ const GET_BACKGROUND_COLOR_SCRIPT = String.raw`
         current = current.parentElement;
       }
     }
+
+    // Fallback: check body and html
+    const bodyBg = globalThis.getComputedStyle(document.body).backgroundColor;
+    if (isOpaque(bodyBg)) return toHex(bodyBg);
+
+    const htmlBg = globalThis.getComputedStyle(document.documentElement).backgroundColor;
+    if (isOpaque(htmlBg)) return toHex(htmlBg);
+
     return '#ffffff';
   }
 `;
@@ -272,9 +289,33 @@ async function captureScreenshot(
 
         // If maskPadding is enabled, inject temporary divs to fill padding with background color
         if (maskPadding) {
-          // Detect background color from element's ancestors
-          const bgColorResult = await element.evaluate(GET_BACKGROUND_COLOR_SCRIPT);
+          // Detect background color - re-find element fresh to handle theme re-renders
+          // HA re-renders components when theme changes, invalidating ElementHandles
+          // Use string-based evaluate to run entirely in browser context
+          const bgColorResult = await page.evaluate(`
+            (() => {
+              const selector = ${JSON.stringify(selector)};
+              const parts = selector.split('>>>').map((p) => p.trim());
+              let current = document;
+
+              for (const part of parts) {
+                if (!part) continue;
+                const root = current instanceof Element ? (current.shadowRoot ?? current) : current;
+                const found = root.querySelector(part);
+                if (!found) return '#ffffff';
+                current = found;
+              }
+
+              if (!(current instanceof Element)) return '#ffffff';
+
+              // Run detection script inline
+              const detectBg = ${GET_BACKGROUND_COLOR_SCRIPT};
+              return detectBg(current);
+            })()
+          `);
+
           const bgColor = typeof bgColorResult === 'string' ? bgColorResult : '#ffffff';
+          verbose(`Background color: ${bgColor}`);
           await injectPaddingMask(page, element, padding, bgColor);
         }
 
@@ -389,7 +430,6 @@ interface SyncResult {
 /**
  * Sync all screenshots defined in config
  */
-// eslint-disable-next-line complexity -- main entry point, complexity is acceptable
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const configPath = options.configPath ?? getConfigPath();
   const config: Config = loadConfig(configPath);
@@ -423,18 +463,6 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const captureSpinner = spinner();
   captureSpinner.start('Launching browser...');
 
-  // Launch browser with optional session state
-  const viewport = config.browser?.viewport ?? { width: 1280, height: 800 };
-  const deviceScaleFactor = config.browser?.deviceScaleFactor;
-  const { browser, context } = await launchBrowser({
-    headless: true,
-    viewport,
-    deviceScaleFactor,
-    storageState,
-  });
-
-  const page = await context.newPage();
-
   // Determine which color schemes to capture
   const colorSchemeSetting = config.browser?.colorScheme;
   const schemes = getColorSchemes(colorSchemeSetting);
@@ -445,41 +473,56 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     quality: config.jpegQuality,
   };
 
+  // Common browser options
+  const viewport = config.browser?.viewport ?? { width: 1280, height: 800 };
+  const deviceScaleFactor = config.browser?.deviceScaleFactor;
+
   const results: ScreenshotResult[] = [];
   const totalToCapture = screenshots.length * Math.max(1, schemes.length);
   let capturedCount = 0;
 
-  for (const screenshot of screenshots) {
-    if (schemes.length === 0) {
-      // No color scheme specified - capture once with browser default
+  // Capture helper - creates context with specific color scheme
+  const captureWithScheme = async (colorScheme?: 'light' | 'dark') => {
+    const { browser, context } = await launchBrowser({
+      headless: true,
+      viewport,
+      deviceScaleFactor,
+      storageState,
+      colorScheme,
+    });
+
+    const page = await context.newPage();
+
+    // Explicitly set color scheme on the page (in addition to context setting)
+    if (colorScheme) {
+      await page.emulateMedia({ colorScheme });
+    }
+
+    const suffix = colorScheme && schemes.length > 1 ? `-${colorScheme}` : '';
+
+    for (const screenshot of screenshots) {
       capturedCount++;
-      captureSpinner.message(`Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}`);
-      const result = await captureAndLog(page, screenshot, outputDirectory, captureOptions, '');
+      captureSpinner.message(
+        `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
+      );
+      const result = await captureAndLog(page, screenshot, outputDirectory, captureOptions, suffix);
       results.push(result);
-    } else {
-      // Capture for each color scheme
-      for (const scheme of schemes) {
-        capturedCount++;
-        const suffix = schemes.length > 1 ? `-${scheme}` : '';
-        captureSpinner.message(
-          `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
-        );
-        await page.emulateMedia({ colorScheme: scheme });
-        const result = await captureAndLog(
-          page,
-          screenshot,
-          outputDirectory,
-          captureOptions,
-          suffix
-        );
-        results.push(result);
-      }
+    }
+
+    await browser.close();
+  };
+
+  if (schemes.length === 0) {
+    // No color scheme specified - capture once with browser default
+    await captureWithScheme();
+  } else {
+    // Capture for each color scheme (separate browser context for each)
+    for (const scheme of schemes) {
+      await captureWithScheme(scheme);
     }
   }
 
   captureSpinner.stop('Screenshots captured');
-
-  await browser.close();
 
   const { length: totalCount } = results;
   const successfulResults = results.filter(({ success }) => success);
