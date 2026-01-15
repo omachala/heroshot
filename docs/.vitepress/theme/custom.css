@@ -86,3 +86,26 @@
   max-width: 320px;
   max-height: 320px;
 }
+
+/* Responsive hero image - smaller on mobile */
+@media (max-width: 640px) {
+  .VPHero .image-src {
+    max-width: 180px;
+    max-height: 180px;
+  }
+
+  .VPHero .name {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .VPHero .image-src {
+    max-width: 140px;
+    max-height: 140px;
+  }
+
+  .VPHero .name {
+    font-size: 2rem;
+  }
+}
