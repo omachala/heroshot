@@ -41,6 +41,7 @@ Visual fidelity asks: "Are the docs still true?"
 ## Key Features
 
 - **Visual Picker** - Point and click to select elements, not manual CSS selectors
+- **Light & Dark Mode** - Capture both color schemes in one run with pixel-perfect backgrounds
 - **Shadow DOM Piercing** - Works with web components (`>>> .inner` syntax)
 - **Persistent Auth** - Log in once, reuse sessions for headless captures
 - **CI/CD Integration** - `heroshot check` fails if screenshots are stale

@@ -9,8 +9,15 @@ export default defineConfig({
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**/*.ts'],
-      // Exclude: tests, types (no runtime code), and integration-test files (covered by e2e)
-      exclude: ['src/tests/**', 'src/types.ts', 'src/browser.ts', 'src/cli.ts', 'src/sync.ts'],
+      // Exclude: tests, types (no runtime code), CLI display, and integration-test files (covered by e2e)
+      exclude: [
+        'src/tests/**',
+        'src/types.ts',
+        'src/browser.ts',
+        'src/cli.ts',
+        'src/sync.ts',
+        'src/ui.ts',
+      ],
       thresholds: {
         lines: 90,
         functions: 90,

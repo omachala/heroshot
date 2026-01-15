@@ -3,9 +3,52 @@ import path from 'node:path';
 import type { BrowserContextOptions, ElementHandle, Page } from 'playwright';
 import { launchBrowser } from './browser';
 import { getConfigPath, loadConfig } from './configFile';
-import { log } from './logger';
 import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
+import { colors, error as logError, outro, spinner, verbose, warn } from './ui';
+
+/** Viewport preset dimensions */
+const VIEWPORT_DESKTOP = { width: 1280, height: 800 };
+const VIEWPORT_TABLET = { width: 768, height: 1024 };
+const VIEWPORT_MOBILE = { width: 375, height: 667 };
+
+/** Parsed viewport with name for filename suffix */
+interface ParsedViewport {
+  name: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * Parse viewport variant string to dimensions
+ * Supports: "desktop", "tablet", "mobile", or "WIDTHxHEIGHT"
+ */
+function parseViewport(variant: string): ParsedViewport {
+  // Check presets first
+  if (variant === 'desktop') {
+    return { name: 'desktop', ...VIEWPORT_DESKTOP };
+  }
+  if (variant === 'tablet') {
+    return { name: 'tablet', ...VIEWPORT_TABLET };
+  }
+  if (variant === 'mobile') {
+    return { name: 'mobile', ...VIEWPORT_MOBILE };
+  }
+
+  // Parse custom format "WIDTHxHEIGHT"
+  const match = /^(\d+)x(\d+)$/.exec(variant);
+  if (match) {
+    const [, widthValue, heightValue] = match;
+    if (widthValue && heightValue) {
+      const width = parseInt(widthValue, 10);
+      const height = parseInt(heightValue, 10);
+      return { name: variant, width, height };
+    }
+  }
+
+  // Fallback to desktop (shouldn't happen with schema validation)
+  return { name: 'desktop', ...VIEWPORT_DESKTOP };
+}
 
 /**
  * Get the visible background color of an element by walking up the DOM tree.
@@ -14,20 +57,29 @@ import type { Config, Screenshot } from './types';
  */
 const GET_BACKGROUND_COLOR_SCRIPT = String.raw`
   (element) => {
-    let current = element.parentElement;
+    const toHex = (bgColor) => {
+      const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+      if (rgbMatch && rgbMatch[1] && rgbMatch[2] && rgbMatch[3]) {
+        const red = parseInt(rgbMatch[1], 10);
+        const green = parseInt(rgbMatch[2], 10);
+        const blue = parseInt(rgbMatch[3], 10);
+        return '#' + red.toString(16).padStart(2, '0') + green.toString(16).padStart(2, '0') + blue.toString(16).padStart(2, '0');
+      }
+      return bgColor;
+    };
+
+    const isOpaque = (bgColor) => bgColor && bgColor !== 'transparent' && !bgColor.startsWith('rgba(0, 0, 0, 0)');
+
+    // Walk up DOM tree from element
+    let current = element;
     while (current) {
       const style = globalThis.getComputedStyle(current);
       const bgColor = style.backgroundColor;
-      if (bgColor && bgColor !== 'transparent' && !bgColor.startsWith('rgba(0, 0, 0, 0)')) {
-        const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-        if (rgbMatch && rgbMatch[1] && rgbMatch[2] && rgbMatch[3]) {
-          const red = parseInt(rgbMatch[1], 10);
-          const green = parseInt(rgbMatch[2], 10);
-          const blue = parseInt(rgbMatch[3], 10);
-          return '#' + red.toString(16).padStart(2, '0') + green.toString(16).padStart(2, '0') + blue.toString(16).padStart(2, '0');
-        }
-        return bgColor;
+
+      if (isOpaque(bgColor)) {
+        return toHex(bgColor);
       }
+
       const root = current.getRootNode();
       if (root instanceof ShadowRoot) {
         current = root.host;
@@ -35,6 +87,14 @@ const GET_BACKGROUND_COLOR_SCRIPT = String.raw`
         current = current.parentElement;
       }
     }
+
+    // Fallback: check body and html
+    const bodyBg = globalThis.getComputedStyle(document.body).backgroundColor;
+    if (isOpaque(bodyBg)) return toHex(bodyBg);
+
+    const htmlBg = globalThis.getComputedStyle(document.documentElement).backgroundColor;
+    if (isOpaque(htmlBg)) return toHex(htmlBg);
+
     return '#ffffff';
   }
 `;
@@ -181,6 +241,7 @@ interface CaptureOptions {
 
 /**
  * Take a screenshot with the given options
+ * When capturing a page without clip, uses fullPage: true for full scrollable content
  */
 async function takeScreenshot(
   target: Page | ElementHandle,
@@ -195,14 +256,16 @@ async function takeScreenshot(
     if (isPage && clip) {
       await target.screenshot({ path: outputPath, type: 'jpeg', quality, clip });
     } else if (isPage) {
-      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage: false });
+      // No selector = full page screenshot (entire scrollable content)
+      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage: true });
     } else {
       await target.screenshot({ path: outputPath, type: 'jpeg', quality });
     }
   } else if (isPage && clip) {
     await target.screenshot({ path: outputPath, type: 'png', clip });
   } else if (isPage) {
-    await target.screenshot({ path: outputPath, type: 'png', fullPage: false });
+    // No selector = full page screenshot (entire scrollable content)
+    await target.screenshot({ path: outputPath, type: 'png', fullPage: true });
   } else {
     await target.screenshot({ path: outputPath, type: 'png' });
   }
@@ -222,7 +285,7 @@ async function captureScreenshot(
   const { format, quality } = captureOptions;
   const finalFilename = filenameSuffix ? addFilenameSuffix(filename, filenameSuffix) : filename;
 
-  log.verbose(`  ${name}${filenameSuffix}...`);
+  verbose(`Capturing: ${name}${filenameSuffix}`);
 
   // Navigate to URL and wait for DOM to be ready
   try {
@@ -272,9 +335,33 @@ async function captureScreenshot(
 
         // If maskPadding is enabled, inject temporary divs to fill padding with background color
         if (maskPadding) {
-          // Detect background color from element's ancestors
-          const bgColorResult = await element.evaluate(GET_BACKGROUND_COLOR_SCRIPT);
+          // Detect background color - re-find element fresh to handle theme re-renders
+          // HA re-renders components when theme changes, invalidating ElementHandles
+          // Use string-based evaluate to run entirely in browser context
+          const bgColorResult = await page.evaluate(`
+            (() => {
+              const selector = ${JSON.stringify(selector)};
+              const parts = selector.split('>>>').map((p) => p.trim());
+              let current = document;
+
+              for (const part of parts) {
+                if (!part) continue;
+                const root = current instanceof Element ? (current.shadowRoot ?? current) : current;
+                const found = root.querySelector(part);
+                if (!found) return '#ffffff';
+                current = found;
+              }
+
+              if (!(current instanceof Element)) return '#ffffff';
+
+              // Run detection script inline
+              const detectBg = ${GET_BACKGROUND_COLOR_SCRIPT};
+              return detectBg(current);
+            })()
+          `);
+
           const bgColor = typeof bgColorResult === 'string' ? bgColorResult : '#ffffff';
+          verbose(`Background color: ${bgColor}`);
           await injectPaddingMask(page, element, padding, bgColor);
         }
 
@@ -310,11 +397,17 @@ async function captureScreenshot(
 
 /**
  * Get array of color schemes to capture based on config setting
+ * - 'auto' = use browser default (no explicit scheme)
+ * - 'light' = light only
+ * - 'dark' = dark only
+ * - undefined/null/anything else = both (light and dark)
  */
-function getColorSchemes(setting?: 'light' | 'dark' | 'both'): ('light' | 'dark')[] {
-  if (setting === 'both') return ['light', 'dark'];
-  if (setting) return [setting];
-  return [];
+function getColorSchemes(setting?: 'auto' | 'light' | 'dark'): ('light' | 'dark')[] {
+  if (setting === 'auto') return [];
+  if (setting === 'light') return ['light'];
+  if (setting === 'dark') return ['dark'];
+  // Default: capture both
+  return ['light', 'dark'];
 }
 
 interface ScreenshotResult {
@@ -325,7 +418,12 @@ interface ScreenshotResult {
 }
 
 /**
- * Capture screenshot and log result
+ * Retry delays in milliseconds (exponential backoff up to 5s)
+ */
+const RETRY_DELAYS = [500, 1000, 2000, 3000, 5000];
+
+/**
+ * Capture screenshot and log result (with retries)
  */
 async function captureAndLog(
   page: Page,
@@ -334,14 +432,30 @@ async function captureAndLog(
   captureOptions: CaptureOptions,
   suffix: string
 ): Promise<ScreenshotResult> {
-  const result = await captureScreenshot(page, screenshot, outputDirectory, captureOptions, suffix);
   const filename = suffix ? addFilenameSuffix(screenshot.filename, suffix) : screenshot.filename;
+  const { length: maxRetries } = RETRY_DELAYS;
+  let result: { success: boolean; error?: string } = { success: false };
 
-  if (result.success) {
-    log.verbose(`    Saved: ${filename}`);
-  } else {
-    log.error(`  ${screenshot.name}${suffix}: ${result.error ?? 'Unknown error'}`);
+  // Try up to 5 times with exponential backoff
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    result = await captureScreenshot(page, screenshot, outputDirectory, captureOptions, suffix);
+
+    if (result.success) {
+      verbose(`Saved: ${filename}`);
+      break;
+    }
+
+    // Wait before next retry (if not last attempt)
+    if (attempt < maxRetries - 1) {
+      const delay = RETRY_DELAYS[attempt] ?? 1000;
+      verbose(
+        `Retry ${String(attempt + 1)}/${String(maxRetries)} for ${filename} in ${String(delay)}ms...`
+      );
+      await page.waitForTimeout(delay);
+    }
   }
+
+  // Error logging is handled by the main sync loop
 
   return {
     id: `${screenshot.id}${suffix}`,
@@ -352,7 +466,8 @@ async function captureAndLog(
 }
 
 interface SyncOptions {
-  id?: string;
+  /** Pattern to filter screenshots by id, name, or filename (case-insensitive substring match) */
+  filter?: string;
   configPath?: string;
   sessionKey?: string;
 }
@@ -371,12 +486,12 @@ function loadEncryptedSession(
 
   const state = loadSession(sessionKey);
   if (state) {
-    log.verbose('Using encrypted session.');
+    verbose('Using encrypted session');
     // eslint-disable-next-line no-restricted-syntax -- deserialized session data
     return state as BrowserContextOptions['storageState'];
   }
 
-  log.verbose('Failed to decrypt session - using fresh browser.');
+  verbose('Failed to decrypt session - using fresh browser');
   return undefined;
 }
 
@@ -388,6 +503,31 @@ interface SyncResult {
 }
 
 /**
+ * Show capture results and return summary
+ */
+function showResults(results: ScreenshotResult[], outputDirectory: string): SyncResult {
+  const { length: totalCount } = results;
+  const successfulResults = results.filter(({ success }) => success);
+  const { length: successCount } = successfulResults;
+  const failedCount = totalCount - successCount;
+
+  if (failedCount > 0) {
+    for (const result of results) {
+      if (!result.success) {
+        logError(`${result.name}: ${result.error ?? 'Unknown error'}`);
+      }
+    }
+    outro(`${colors.red(`${failedCount} failed`)}, ${successCount} captured`);
+  } else {
+    outro(
+      `${successCount} screenshot${successCount === 1 ? '' : 's'} saved to ${colors.dim(outputDirectory + '/')}`
+    );
+  }
+
+  return { total: totalCount, success: successCount, failed: failedCount, results };
+}
+
+/**
  * Sync all screenshots defined in config
  */
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
@@ -395,22 +535,34 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const config: Config = loadConfig(configPath);
 
   if (config.screenshots.length === 0) {
-    log('No screenshots defined.');
+    warn('No screenshots defined.');
+    outro('Run "heroshot config" to add screenshots');
     return { total: 0, success: 0, failed: 0, results: [] };
   }
 
-  // Filter by ID if specified
-  const { id: filterId } = options;
-  const screenshots = filterId
-    ? config.screenshots.filter(screenshot => screenshot.id === filterId)
+  // Filter by pattern if specified (matches id, name, or filename - case-insensitive)
+  const { filter: filterPattern } = options;
+  const screenshots = filterPattern
+    ? config.screenshots.filter(screenshot => {
+        const pattern = filterPattern.toLowerCase();
+        return (
+          screenshot.id.toLowerCase().includes(pattern) ||
+          screenshot.name.toLowerCase().includes(pattern) ||
+          screenshot.filename.toLowerCase().includes(pattern)
+        );
+      })
     : config.screenshots;
 
-  if (filterId && screenshots.length === 0) {
-    log(`No screenshot found with ID: ${filterId}`);
+  if (filterPattern && screenshots.length === 0) {
+    logError(`No screenshots matching: ${filterPattern}`);
     return { total: 0, success: 0, failed: 0, results: [] };
   }
 
-  log.verbose(`Syncing ${screenshots.length} screenshot(s)...`);
+  // Log which screenshots matched the filter
+  if (filterPattern && screenshots.length > 0) {
+    const names = screenshots.map(({ name }) => name).join(', ');
+    verbose(`Matched ${screenshots.length}: ${names}`);
+  }
 
   // Get output directory (relative to project root, which is parent of .heroshot/)
   const configDirectory = path.dirname(configPath);
@@ -420,17 +572,9 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   // Try to load encrypted session if available
   const storageState = loadEncryptedSession(options.sessionKey);
 
-  // Launch browser with optional session state
-  const viewport = config.browser?.viewport ?? { width: 1280, height: 800 };
-  const deviceScaleFactor = config.browser?.deviceScaleFactor;
-  const { browser, context } = await launchBrowser({
-    headless: true,
-    viewport,
-    deviceScaleFactor,
-    storageState,
-  });
-
-  const page = await context.newPage();
+  // Start the capture spinner
+  const captureSpinner = spinner();
+  captureSpinner.start('Launching browser...');
 
   // Determine which color schemes to capture
   const colorSchemeSetting = config.browser?.colorScheme;
@@ -442,18 +586,52 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     quality: config.jpegQuality,
   };
 
-  const results: ScreenshotResult[] = [];
+  // Common browser options
+  const defaultViewport = config.browser?.viewport ?? { width: 1280, height: 800 };
+  const deviceScaleFactor = config.browser?.deviceScaleFactor;
 
+  // Calculate total captures (screenshots × viewports × colorSchemes)
+  let totalToCapture = 0;
+  const schemeCount = Math.max(1, schemes.length);
   for (const screenshot of screenshots) {
-    if (schemes.length === 0) {
-      // No color scheme specified - capture once with browser default
-      const result = await captureAndLog(page, screenshot, outputDirectory, captureOptions, '');
-      results.push(result);
-    } else {
-      // Capture for each color scheme
-      for (const scheme of schemes) {
-        await page.emulateMedia({ colorScheme: scheme });
-        const suffix = schemes.length > 1 ? `-${scheme}` : '';
+    const viewportCount = screenshot.viewports?.length ?? 1;
+    totalToCapture += viewportCount * schemeCount;
+  }
+
+  const results: ScreenshotResult[] = [];
+  let capturedCount = 0;
+
+  // Capture helper - creates context with specific color scheme
+  const captureWithScheme = async (colorScheme?: 'light' | 'dark') => {
+    const { browser, context } = await launchBrowser({
+      headless: true,
+      viewport: defaultViewport,
+      deviceScaleFactor,
+      storageState,
+      colorScheme,
+    });
+
+    const page = await context.newPage();
+
+    // Explicitly set color scheme on the page (in addition to context setting)
+    if (colorScheme) {
+      await page.emulateMedia({ colorScheme });
+    }
+
+    const hasMultipleSchemes = schemes.length > 1;
+
+    for (const screenshot of screenshots) {
+      // Get viewports for this screenshot (or use single default)
+      const viewportVariants = screenshot.viewports ?? [];
+      const hasMultipleViewports = viewportVariants.length > 1;
+
+      if (viewportVariants.length === 0) {
+        // No viewports specified - use default viewport, just add colorScheme suffix if needed
+        capturedCount++;
+        const suffix = hasMultipleSchemes && colorScheme ? `-${colorScheme}` : '';
+        captureSpinner.message(
+          `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
+        );
         const result = await captureAndLog(
           page,
           screenshot,
@@ -462,27 +640,52 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
           suffix
         );
         results.push(result);
+      } else {
+        // Capture for each viewport variant
+        for (const variant of viewportVariants) {
+          const parsedViewport = parseViewport(variant);
+
+          // Resize page for this viewport
+          await page.setViewportSize({
+            width: parsedViewport.width,
+            height: parsedViewport.height,
+          });
+
+          capturedCount++;
+          // Build suffix: -viewport-colorScheme (only add parts if multiple variants exist)
+          const viewportSuffix = hasMultipleViewports ? `-${parsedViewport.name}` : '';
+          const schemeSuffix = hasMultipleSchemes && colorScheme ? `-${colorScheme}` : '';
+          const suffix = `${viewportSuffix}${schemeSuffix}`;
+
+          captureSpinner.message(
+            `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
+          );
+          const result = await captureAndLog(
+            page,
+            screenshot,
+            outputDirectory,
+            captureOptions,
+            suffix
+          );
+          results.push(result);
+        }
       }
+    }
+
+    await browser.close();
+  };
+
+  if (schemes.length === 0) {
+    // No color scheme specified - capture once with browser default
+    await captureWithScheme();
+  } else {
+    // Capture for each color scheme (separate browser context for each)
+    for (const scheme of schemes) {
+      await captureWithScheme(scheme);
     }
   }
 
-  await browser.close();
+  captureSpinner.stop('Screenshots captured');
 
-  const { length: totalCount } = results;
-  const successfulResults = results.filter(({ success }) => success);
-  const { length: successCount } = successfulResults;
-  const failedCount = totalCount - successCount;
-
-  if (failedCount > 0) {
-    log(`Done: ${successCount}/${totalCount} screenshots (${failedCount} failed)`);
-  } else {
-    log(`Done: ${successCount} screenshot${successCount === 1 ? '' : 's'} captured`);
-  }
-
-  return {
-    total: totalCount,
-    success: successCount,
-    failed: failedCount,
-    results,
-  };
+  return showResults(results, config.outputDirectory);
 }

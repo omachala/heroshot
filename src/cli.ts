@@ -3,9 +3,9 @@ import path from 'node:path';
 import { Command } from 'commander';
 import { setup } from './browser';
 import { getConfigPath } from './configFile';
-import { log, setVerbose } from './logger';
 import { getSessionPath, loadLocalKey } from './session';
 import { sync } from './sync';
+import { error, intro, log, outro, setVerbose, verbose } from './ui';
 
 // Read version from package.json
 const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
@@ -33,6 +33,7 @@ program
   .hook('preAction', () => {
     const options = program.opts<GlobalOptions>();
     setVerbose(options.verbose ?? false);
+    intro(version);
   });
 
 // Default command: check for config, run setup if missing, otherwise sync
@@ -52,14 +53,13 @@ program
     } else {
       if (options.config) {
         // User specified a config that doesn't exist
-        log(`Config file not found: ${configPath}`);
+        error(`Config file not found: ${configPath}`);
         process.exitCode = 1;
         return;
       }
       // No config - run setup, then auto-sync if there are screenshots
       const { hasScreenshots } = await setup();
       if (hasScreenshots) {
-        log('');
         const result = await sync({});
         if (result.failed > 0) {
           process.exitCode = 1;
@@ -73,24 +73,61 @@ program
   .description('Open browser to add/edit screenshot definitions')
   .option('--reset', 'Clear existing session and start fresh')
   .option('--only', 'Only run config, skip sync afterwards')
-  .action(async (commandOptions: { reset?: boolean; only?: boolean }) => {
-    const globalOptions = program.opts<GlobalOptions>();
+  .option('--light', 'Force light mode (prefers-color-scheme: light)')
+  .option('--dark', 'Force dark mode (prefers-color-scheme: dark)')
+  .action(
+    async (commandOptions: {
+      reset?: boolean;
+      only?: boolean;
+      light?: boolean;
+      dark?: boolean;
+    }) => {
+      const globalOptions = program.opts<GlobalOptions>();
 
-    if (commandOptions.reset) {
-      const sessionPath = getSessionPath();
-      if (existsSync(sessionPath)) {
-        rmSync(sessionPath);
-        log.verbose('Session cleared.');
+      if (commandOptions.reset) {
+        const sessionPath = getSessionPath();
+        if (existsSync(sessionPath)) {
+          rmSync(sessionPath);
+          verbose('Session cleared.');
+        }
+      }
+
+      // Determine color scheme: explicit flag > system default
+      let colorScheme: 'light' | 'dark' | undefined;
+      if (commandOptions.light) colorScheme = 'light';
+      else if (commandOptions.dark) colorScheme = 'dark';
+
+      const { hasScreenshots } = await setup({ colorScheme });
+      if (hasScreenshots && !commandOptions.only) {
+        const configPath = globalOptions.config ? path.resolve(globalOptions.config) : undefined;
+        const result = await sync({ configPath, sessionKey: globalOptions.sessionKey });
+        if (result.failed > 0) {
+          process.exitCode = 1;
+        }
       }
     }
-    const { hasScreenshots } = await setup();
-    if (hasScreenshots && !commandOptions.only) {
-      log('');
-      const configPath = globalOptions.config ? path.resolve(globalOptions.config) : undefined;
-      const result = await sync({ configPath, sessionKey: globalOptions.sessionKey });
-      if (result.failed > 0) {
-        process.exitCode = 1;
-      }
+  );
+
+program
+  .command('sync [pattern]')
+  .description('Capture screenshots (optionally filter by pattern)')
+  .action(async (pattern?: string) => {
+    const options = program.opts<GlobalOptions>();
+    const configPath = options.config ? path.resolve(options.config) : getConfigPath();
+
+    if (!existsSync(configPath)) {
+      error('No config found. Run "heroshot config" first.');
+      process.exitCode = 1;
+      return;
+    }
+
+    const result = await sync({
+      configPath,
+      sessionKey: options.sessionKey,
+      filter: pattern,
+    });
+    if (result.failed > 0) {
+      process.exitCode = 1;
     }
   });
 
@@ -100,9 +137,11 @@ program
   .action(() => {
     const sessionKey = loadLocalKey();
     if (sessionKey) {
+      // Plain output for easy copy/paste in CI
       log(sessionKey);
+      outro('Copy this key to your CI secrets');
     } else {
-      log('No session key found. Run "heroshot config" first to generate one.');
+      error('No session key found. Run "heroshot config" first to generate one.');
       process.exitCode = 1;
     }
   });
