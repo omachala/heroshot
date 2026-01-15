@@ -105,6 +105,49 @@ features:
     grid-template-columns: 1fr;
   }
 }
+.try-it {
+  text-align: center;
+  margin-top: 48px;
+}
+.try-it h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+}
+.terminal {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 15px;
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+}
+.terminal code {
+  color: var(--vp-c-text-1);
+}
+.terminal .prompt {
+  color: var(--vp-c-brand-1);
+}
+.terminal .copy-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-2);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+.terminal .copy-btn:hover {
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-brand-1);
+}
+.terminal .copy-btn.copied {
+  border-color: var(--vp-c-green-2);
+  color: var(--vp-c-green-2);
+}
 </style>
 
 <div class="showcase">
@@ -145,6 +188,14 @@ features:
       <p class="screenshot-label">Mobile (375px)</p>
     </div>
   </div>
+
+  <div class="try-it">
+    <h3>Try it yourself</h3>
+    <div class="terminal">
+      <code><span class="prompt">$</span> npx heroshot</code>
+      <button class="copy-btn" data-copy="npx heroshot">Copy</button>
+    </div>
+  </div>
 </div>
 
 <script setup>
@@ -160,5 +211,18 @@ onMounted(() => {
       buttons.forEach(b => b.classList.toggle('active', b.dataset.theme === theme))
     })
   })
+
+  const copyBtn = document.querySelector('.copy-btn[data-copy]')
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(copyBtn.dataset.copy)
+      copyBtn.textContent = 'Copied!'
+      copyBtn.classList.add('copied')
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy'
+        copyBtn.classList.remove('copied')
+      }, 2000)
+    })
+  }
 })
 </script>
