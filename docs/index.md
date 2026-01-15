@@ -113,40 +113,88 @@ features:
   font-size: 20px;
   margin-bottom: 16px;
 }
-.terminal {
-  display: inline-flex;
+.terminal-window {
+  display: inline-block;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+  border: 1px solid var(--vp-c-divider);
+  min-width: 480px;
+}
+.terminal-header {
+  background: linear-gradient(180deg, #e8e8e8 0%, #d8d8d8 100%);
+  padding: 14px 18px;
+  display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 24px;
-  border-radius: 8px;
+  gap: 8px;
+}
+.dark .terminal-header {
+  background: linear-gradient(180deg, #3d3d3d 0%, #2d2d2d 100%);
+}
+.terminal-dots {
+  display: flex;
+  gap: 8px;
+}
+.terminal-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+.terminal-dot.red { background: #ff5f56; }
+.terminal-dot.yellow { background: #ffbd2e; }
+.terminal-dot.green { background: #27ca40; }
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  color: #666;
+  margin-right: 62px;
+  font-weight: 500;
+}
+.dark .terminal-title {
+  color: #999;
+}
+.terminal-body {
+  background: #1e1e1e;
+  padding: 32px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+.terminal-body code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 15px;
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
+  font-size: 20px;
+  color: #f8f8f8;
+  letter-spacing: 0.5px;
 }
-.terminal code {
-  color: var(--vp-c-text-1);
+.terminal-body .prompt {
+  color: #27ca40;
 }
-.terminal .prompt {
-  color: var(--vp-c-brand-1);
-}
-.terminal .copy-btn {
-  padding: 6px 12px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  background: var(--vp-c-bg);
-  color: var(--vp-c-text-2);
+.terminal-body .copy-btn {
+  padding: 10px 20px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #2d2d2d;
+  color: #aaa;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
   transition: all 0.2s;
 }
-.terminal .copy-btn:hover {
-  border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
+.terminal-body .copy-btn:hover {
+  border-color: #27ca40;
+  color: #27ca40;
 }
-.terminal .copy-btn.copied {
-  border-color: var(--vp-c-green-2);
-  color: var(--vp-c-green-2);
+.terminal-body .copy-btn.copied {
+  border-color: #27ca40;
+  color: #27ca40;
+}
+@media (max-width: 560px) {
+  .terminal-window {
+    min-width: auto;
+    width: 100%;
+  }
 }
 </style>
 
@@ -191,9 +239,19 @@ features:
 
   <div class="try-it">
     <h3>Try it yourself</h3>
-    <div class="terminal">
-      <code><span class="prompt">$</span> npx heroshot</code>
-      <button class="copy-btn" data-copy="npx heroshot">Copy</button>
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <div class="terminal-dots">
+          <span class="terminal-dot red"></span>
+          <span class="terminal-dot yellow"></span>
+          <span class="terminal-dot green"></span>
+        </div>
+        <span class="terminal-title">Terminal</span>
+      </div>
+      <div class="terminal-body">
+        <code><span class="prompt">$</span> npx heroshot</code>
+        <button class="copy-btn" data-copy="npx heroshot">Copy</button>
+      </div>
     </div>
   </div>
 </div>
