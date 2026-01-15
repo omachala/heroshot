@@ -51,8 +51,8 @@ const playwrightPatchPlugin: BunPlugin = {
   },
 };
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
-const rootDir = path.resolve(__dirname, '..');
+// Use Bun's built-in import.meta.dirname for cross-platform support
+const rootDir = path.resolve(import.meta.dirname, '..');
 
 process.chdir(rootDir);
 
