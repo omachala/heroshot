@@ -198,6 +198,18 @@ features:
     min-width: auto;
     width: 100%;
   }
+  .terminal-body {
+    padding: 20px 16px;
+    gap: 16px;
+  }
+  .terminal-body code {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+  .terminal-body .copy-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
 }
 </style>
 
