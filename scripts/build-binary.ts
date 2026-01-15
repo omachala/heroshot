@@ -14,6 +14,19 @@ import { $ } from 'bun';
 import type { BunPlugin } from 'bun';
 import pkg from '../package.json';
 
+// Playwright version to inline in bundle (avoids runtime package.json reads)
+const PLAYWRIGHT_VERSION = '1.57.0';
+
+// Regex patterns for patching Playwright
+const PATTERNS = {
+  // require("../../../package.json").version -> "1.57.0"
+  pkgVersion: /require\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)\.version/g,
+  // require.resolve("../../../package.json") -> placeholder
+  pkgResolve: /require\.resolve\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)/g,
+  // const coreDir = path.dirname(require.resolve(...)) -> fixed value
+  coreDir: /const coreDir = .*dirname.*package\.json.*/g,
+};
+
 /**
  * Bun plugin to patch Playwright's package.json resolution
  * Replaces require.resolve calls with inline values
@@ -21,43 +34,18 @@ import pkg from '../package.json';
 const playwrightPatchPlugin: BunPlugin = {
   name: 'playwright-patch',
   setup(build) {
-    // Intercept playwright-core files that read package.json
+    // Patch nodePlatform.js - coreDir resolution
     build.onLoad({ filter: /playwright-core.*nodePlatform\.js$/ }, async args => {
       let contents = await Bun.file(args.path).text();
-
-      // Replace: require.resolve("../../../package.json")
-      // With a path that will work in the bundle
-      contents = contents.replace(
-        /require\.resolve\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)/g,
-        '"/playwright-core-pkg"' // Placeholder path
-      );
-
-      // Replace the coreDir calculation with a fixed value
-      contents = contents.replace(
-        /const coreDir = .*dirname.*package\.json.*/g,
-        'const coreDir = "/@playwright-core";'
-      );
-
+      contents = contents.replace(PATTERNS.pkgResolve, '"/playwright-core-pkg"');
+      contents = contents.replace(PATTERNS.coreDir, 'const coreDir = "/@playwright-core";');
       return { contents, loader: 'js' };
     });
 
-    // Patch userAgent.js
-    build.onLoad({ filter: /playwright-core.*userAgent\.js$/ }, async args => {
+    // Patch files that read package.json version (userAgent.js, dependencies.js)
+    build.onLoad({ filter: /playwright-core.*(userAgent|dependencies)\.js$/ }, async args => {
       let contents = await Bun.file(args.path).text();
-      contents = contents.replace(
-        /require\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)\.version/g,
-        '"1.57.0"'
-      );
-      return { contents, loader: 'js' };
-    });
-
-    // Patch dependencies.js
-    build.onLoad({ filter: /playwright-core.*dependencies\.js$/ }, async args => {
-      let contents = await Bun.file(args.path).text();
-      contents = contents.replace(
-        /require\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)\.version/g,
-        '"1.57.0"'
-      );
+      contents = contents.replace(PATTERNS.pkgVersion, `"${PLAYWRIGHT_VERSION}"`);
       return { contents, loader: 'js' };
     });
   },

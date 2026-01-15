@@ -20,7 +20,7 @@ import {
   sessionExists,
 } from './session';
 import type { Screenshot, Viewport } from './types';
-import { info, note, spinner, success, verbose } from './ui';
+import { info, log, note, spinner, success, verbose } from './ui';
 
 const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
 
@@ -129,7 +129,7 @@ export async function launchBrowser(
   options: LaunchOptions = {}
 ): Promise<{ browser: Browser; context: BrowserContext }> {
   const viewport = options.viewport ?? DEFAULT_VIEWPORT;
-  log.verbose(`Launching browser (headless: ${options.headless ?? false})...`);
+  verbose(`Launching browser (headless: ${options.headless ?? false})...`);
 
   // Detect available system browsers
   const systemBrowsers = detectSystemBrowsers();
@@ -140,7 +140,7 @@ export async function launchBrowser(
     for (const { channel } of systemBrowsers) {
       channelsToTry.push(channel);
     }
-    log.verbose(`Detected browsers: ${systemBrowsers.map(({ name }) => name).join(', ')}`);
+    verbose(`Detected browsers: ${systemBrowsers.map(({ name }) => name).join(', ')}`);
   }
 
   // Also try Playwright's bundled Chromium as fallback (undefined channel)
@@ -155,14 +155,14 @@ export async function launchBrowser(
         ...(channel && { channel }),
       });
       if (channel) {
-        log.verbose(`Using ${channel}`);
+        verbose(`Using ${channel}`);
       } else {
-        log.verbose('Using Playwright Chromium');
+        verbose('Using Playwright Chromium');
       }
       break;
     } catch (error) {
       // This channel failed, try next one
-      log.verbose(
+      verbose(
         `Failed to launch ${channel ?? 'playwright-chromium'}: ${error instanceof Error ? error.message : String(error)}`
       );
       continue;
