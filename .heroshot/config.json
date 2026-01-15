@@ -1,0 +1,16 @@
+{
+  "outputDirectory": "docs/public/screenshots",
+  "outputFormat": "png",
+  "browser": {
+    "deviceScaleFactor": 2
+  },
+  "screenshots": [
+    {
+      "id": "landing",
+      "name": "Landing Page",
+      "url": "https://heroshot.sh",
+      "filename": "landing.png",
+      "viewports": ["desktop", "tablet", "mobile"]
+    }
+  ]
+}
