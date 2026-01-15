@@ -109,7 +109,7 @@ features:
 
 <div class="showcase">
   <h2>See It In Action</h2>
-  <p class="subtitle">This page is screenshotted by heroshot. One config, 6 images.</p>
+  <p class="subtitle">This page is screenshotted by heroshot. <a href="https://github.com/omachala/heroshot/blob/main/.heroshot/config.json" target="_blank">One config</a>, 6 images.</p>
 
   <div class="theme-tabs">
     <button class="active" data-theme="light">Light Mode</button>
@@ -118,30 +118,30 @@ features:
 
   <div id="light-screenshots" class="screenshot-grid">
     <div class="screenshot-item">
-      <img src="/screenshots/landing-desktop-light.png" alt="Desktop - Light" />
+      <img src="/screenshots/hero-desktop-light.png" alt="Desktop - Light" />
       <p class="screenshot-label">Desktop (1280px)</p>
     </div>
     <div class="screenshot-item">
-      <img src="/screenshots/landing-tablet-light.png" alt="Tablet - Light" />
+      <img src="/screenshots/hero-tablet-light.png" alt="Tablet - Light" />
       <p class="screenshot-label">Tablet (768px)</p>
     </div>
     <div class="screenshot-item">
-      <img src="/screenshots/landing-mobile-light.png" alt="Mobile - Light" />
+      <img src="/screenshots/hero-mobile-light.png" alt="Mobile - Light" />
       <p class="screenshot-label">Mobile (375px)</p>
     </div>
   </div>
 
   <div id="dark-screenshots" class="screenshot-grid" style="display: none;">
     <div class="screenshot-item">
-      <img src="/screenshots/landing-desktop-dark.png" alt="Desktop - Dark" />
+      <img src="/screenshots/hero-desktop-dark.png" alt="Desktop - Dark" />
       <p class="screenshot-label">Desktop (1280px)</p>
     </div>
     <div class="screenshot-item">
-      <img src="/screenshots/landing-tablet-dark.png" alt="Tablet - Dark" />
+      <img src="/screenshots/hero-tablet-dark.png" alt="Tablet - Dark" />
       <p class="screenshot-label">Tablet (768px)</p>
     </div>
     <div class="screenshot-item">
-      <img src="/screenshots/landing-mobile-dark.png" alt="Mobile - Dark" />
+      <img src="/screenshots/hero-mobile-dark.png" alt="Mobile - Dark" />
       <p class="screenshot-label">Mobile (375px)</p>
     </div>
   </div>

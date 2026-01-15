@@ -6,10 +6,13 @@
   },
   "screenshots": [
     {
-      "id": "landing",
-      "name": "Landing Page",
+      "id": "hero",
+      "name": "Hero Section",
       "url": "https://heroshot.sh",
-      "filename": "landing.png",
+      "filename": "hero.png",
+      "selector": ".VPHero",
+      "padding": { "top": 32, "right": 32, "bottom": 32, "left": 32 },
+      "maskPadding": true,
       "viewports": ["desktop", "tablet", "mobile"]
     }
   ]
