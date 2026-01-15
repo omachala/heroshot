@@ -7,6 +7,49 @@ import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
 import { colors, error as logError, outro, spinner, verbose, warn } from './ui';
 
+/** Viewport preset dimensions */
+const VIEWPORT_DESKTOP = { width: 1280, height: 800 };
+const VIEWPORT_TABLET = { width: 768, height: 1024 };
+const VIEWPORT_MOBILE = { width: 375, height: 667 };
+
+/** Parsed viewport with name for filename suffix */
+interface ParsedViewport {
+  name: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * Parse viewport variant string to dimensions
+ * Supports: "desktop", "tablet", "mobile", or "WIDTHxHEIGHT"
+ */
+function parseViewport(variant: string): ParsedViewport {
+  // Check presets first
+  if (variant === 'desktop') {
+    return { name: 'desktop', ...VIEWPORT_DESKTOP };
+  }
+  if (variant === 'tablet') {
+    return { name: 'tablet', ...VIEWPORT_TABLET };
+  }
+  if (variant === 'mobile') {
+    return { name: 'mobile', ...VIEWPORT_MOBILE };
+  }
+
+  // Parse custom format "WIDTHxHEIGHT"
+  const match = /^(\d+)x(\d+)$/.exec(variant);
+  if (match) {
+    const [, widthValue, heightValue] = match;
+    if (widthValue && heightValue) {
+      const width = parseInt(widthValue, 10);
+      const height = parseInt(heightValue, 10);
+      return { name: variant, width, height };
+    }
+  }
+
+  // Fallback to desktop (shouldn't happen with schema validation)
+  return { name: 'desktop', ...VIEWPORT_DESKTOP };
+}
+
 /**
  * Get the visible background color of an element by walking up the DOM tree.
  * Returns the first non-transparent background color found, or white as fallback.
@@ -544,18 +587,25 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   };
 
   // Common browser options
-  const viewport = config.browser?.viewport ?? { width: 1280, height: 800 };
+  const defaultViewport = config.browser?.viewport ?? { width: 1280, height: 800 };
   const deviceScaleFactor = config.browser?.deviceScaleFactor;
 
+  // Calculate total captures (screenshots × viewports × colorSchemes)
+  let totalToCapture = 0;
+  const schemeCount = Math.max(1, schemes.length);
+  for (const screenshot of screenshots) {
+    const viewportCount = screenshot.viewports?.length ?? 1;
+    totalToCapture += viewportCount * schemeCount;
+  }
+
   const results: ScreenshotResult[] = [];
-  const totalToCapture = screenshots.length * Math.max(1, schemes.length);
   let capturedCount = 0;
 
   // Capture helper - creates context with specific color scheme
   const captureWithScheme = async (colorScheme?: 'light' | 'dark') => {
     const { browser, context } = await launchBrowser({
       headless: true,
-      viewport,
+      viewport: defaultViewport,
       deviceScaleFactor,
       storageState,
       colorScheme,
@@ -568,15 +618,58 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
       await page.emulateMedia({ colorScheme });
     }
 
-    const suffix = colorScheme && schemes.length > 1 ? `-${colorScheme}` : '';
+    const hasMultipleSchemes = schemes.length > 1;
 
     for (const screenshot of screenshots) {
-      capturedCount++;
-      captureSpinner.message(
-        `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
-      );
-      const result = await captureAndLog(page, screenshot, outputDirectory, captureOptions, suffix);
-      results.push(result);
+      // Get viewports for this screenshot (or use single default)
+      const viewportVariants = screenshot.viewports ?? [];
+      const hasMultipleViewports = viewportVariants.length > 1;
+
+      if (viewportVariants.length === 0) {
+        // No viewports specified - use default viewport, just add colorScheme suffix if needed
+        capturedCount++;
+        const suffix = hasMultipleSchemes && colorScheme ? `-${colorScheme}` : '';
+        captureSpinner.message(
+          `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
+        );
+        const result = await captureAndLog(
+          page,
+          screenshot,
+          outputDirectory,
+          captureOptions,
+          suffix
+        );
+        results.push(result);
+      } else {
+        // Capture for each viewport variant
+        for (const variant of viewportVariants) {
+          const parsedViewport = parseViewport(variant);
+
+          // Resize page for this viewport
+          await page.setViewportSize({
+            width: parsedViewport.width,
+            height: parsedViewport.height,
+          });
+
+          capturedCount++;
+          // Build suffix: -viewport-colorScheme (only add parts if multiple variants exist)
+          const viewportSuffix = hasMultipleViewports ? `-${parsedViewport.name}` : '';
+          const schemeSuffix = hasMultipleSchemes && colorScheme ? `-${colorScheme}` : '';
+          const suffix = `${viewportSuffix}${schemeSuffix}`;
+
+          captureSpinner.message(
+            `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
+          );
+          const result = await captureAndLog(
+            page,
+            screenshot,
+            outputDirectory,
+            captureOptions,
+            suffix
+          );
+          results.push(result);
+        }
+      }
     }
 
     await browser.close();

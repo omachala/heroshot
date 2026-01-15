@@ -30,6 +30,10 @@ features:
     title: Light & Dark Mode
     details: Capture both color schemes in one run. Pixel-perfect backgrounds that match your UI theme.
   - icon:
+      src: /icons/devices.svg
+    title: Viewport Variants
+    details: One config, multiple sizes. Desktop, tablet, mobile - all generated automatically from a single definition.
+  - icon:
       src: /icons/rocket.svg
     title: CI/CD Ready
     details: Run heroshot sync in your pipeline. Screenshots update on every deploy.

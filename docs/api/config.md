@@ -46,7 +46,8 @@ your-project/
         "x": 0,
         "y": 100
       },
-      "maskPadding": true
+      "maskPadding": true,
+      "viewports": ["desktop", "mobile"]
     },
     {
       "id": "def456",
@@ -88,16 +89,25 @@ your-project/
 
 ## Screenshot Definition
 
-| Property      | Type    | Required | Description                                   |
-| ------------- | ------- | -------- | --------------------------------------------- |
-| `id`          | string  | auto     | Unique identifier (auto-generated if omitted) |
-| `name`        | string  | yes      | Display name for the screenshot               |
-| `url`         | string  | yes      | Full URL to capture                           |
-| `filename`    | string  | yes      | Output filename (e.g., `"hero.png"`)          |
-| `selector`    | string  | no       | CSS selector for element capture              |
-| `padding`     | object  | no       | Expand capture area beyond element            |
-| `scroll`      | object  | no       | Scroll position before capture                |
-| `maskPadding` | boolean | no       | Fill padding with detected background color   |
+| Property      | Type     | Required | Description                                       |
+| ------------- | -------- | -------- | ------------------------------------------------- |
+| `id`          | string   | auto     | Unique identifier (auto-generated if omitted)     |
+| `name`        | string   | yes      | Display name for the screenshot                   |
+| `url`         | string   | yes      | Full URL to capture                               |
+| `filename`    | string   | yes      | Base filename (suffixes added automatically)      |
+| `selector`    | string   | no       | CSS selector for element capture                  |
+| `padding`     | object   | no       | Expand capture area beyond element                |
+| `scroll`      | object   | no       | Scroll position before capture                    |
+| `maskPadding` | boolean  | no       | Fill padding with detected background color       |
+| `viewports`   | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`) |
+
+::: tip Filename is a Template
+The `filename` is a base name. Heroshot automatically appends suffixes based on variants:
+
+- `dashboard.png` → `dashboard-light.png`, `dashboard-dark.png` (color schemes)
+- `dashboard.png` → `dashboard-desktop.png`, `dashboard-mobile.png` (viewports)
+- Combined: `dashboard-desktop-light.png`, `dashboard-mobile-dark.png`
+  :::
 
 ### Selector
 
@@ -153,6 +163,42 @@ When `maskPadding: true`, heroshot detects the element's background color and fi
   "maskPadding": true
 }
 ```
+
+### Viewports
+
+Generate screenshots at multiple viewport sizes. Supports preset names and custom dimensions:
+
+```json
+{
+  "name": "Dashboard",
+  "url": "https://myapp.com/dashboard",
+  "filename": "dashboard.png",
+  "viewports": ["desktop", "tablet", "mobile"]
+}
+```
+
+**Presets:**
+
+| Name      | Dimensions |
+| --------- | ---------- |
+| `desktop` | 1280×800   |
+| `tablet`  | 768×1024   |
+| `mobile`  | 375×667    |
+
+**Custom dimensions:** Use `"WIDTHxHEIGHT"` format (e.g., `"1920x1080"`)
+
+```json
+"viewports": ["desktop", "mobile", "1920x1080"]
+```
+
+Combined with default color scheme (both), this generates 6 files:
+
+- `dashboard-desktop-light.png`
+- `dashboard-desktop-dark.png`
+- `dashboard-mobile-light.png`
+- `dashboard-mobile-dark.png`
+- `dashboard-1920x1080-light.png`
+- `dashboard-1920x1080-dark.png`
 
 ## Minimal Config
 
