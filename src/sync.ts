@@ -198,6 +198,7 @@ interface CaptureOptions {
 
 /**
  * Take a screenshot with the given options
+ * When capturing a page without clip, uses fullPage: true for full scrollable content
  */
 async function takeScreenshot(
   target: Page | ElementHandle,
@@ -212,14 +213,16 @@ async function takeScreenshot(
     if (isPage && clip) {
       await target.screenshot({ path: outputPath, type: 'jpeg', quality, clip });
     } else if (isPage) {
-      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage: false });
+      // No selector = full page screenshot (entire scrollable content)
+      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage: true });
     } else {
       await target.screenshot({ path: outputPath, type: 'jpeg', quality });
     }
   } else if (isPage && clip) {
     await target.screenshot({ path: outputPath, type: 'png', clip });
   } else if (isPage) {
-    await target.screenshot({ path: outputPath, type: 'png', fullPage: false });
+    // No selector = full page screenshot (entire scrollable content)
+    await target.screenshot({ path: outputPath, type: 'png', fullPage: true });
   } else {
     await target.screenshot({ path: outputPath, type: 'png' });
   }
