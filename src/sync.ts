@@ -423,7 +423,8 @@ async function captureAndLog(
 }
 
 interface SyncOptions {
-  id?: string;
+  /** Pattern to filter screenshots by id, name, or filename (case-insensitive substring match) */
+  filter?: string;
   configPath?: string;
   sessionKey?: string;
 }
@@ -459,6 +460,31 @@ interface SyncResult {
 }
 
 /**
+ * Show capture results and return summary
+ */
+function showResults(results: ScreenshotResult[], outputDirectory: string): SyncResult {
+  const { length: totalCount } = results;
+  const successfulResults = results.filter(({ success }) => success);
+  const { length: successCount } = successfulResults;
+  const failedCount = totalCount - successCount;
+
+  if (failedCount > 0) {
+    for (const result of results) {
+      if (!result.success) {
+        logError(`${result.name}: ${result.error ?? 'Unknown error'}`);
+      }
+    }
+    outro(`${colors.red(`${failedCount} failed`)}, ${successCount} captured`);
+  } else {
+    outro(
+      `${successCount} screenshot${successCount === 1 ? '' : 's'} saved to ${colors.dim(outputDirectory + '/')}`
+    );
+  }
+
+  return { total: totalCount, success: successCount, failed: failedCount, results };
+}
+
+/**
  * Sync all screenshots defined in config
  */
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
@@ -471,15 +497,28 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     return { total: 0, success: 0, failed: 0, results: [] };
   }
 
-  // Filter by ID if specified
-  const { id: filterId } = options;
-  const screenshots = filterId
-    ? config.screenshots.filter(screenshot => screenshot.id === filterId)
+  // Filter by pattern if specified (matches id, name, or filename - case-insensitive)
+  const { filter: filterPattern } = options;
+  const screenshots = filterPattern
+    ? config.screenshots.filter(screenshot => {
+        const pattern = filterPattern.toLowerCase();
+        return (
+          screenshot.id.toLowerCase().includes(pattern) ||
+          screenshot.name.toLowerCase().includes(pattern) ||
+          screenshot.filename.toLowerCase().includes(pattern)
+        );
+      })
     : config.screenshots;
 
-  if (filterId && screenshots.length === 0) {
-    logError(`No screenshot found with ID: ${filterId}`);
+  if (filterPattern && screenshots.length === 0) {
+    logError(`No screenshots matching: ${filterPattern}`);
     return { total: 0, success: 0, failed: 0, results: [] };
+  }
+
+  // Log which screenshots matched the filter
+  if (filterPattern && screenshots.length > 0) {
+    const names = screenshots.map(({ name }) => name).join(', ');
+    verbose(`Matched ${screenshots.length}: ${names}`);
   }
 
   // Get output directory (relative to project root, which is parent of .heroshot/)
@@ -555,30 +594,5 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   captureSpinner.stop('Screenshots captured');
 
-  const { length: totalCount } = results;
-  const successfulResults = results.filter(({ success }) => success);
-  const { length: successCount } = successfulResults;
-  const failedCount = totalCount - successCount;
-
-  // Show results
-  if (failedCount > 0) {
-    // Show failed screenshots
-    for (const result of results) {
-      if (!result.success) {
-        logError(`${result.name}: ${result.error ?? 'Unknown error'}`);
-      }
-    }
-    outro(`${colors.red(`${failedCount} failed`)}, ${successCount} captured`);
-  } else {
-    outro(
-      `${successCount} screenshot${successCount === 1 ? '' : 's'} saved to ${colors.dim(config.outputDirectory + '/')}`
-    );
-  }
-
-  return {
-    total: totalCount,
-    success: successCount,
-    failed: failedCount,
-    results,
-  };
+  return showResults(results, config.outputDirectory);
 }

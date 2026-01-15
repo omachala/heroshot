@@ -109,6 +109,29 @@ program
   );
 
 program
+  .command('sync [pattern]')
+  .description('Capture screenshots (optionally filter by pattern)')
+  .action(async (pattern?: string) => {
+    const options = program.opts<GlobalOptions>();
+    const configPath = options.config ? path.resolve(options.config) : getConfigPath();
+
+    if (!existsSync(configPath)) {
+      error('No config found. Run "heroshot config" first.');
+      process.exitCode = 1;
+      return;
+    }
+
+    const result = await sync({
+      configPath,
+      sessionKey: options.sessionKey,
+      filter: pattern,
+    });
+    if (result.failed > 0) {
+      process.exitCode = 1;
+    }
+  });
+
+program
   .command('session-key')
   .description('Print the session key for this project (for CI setup)')
   .action(() => {

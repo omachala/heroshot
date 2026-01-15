@@ -55,6 +55,24 @@ The capture behavior is controlled by `browser.colorScheme` in your config:
 - **light** / **dark**: Captures single variant only
   :::
 
+### `heroshot sync [pattern]`
+
+Capture screenshots headlessly. Optionally filter by pattern.
+
+```bash
+heroshot sync               # Capture all screenshots
+heroshot sync dashboard     # Capture screenshots matching "dashboard"
+heroshot sync hero          # Matches: hero-light.png, homepage-hero.png, etc.
+```
+
+The pattern matches against:
+
+- Screenshot **id**
+- Screenshot **name**
+- Screenshot **filename**
+
+Matching is case-insensitive and uses substring matching. If multiple screenshots match, all are captured.
+
 ### `heroshot session-key`
 
 Print the session key for this project (for CI setup).
@@ -81,6 +99,13 @@ heroshot config -v
 
 ```bash
 heroshot config -c ./custom-heroshot.json
+```
+
+### Sync specific screenshots
+
+```bash
+heroshot sync dashboard     # Only screenshots matching "dashboard"
+heroshot sync -v hero       # Verbose output, matching "hero"
 ```
 
 ### Get session key for CI
