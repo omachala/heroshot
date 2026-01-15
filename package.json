@@ -17,6 +17,8 @@
   "scripts": {
     "dev": "tsx src/cli.ts",
     "build": "tsup",
+    "build:binary": "bun run scripts/build-binary.ts",
+    "build:binary:single": "bun run scripts/build-binary.ts --single",
     "build:toolbar": "vite build --config toolbar/vite.config.ts",
     "test": "vitest",
     "test:run": "vitest run",
@@ -92,5 +94,12 @@
     "playwright": "^1.49.0",
     "sharp": "^0.33.0",
     "zod": "^4.3.5"
+  },
+  "optionalDependencies": {
+    "heroshot-darwin-arm64": "0.1.0",
+    "heroshot-darwin-x64": "0.1.0",
+    "heroshot-linux-arm64": "0.1.0",
+    "heroshot-linux-x64": "0.1.0",
+    "heroshot-windows-x64": "0.1.0"
   }
 }

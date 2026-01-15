@@ -1,0 +1,114 @@
+#!/usr/bin/env node
+
+/**
+ * Heroshot CLI wrapper
+ *
+ * This script finds and executes the platform-specific binary installed
+ * via npm optionalDependencies. It supports:
+ * - heroshot-darwin-arm64 (macOS Apple Silicon)
+ * - heroshot-darwin-x64 (macOS Intel)
+ * - heroshot-linux-arm64 (Linux ARM64)
+ * - heroshot-linux-x64 (Linux x64)
+ * - heroshot-windows-x64 (Windows x64)
+ */
+
+const childProcess = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+/**
+ * Execute the binary with inherited stdio
+ */
+function run(binaryPath) {
+  const result = childProcess.spawnSync(binaryPath, process.argv.slice(2), {
+    stdio: 'inherit',
+  });
+
+  if (result.error) {
+    console.error('Failed to execute heroshot:', result.error.message);
+    process.exit(1);
+  }
+
+  const exitCode = typeof result.status === 'number' ? result.status : 0;
+  process.exit(exitCode);
+}
+
+// Allow override via environment variable
+const envPath = process.env.HEROSHOT_BIN_PATH;
+if (envPath) {
+  run(envPath);
+}
+
+// Map Node.js platform/arch to package names
+const platformMap = {
+  darwin: 'darwin',
+  linux: 'linux',
+  win32: 'windows',
+};
+
+const archMap = {
+  x64: 'x64',
+  arm64: 'arm64',
+};
+
+const platform = platformMap[os.platform()] || os.platform();
+const arch = archMap[os.arch()] || os.arch();
+const packagePrefix = `heroshot-${platform}-${arch}`;
+const binaryName = platform === 'windows' ? 'heroshot.exe' : 'heroshot';
+
+/**
+ * Search for the platform-specific package in node_modules
+ * Walks up the directory tree to handle different npm installation locations
+ */
+function findBinary(startDir) {
+  let currentDir = startDir;
+
+  while (true) {
+    const nodeModulesPath = path.join(currentDir, 'node_modules');
+
+    if (fs.existsSync(nodeModulesPath)) {
+      const entries = fs.readdirSync(nodeModulesPath);
+
+      for (const entry of entries) {
+        if (!entry.startsWith(packagePrefix)) {
+          continue;
+        }
+
+        const candidatePath = path.join(nodeModulesPath, entry, 'bin', binaryName);
+        if (fs.existsSync(candidatePath)) {
+          return candidatePath;
+        }
+      }
+    }
+
+    const parentDir = path.dirname(currentDir);
+    if (parentDir === currentDir) {
+      // Reached filesystem root
+      return null;
+    }
+    currentDir = parentDir;
+  }
+}
+
+// Start search from this script's directory
+const scriptPath = fs.realpathSync(__filename);
+const scriptDir = path.dirname(scriptPath);
+const resolvedBinary = findBinary(scriptDir);
+
+if (!resolvedBinary) {
+  console.error(`Could not find heroshot binary for your platform (${platform}-${arch}).`);
+  console.error();
+  console.error('This usually means your package manager failed to install');
+  console.error('the platform-specific package. Try:');
+  console.error();
+  console.error(`  npm install ${packagePrefix}`);
+  console.error();
+  console.error('Or use npx with the full package name:');
+  console.error();
+  console.error(`  npx heroshot`);
+  console.error();
+  process.exit(1);
+}
+
+run(resolvedBinary);
