@@ -376,15 +376,27 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
     });
   };
 
+  // Close browser when user manually closes the last window
+  // (browser.disconnected only fires when process terminates, not when windows close)
+  const handlePageClose = (page: Page) => {
+    page.on('close', () => {
+      if (context.pages().length === 0) {
+        void browser.close();
+      }
+    });
+  };
+
   // Handle new pages/tabs
   context.on('page', page => {
     setupPage(page);
+    handlePageClose(page);
   });
 
   // Use existing page from context or create one if none exists
   const existingPages = context.pages();
   const page = existingPages[0] ?? (await context.newPage());
   setupPage(page);
+  handlePageClose(page);
 
   // Navigate to heroshot.sh welcome page
   await page.goto('https://heroshot.sh/welcome', { waitUntil: 'domcontentloaded' });
