@@ -1,5 +1,7 @@
+import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { createInterface } from 'node:readline';
 import {
   type Browser,
   type BrowserContext,
@@ -7,6 +9,7 @@ import {
   type Page,
   chromium,
 } from 'playwright';
+import { type BrowserChannel, detectSystemBrowsers } from './browserDetect';
 import { ensureHeroshotDirectory, getConfigPath, loadConfig, saveConfig } from './configFile';
 import {
   generateSessionKey,
@@ -23,12 +26,6 @@ const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
 
 const DEFAULT_VIEWPORT: Viewport = { width: 1280, height: 800 };
 
-/**
- * Browser channels to try in order of preference.
- * System Chrome first (no download needed), then Playwright's bundled Chromium.
- */
-const BROWSER_CHANNELS: readonly string[] = ['chrome', 'chromium'];
-
 interface LaunchOptions {
   headless?: boolean;
   viewport?: Viewport;
@@ -38,22 +35,82 @@ interface LaunchOptions {
 }
 
 /**
+ * Prompt user for yes/no confirmation
+ */
+async function confirm(message: string): Promise<boolean> {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise(resolve => {
+    rl.question(`${message} (y/N) `, answer => {
+      rl.close();
+      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
+    });
+  });
+}
+
+/**
+ * Install Playwright's Chromium browser
+ */
+function installPlaywrightChromium(): boolean {
+  log('Installing Chromium browser...');
+  log('');
+
+  try {
+    // Use npx to install - works in both Node and Bun environments
+    // eslint-disable-next-line sonarjs/no-os-command-from-path -- npx is required for playwright install
+    execSync('npx playwright install chromium', {
+      stdio: 'inherit',
+    });
+    log('');
+    log('Chromium installed successfully.');
+    return true;
+  } catch {
+    log('');
+    log('Failed to install Chromium.');
+    return false;
+  }
+}
+
+/**
  * Launch browser and create context with optional storage state.
- * Tries system Chrome first, falls back to Playwright's bundled Chromium.
+ * Detects system browsers (Chrome, Edge, Chromium) or prompts to install Chromium.
  */
 export async function launchBrowser(
   options: LaunchOptions = {}
 ): Promise<{ browser: Browser; context: BrowserContext }> {
   const viewport = options.viewport ?? DEFAULT_VIEWPORT;
 
+  // Detect available system browsers
+  const systemBrowsers = detectSystemBrowsers();
+  const channelsToTry: (BrowserChannel | undefined)[] = [];
+
+  if (systemBrowsers.length > 0) {
+    // Use detected system browsers in order of preference
+    for (const { channel } of systemBrowsers) {
+      channelsToTry.push(channel);
+    }
+    log.verbose(`Detected browsers: ${systemBrowsers.map(({ name }) => name).join(', ')}`);
+  }
+
+  // Also try Playwright's bundled Chromium as fallback (undefined channel)
+  channelsToTry.push(undefined);
+
   // Try each browser channel in order
   let browser: Browser | null = null;
-  for (const channel of BROWSER_CHANNELS) {
+  for (const channel of channelsToTry) {
     try {
       browser = await chromium.launch({
         headless: options.headless ?? false,
-        channel,
+        ...(channel && { channel }),
       });
+      if (channel) {
+        log.verbose(`Using ${channel}`);
+      } else {
+        log.verbose('Using Playwright Chromium');
+      }
       break;
     } catch {
       // This channel failed, try next one
@@ -61,21 +118,53 @@ export async function launchBrowser(
     }
   }
 
+  // If no browser found, prompt to install Chromium
   if (!browser) {
-    const message = [
-      '',
-      'Error: No browser found.',
-      '',
-      'Heroshot needs a browser to capture screenshots. Options:',
-      '',
-      '  1. Install Chrome (recommended):',
-      '     https://www.google.com/chrome/',
-      '',
-      '  2. Or install Playwright browsers:',
-      '     npx playwright install chromium',
-      '',
-    ].join('\n');
-    throw new Error(message);
+    log('');
+    log('No browser found.');
+    log('');
+    log('Heroshot needs a Chromium-based browser to capture screenshots.');
+    log('');
+
+    // Check if we can use npx (Node available)
+    let hasNpx = false;
+    try {
+      // eslint-disable-next-line sonarjs/no-os-command-from-path -- checking if npx exists
+      execSync('which npx', { stdio: 'pipe' });
+      hasNpx = true;
+    } catch {
+      // npx not available
+    }
+
+    if (hasNpx) {
+      log('Options:');
+      log('  1. Install Chromium now (recommended, ~150MB download)');
+      log('  2. Install Chrome manually: https://www.google.com/chrome/');
+      log('');
+
+      const shouldInstall = await confirm('Install Chromium now?');
+
+      if (shouldInstall) {
+        const success = installPlaywrightChromium();
+        if (success) {
+          // Try launching again with Playwright Chromium
+          browser = await chromium.launch({
+            headless: options.headless ?? false,
+          });
+        }
+      }
+    } else {
+      // No npx - standalone binary without Node
+      log('Please install a browser:');
+      log('');
+      log('  Chrome: https://www.google.com/chrome/');
+      log('  Edge:   https://www.microsoft.com/edge');
+      log('');
+    }
+
+    if (!browser) {
+      throw new Error('No browser available. Please install Chrome or Edge and try again.');
+    }
   }
 
   // Create context with viewport and optional storage state
