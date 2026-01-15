@@ -5,8 +5,8 @@
 <h1 align="center">heroshot</h1>
 
 <p align="center">
-  <strong>Screenshot automation for docs, landing pages, and more.</strong><br>
-  Point and click to define. One command to regenerate when your UI changes.
+  <strong>Screenshots that stay true.</strong><br>
+  Your UI evolves. Heroshot keeps your docs and marketing in sync - automatically.
 </p>
 
 <p align="center">

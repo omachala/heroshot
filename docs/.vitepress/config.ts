@@ -2,7 +2,7 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'Heroshot',
-  description: 'Screenshot automation CLI tool',
+  description: 'Screenshots that stay true. Your UI evolves, your screenshots follow.',
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],

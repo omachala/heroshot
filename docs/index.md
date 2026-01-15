@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: HeroShot
-  text: Screen Capture Automation CLI
-  tagline: Define once, regenerate forever. Screenshots that stay in sync with your UI - automatically.
+  text: Screenshots that stay true
+  tagline: Your UI evolves. Your screenshots follow - automatically.
   image:
     src: /logo.svg
     alt: Heroshot Logo
