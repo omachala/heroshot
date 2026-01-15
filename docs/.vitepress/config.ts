@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress';
 export default defineConfig({
   title: 'Heroshot',
   description: 'Screenshots that stay true. Your UI evolves, your screenshots follow.',
+  sitemap: { hostname: 'https://heroshot.sh' },
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
