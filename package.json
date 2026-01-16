@@ -20,6 +20,7 @@
     "build:toolbar": "vite build --config toolbar/vite.config.ts",
     "test": "vitest",
     "test:run": "vitest run",
+    "test:cli": "vitest run --dir src/tests/cli",
     "test:toolbar": "vitest run --config toolbar/vite.config.ts",
     "test:toolbar:coverage": "vitest run --config toolbar/vite.config.ts --coverage",
     "test:toolbar:e2e": "playwright test --config toolbar/playwright.config.ts",

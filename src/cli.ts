@@ -36,7 +36,6 @@ interface OneshotCommandOptions {
   desktop?: boolean;
   dark?: boolean;
   light?: boolean;
-  both?: boolean;
   scale?: number;
   retina?: boolean;
   quality?: number;
@@ -112,7 +111,6 @@ function buildOneshotOptions(
     desktop: commandOptions?.desktop,
     dark: commandOptions?.dark,
     light: commandOptions?.light,
-    both: commandOptions?.both,
     scale: commandOptions?.scale ?? (commandOptions?.retina ? undefined : configScale),
     retina: commandOptions?.retina,
     format: configFormat,
@@ -233,7 +231,6 @@ program
   .option('--desktop', 'Use desktop viewport (1280x800)')
   .option('--dark', 'Force dark color scheme')
   .option('--light', 'Force light color scheme')
-  .option('--both', 'Capture both light and dark schemes')
   .option('--scale <factor>', 'Device scale factor (1, 2, 3)', parseInt)
   .option('--retina', 'Use retina scale (2x)')
   .option('-q, --quality <percent>', 'JPEG quality (1-100), outputs JPEG', parseInt)

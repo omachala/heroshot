@@ -47,7 +47,7 @@ heroshot https://example.com                          # Full page screenshot
 heroshot https://example.com --selector "h1"          # Element screenshot
 heroshot https://example.com --selector ".hero" -o hero.png
 heroshot https://example.com --dark --mobile          # Dark mode, mobile viewport
-heroshot https://example.com --both                   # Light + dark variants
+heroshot https://example.com --light --dark           # Light + dark variants
 ```
 
 #### What to capture
@@ -77,11 +77,12 @@ Control the browser window size. Use presets for common device sizes, or set exa
 
 Capture light mode, dark mode, or both. Useful for documenting themes.
 
-| Option    | Description                                                                 |
-| --------- | --------------------------------------------------------------------------- |
-| `--light` | Force light color scheme                                                    |
-| `--dark`  | Force dark color scheme                                                     |
-| `--both`  | Capture both variants, outputs `filename-light.png` and `filename-dark.png` |
+| Option    | Description              |
+| --------- | ------------------------ |
+| `--light` | Force light color scheme |
+| `--dark`  | Force dark color scheme  |
+
+Use `--light --dark` together to capture both variants, outputting `filename-light.png` and `filename-dark.png`.
 
 #### Image quality
 
@@ -215,7 +216,7 @@ heroshot https://example.com --selector ".hero-section"
 heroshot https://example.com --selector "nav" --mobile --dark -p 20
 
 # Both color schemes, retina quality
-heroshot https://example.com --both --retina -o homepage.png
+heroshot https://example.com --light --dark --retina -o homepage.png
 
 # JPEG output with quality setting
 heroshot https://example.com -q 85 -o photo.jpg

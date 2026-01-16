@@ -35,8 +35,6 @@ export interface OneshotOptions {
   dark?: boolean;
   /** Force light color scheme */
   light?: boolean;
-  /** Capture both color schemes */
-  both?: boolean;
   /** Device scale factor (1, 2, 3) */
   scale?: number;
   /** Shortcut for scale=2 */
@@ -105,7 +103,6 @@ export async function oneshot(options: OneshotOptions): Promise<OneshotResult> {
     desktop,
     dark,
     light,
-    both,
     scale,
     retina,
     format: formatOption,
@@ -140,14 +137,10 @@ export async function oneshot(options: OneshotOptions): Promise<OneshotResult> {
   const deviceScaleFactor = retina ? 2 : (scale ?? 1);
 
   // Determine color schemes to capture
-  let colorSchemes: ('light' | 'dark')[] = [];
-  if (both) {
-    colorSchemes = ['light', 'dark'];
-  } else if (dark) {
-    colorSchemes = ['dark'];
-  } else if (light) {
-    colorSchemes = ['light'];
-  }
+  // Using --light --dark together captures both variants
+  const colorSchemes: ('light' | 'dark')[] = [];
+  if (light) colorSchemes.push('light');
+  if (dark) colorSchemes.push('dark');
   // Default: empty array means no preference (browser default)
 
   // Load session if available (same pattern as sync.ts)
