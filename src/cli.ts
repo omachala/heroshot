@@ -2,9 +2,11 @@ import { existsSync, readFileSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { Command } from 'commander';
 import { setup } from './browser';
-import { getConfigPath } from './configFile';
+import { getConfigPath, loadConfig, saveConfig } from './configFile';
+import { type OneshotOptions, oneshot } from './oneshot';
 import { getSessionPath, loadLocalKey } from './session';
 import { sync } from './sync';
+import type { Config, Screenshot } from './types';
 import { error, intro, log, outro, setVerbose, verbose } from './ui';
 
 // Read version from package.json
@@ -23,6 +25,26 @@ interface GlobalOptions {
   sessionKey?: string;
 }
 
+interface OneshotCommandOptions {
+  selector?: string[];
+  output?: string;
+  padding?: number;
+  width?: number;
+  height?: number;
+  mobile?: boolean;
+  tablet?: boolean;
+  desktop?: boolean;
+  dark?: boolean;
+  light?: boolean;
+  both?: boolean;
+  scale?: number;
+  retina?: boolean;
+  quality?: number;
+  omitBackground?: boolean;
+  timeout?: number;
+  save?: boolean;
+}
+
 program
   .name('heroshot')
   .description('Define your screenshots once, update them forever with one command')
@@ -36,35 +58,211 @@ program
     intro(version);
   });
 
-// Default command: check for config, run setup if missing, otherwise sync
-program
-  .command('run', { isDefault: true, hidden: true })
-  .description('Run heroshot (setup if no config, otherwise sync)')
-  .action(async () => {
-    const options = program.opts<GlobalOptions>();
-    const configPath = options.config ? path.resolve(options.config) : getConfigPath();
+/** Generate a unique ID for screenshots */
+function generateUid(): string {
+  // Using crypto for better randomness - eslint-disable-next-line sonarjs/pseudo-random
+  return crypto.randomUUID().slice(0, 8);
+}
 
-    if (existsSync(configPath)) {
-      // Config exists - run sync
-      const result = await sync({ configPath, sessionKey: options.sessionKey });
-      if (result.failed > 0) {
-        process.exitCode = 1;
-      }
+/** Generate a filename from URL and selector */
+function generateScreenshotFilename(url: string, selector?: string): string {
+  try {
+    const parsed = new URL(url);
+    const parts = [parsed.hostname, ...parsed.pathname.split('/').filter(Boolean)];
+    let base = parts
+      .join('-')
+      .replaceAll(/[^\w-]/g, '-')
+      .replaceAll(/-+/g, '-');
+    if (selector) {
+      const selectorPart = selector
+        .replaceAll(/[^\w-]/g, '-')
+        .replaceAll(/-+/g, '-')
+        .slice(0, 20);
+      base = `${base}-${selectorPart}`;
+    }
+    return `${base || 'screenshot'}.png`;
+  } catch {
+    return 'screenshot.png';
+  }
+}
+
+/** Build oneshot options from CLI args and config defaults */
+// eslint-disable-next-line complexity -- many options to map
+function buildOneshotOptions(
+  url: string,
+  commandOptions: OneshotCommandOptions | undefined,
+  existingConfig: Config | undefined,
+  sessionKey: string | undefined
+): OneshotOptions {
+  const configOutputDirectory = existingConfig?.outputDirectory;
+  const configScale = existingConfig?.browser?.deviceScaleFactor;
+  const configFormat = existingConfig?.outputFormat;
+  const configQuality = existingConfig?.jpegQuality;
+
+  return {
+    url,
+    selector: commandOptions?.selector,
+    output: commandOptions?.output,
+    outputDirectory: commandOptions?.output ? undefined : configOutputDirectory,
+    padding: commandOptions?.padding,
+    width: commandOptions?.width,
+    height: commandOptions?.height,
+    mobile: commandOptions?.mobile,
+    tablet: commandOptions?.tablet,
+    desktop: commandOptions?.desktop,
+    dark: commandOptions?.dark,
+    light: commandOptions?.light,
+    both: commandOptions?.both,
+    scale: commandOptions?.scale ?? (commandOptions?.retina ? undefined : configScale),
+    retina: commandOptions?.retina,
+    format: configFormat,
+    quality: commandOptions?.quality ?? (configFormat === 'jpeg' ? configQuality : undefined),
+    omitBackground: commandOptions?.omitBackground,
+    timeout: commandOptions?.timeout,
+    sessionKey,
+  };
+}
+
+/** Save screenshot to config file */
+function saveScreenshotToConfig(
+  configPath: string,
+  url: string,
+  oneshotOptions: OneshotOptions,
+  existingConfig: Config | undefined
+): void {
+  const configForSave = existingConfig ?? loadConfig('');
+  const selectorValue = oneshotOptions.selector?.[0];
+  const filename = oneshotOptions.output ?? generateScreenshotFilename(url, selectorValue);
+
+  const screenshotEntry: Screenshot = {
+    id: generateUid(),
+    name: path.basename(filename, path.extname(filename)),
+    url,
+    filename,
+    selector: selectorValue,
+  };
+
+  if (oneshotOptions.padding) {
+    screenshotEntry.padding = {
+      top: oneshotOptions.padding,
+      right: oneshotOptions.padding,
+      bottom: oneshotOptions.padding,
+      left: oneshotOptions.padding,
+    };
+  }
+
+  if (oneshotOptions.mobile) {
+    screenshotEntry.viewports = ['mobile'];
+  } else if (oneshotOptions.tablet) {
+    screenshotEntry.viewports = ['tablet'];
+  } else if (oneshotOptions.desktop) {
+    screenshotEntry.viewports = ['desktop'];
+  }
+
+  if (oneshotOptions.dark) {
+    configForSave.browser = { ...configForSave.browser, colorScheme: 'dark' };
+  } else if (oneshotOptions.light) {
+    configForSave.browser = { ...configForSave.browser, colorScheme: 'light' };
+  }
+
+  if (oneshotOptions.scale || oneshotOptions.retina) {
+    configForSave.browser = {
+      ...configForSave.browser,
+      deviceScaleFactor: oneshotOptions.retina ? 2 : oneshotOptions.scale,
+    };
+  }
+
+  configForSave.screenshots.push(screenshotEntry);
+  saveConfig(configPath, configForSave);
+  verbose(`Saved to config: ${screenshotEntry.name}`);
+}
+
+/** Handle one-shot URL capture */
+async function handleOneshotCapture(
+  url: string,
+  commandOptions: OneshotCommandOptions | undefined,
+  configPath: string,
+  sessionKey: string | undefined
+): Promise<boolean> {
+  const existingConfig = existsSync(configPath) ? loadConfig(configPath) : undefined;
+  const oneshotOptions = buildOneshotOptions(url, commandOptions, existingConfig, sessionKey);
+  const result = await oneshot(oneshotOptions);
+
+  if (commandOptions?.save && result.success) {
+    saveScreenshotToConfig(configPath, url, oneshotOptions, existingConfig);
+  }
+
+  return result.success;
+}
+
+/** Handle default command (setup or sync) */
+async function handleDefaultCommand(
+  configPath: string,
+  sessionKey: string | undefined,
+  hasExplicitConfig: boolean
+): Promise<boolean> {
+  if (existsSync(configPath)) {
+    const result = await sync({ configPath, sessionKey });
+    return result.failed === 0;
+  }
+
+  if (hasExplicitConfig) {
+    error(`Config file not found: ${configPath}`);
+    return false;
+  }
+
+  const { hasScreenshots } = await setup();
+  if (hasScreenshots) {
+    const result = await sync({});
+    return result.failed === 0;
+  }
+  return true;
+}
+
+// Default command: handle URL for one-shot OR run setup/sync
+program
+  .command('shot [url]', { isDefault: true, hidden: true })
+  .description('Take a screenshot (one-shot mode with URL, or sync if no URL)')
+  .option('--selector <selector...>', 'CSS selector(s) to capture')
+  .option('-o, --output <file>', 'Output filename')
+  .option('-p, --padding <pixels>', 'Padding around element', parseInt)
+  .option('-w, --width <pixels>', 'Viewport width', parseInt)
+  .option('-H, --height <pixels>', 'Viewport height', parseInt)
+  .option('--mobile', 'Use mobile viewport (375x667)')
+  .option('--tablet', 'Use tablet viewport (768x1024)')
+  .option('--desktop', 'Use desktop viewport (1280x800)')
+  .option('--dark', 'Force dark color scheme')
+  .option('--light', 'Force light color scheme')
+  .option('--both', 'Capture both light and dark schemes')
+  .option('--scale <factor>', 'Device scale factor (1, 2, 3)', parseInt)
+  .option('--retina', 'Use retina scale (2x)')
+  .option('-q, --quality <percent>', 'JPEG quality (1-100), outputs JPEG', parseInt)
+  .option('--omit-background', 'Transparent background (PNG only)')
+  .option('--timeout <ms>', 'Timeout in milliseconds', parseInt)
+  .option('--save', 'Save screenshot definition to config')
+  .action(async (url?: string, commandOptions?: OneshotCommandOptions) => {
+    const globalOptions = program.opts<GlobalOptions>();
+    const configPath = globalOptions.config ? path.resolve(globalOptions.config) : getConfigPath();
+
+    if (url?.startsWith('http')) {
+      const success = await handleOneshotCapture(
+        url,
+        commandOptions,
+        configPath,
+        globalOptions.sessionKey
+      );
+      if (!success) process.exitCode = 1;
+    } else if (url) {
+      // URL doesn't look like a URL - treat as pattern for sync
+      const result = await sync({ configPath, sessionKey: globalOptions.sessionKey, filter: url });
+      if (result.failed > 0) process.exitCode = 1;
     } else {
-      if (options.config) {
-        // User specified a config that doesn't exist
-        error(`Config file not found: ${configPath}`);
-        process.exitCode = 1;
-        return;
-      }
-      // No config - run setup, then auto-sync if there are screenshots
-      const { hasScreenshots } = await setup();
-      if (hasScreenshots) {
-        const result = await sync({});
-        if (result.failed > 0) {
-          process.exitCode = 1;
-        }
-      }
+      const success = await handleDefaultCommand(
+        configPath,
+        globalOptions.sessionKey,
+        !!globalOptions.config
+      );
+      if (!success) process.exitCode = 1;
     }
   });
 
