@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /guide/getting-started
+      link: /docs/getting-started
     - theme: alt
       text: View on GitHub
       link: https://github.com/omachala/heroshot
@@ -73,7 +73,7 @@ features:
   </div>
 
   <div class="try-link">
-    <a href="/guide/getting-started">Try it yourself</a>
+    <a href="/docs/getting-started">Try it yourself</a>
   </div>
 </div>
 

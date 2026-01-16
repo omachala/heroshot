@@ -2,7 +2,8 @@ import { defineConfig } from 'vitepress';
 
 export default defineConfig({
   title: 'Heroshot',
-  description: 'Screenshots that stay true. Your UI evolves, your screenshots follow.',
+  description:
+    'Free, open-source screenshot automation. Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.',
   sitemap: { hostname: 'https://heroshot.sh' },
 
   head: [
@@ -19,34 +20,30 @@ export default defineConfig({
     logo: '/nav-logo.svg',
 
     nav: [
-      { text: 'Docs', link: '/guide/' },
-      { text: 'Guides', link: '/guide/automated-updates' },
-      { text: 'CLI', link: '/api/cli' },
+      { text: 'Docs', link: '/docs/' },
       { text: 'GitHub', link: 'https://github.com/omachala/heroshot', target: '_blank' },
       { text: 'NPM', link: 'https://www.npmjs.com/package/heroshot', target: '_blank' },
     ],
 
     sidebar: {
-      '/guide/': [
+      '/docs/': [
         {
           text: 'Introduction',
           items: [
-            { text: 'What is Heroshot?', link: '/guide/' },
-            { text: 'Getting Started', link: '/guide/getting-started' },
+            { text: 'What is Heroshot?', link: '/docs/' },
+            { text: 'Getting Started', link: '/docs/getting-started' },
+          ],
+        },
+        {
+          text: 'CLI',
+          items: [
+            { text: 'CLI Reference', link: '/docs/cli' },
+            { text: 'Configuration', link: '/docs/config' },
           ],
         },
         {
           text: 'Guides',
-          items: [{ text: 'Automated Updates', link: '/guide/automated-updates' }],
-        },
-      ],
-      '/api/': [
-        {
-          text: 'Reference',
-          items: [
-            { text: 'CLI', link: '/api/cli' },
-            { text: 'Configuration', link: '/api/config' },
-          ],
+          items: [{ text: 'Automated Updates', link: '/docs/guide/automated-updates' }],
         },
       ],
     },
