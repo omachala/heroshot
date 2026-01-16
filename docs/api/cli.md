@@ -33,7 +33,14 @@ heroshot -c custom.json     # Use custom config file
 
 ### `heroshot <url>` (one-shot mode)
 
-Take a screenshot directly without config file. Perfect for quick captures.
+Take a screenshot directly without config file. Perfect for quick captures or building your config from the command line.
+
+**Two ways to build your screenshot config:**
+
+1. **Visual mode** - Run `heroshot config` to open a browser, point-and-click to select elements, adjust settings visually
+2. **CLI mode** - Use `heroshot <url> --save` to capture and add screenshots via command line
+
+Both approaches write to the same `.heroshot/config.json` file. Use whichever fits your workflow - or mix them. The visual picker is great for exploring a page, while CLI mode is ideal for scripting or when you know exactly what you want.
 
 ```bash
 heroshot https://example.com                          # Full page screenshot
