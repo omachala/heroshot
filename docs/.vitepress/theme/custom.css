@@ -114,12 +114,20 @@
     max-width: 200px;
     max-height: 200px;
   }
+
+  .VPHero .text {
+    font-size: 1.75rem;
+  }
 }
 
 @media (max-width: 640px) {
   .VPHero .image-src {
     max-width: 180px;
     max-height: 180px;
+  }
+
+  .VPHero .text {
+    font-size: 1.5rem;
   }
 
   .VPHero .name {
