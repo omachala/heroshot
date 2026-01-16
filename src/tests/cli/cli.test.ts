@@ -2,7 +2,7 @@
  * CLI integration tests
  * Tests the actual CLI binary with various flag combinations
  */
-import { execSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -14,17 +14,16 @@ const CLI_PATH = path.join(import.meta.dirname, '../../../dist/cli.js');
 
 /** Run CLI command and return result */
 function runCli(args: string): { success: boolean; output: string } {
-  try {
-    const output = execSync(`node ${CLI_PATH} ${args}`, {
-      encoding: 'utf8',
-      timeout: 60_000,
-      cwd: TEST_OUTPUT_DIR,
-    });
-    return { success: true, output };
-  } catch (error) {
-    const execError = error as { stdout?: string; stderr?: string };
-    return { success: false, output: execError.stdout ?? execError.stderr ?? '' };
-  }
+  const argsArray = args.split(/\s+/).filter(Boolean);
+  const result = spawnSync('node', [CLI_PATH, ...argsArray], {
+    encoding: 'utf8',
+    timeout: 60_000,
+    cwd: TEST_OUTPUT_DIR,
+  });
+  return {
+    success: result.status === 0,
+    output: result.stdout ?? result.stderr ?? '',
+  };
 }
 
 /** Get image dimensions using sharp */
