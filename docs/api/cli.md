@@ -50,40 +50,70 @@ heroshot https://example.com --dark --mobile          # Dark mode, mobile viewpo
 heroshot https://example.com --both                   # Light + dark variants
 ```
 
-| Option              | Description                          |
-| ------------------- | ------------------------------------ |
-| `--selector <sel>`  | CSS selector to capture (repeatable) |
-| `-o, --output`      | Output filename                      |
-| `-p, --padding`     | Padding around element in pixels     |
-| `-w, --width`       | Viewport width                       |
-| `-H, --height`      | Viewport height                      |
-| `--mobile`          | Mobile viewport preset (375x667)     |
-| `--tablet`          | Tablet viewport preset (768x1024)    |
-| `--desktop`         | Desktop viewport preset (1280x800)   |
-| `--dark`            | Force dark color scheme              |
-| `--light`           | Force light color scheme             |
-| `--both`            | Capture both light and dark variants |
-| `--scale <n>`       | Device scale factor (1, 2, 3)        |
-| `--retina`          | Shortcut for `--scale 2`             |
-| `-q, --quality <n>` | JPEG quality (1-100), outputs JPEG   |
-| `--omit-background` | Transparent background (PNG only)    |
-| `--timeout <ms>`    | Timeout in milliseconds              |
-| `--save`            | Save screenshot definition to config |
+#### What to capture
 
-::: tip Config Defaults
-When a config file exists, one-shot mode uses its defaults:
+By default, heroshot captures the full page. Use `--selector` to focus on a specific element.
 
-- `outputDirectory` - screenshots saved there
-- `browser.deviceScaleFactor` - default scale
-- `outputFormat` / `jpegQuality` - default format
-  :::
+| Option             | Description                                                              |
+| ------------------ | ------------------------------------------------------------------------ |
+| `--selector <sel>` | CSS selector for the element to capture. Omit for full-page screenshot.  |
+| `-p, --padding`    | Add breathing room around the element (in pixels). Great for context.    |
+| `-o, --output`     | Output filename. Auto-generated from URL if not specified.               |
+| `--save`           | Add this screenshot to your config so `heroshot sync` includes it later. |
 
-::: tip Save for Later
-Use `--save` to add the screenshot to your config for future syncs:
+#### Viewport size
+
+Control the browser window size. Use presets for common device sizes, or set exact dimensions.
+
+| Option         | Description                                                     |
+| -------------- | --------------------------------------------------------------- |
+| `--mobile`     | Phone-sized viewport (375x667) - perfect for mobile screenshots |
+| `--tablet`     | Tablet viewport (768x1024) - great for responsive layouts       |
+| `--desktop`    | Desktop viewport (1280x800) - the default if nothing specified  |
+| `-w, --width`  | Custom viewport width in pixels                                 |
+| `-H, --height` | Custom viewport height in pixels                                |
+
+#### Color scheme
+
+Capture light mode, dark mode, or both. Useful for documenting themes.
+
+| Option    | Description                                                                 |
+| --------- | --------------------------------------------------------------------------- |
+| `--light` | Force light color scheme                                                    |
+| `--dark`  | Force dark color scheme                                                     |
+| `--both`  | Capture both variants, outputs `filename-light.png` and `filename-dark.png` |
+
+#### Image quality
+
+Control resolution and format. Higher scale = sharper images but larger files.
+
+| Option              | Description                                                       |
+| ------------------- | ----------------------------------------------------------------- |
+| `--scale <n>`       | Device scale factor (1, 2, or 3). Use 2 for retina-quality images |
+| `--retina`          | Shortcut for `--scale 2`                                          |
+| `-q, --quality <n>` | Output as JPEG with given quality (1-100). Smaller files than PNG |
+| `--omit-background` | Transparent background (PNG only). Useful for element cutouts     |
+
+#### Other options
+
+| Option           | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| `--timeout <ms>` | How long to wait for the page to load (default: 30000ms) |
+
+::: tip Using Config Defaults
+If you have a `.heroshot/config.json`, one-shot mode automatically uses your saved defaults for output directory, scale factor, and image format. CLI flags override these when specified.
+:::
+
+::: tip Building Config from CLI
+Use `--save` to build your screenshot collection from the command line:
 
 ```bash
-heroshot https://myapp.com --selector ".hero" --save
-heroshot sync  # Now includes the saved screenshot
+# Capture and save to config
+heroshot https://myapp.com --selector ".hero" --mobile --save
+heroshot https://myapp.com/pricing --selector ".plans" --save
+
+# Later, regenerate all saved screenshots
+heroshot sync
 ```
 
 :::
