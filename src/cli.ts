@@ -3,10 +3,10 @@ import path from 'node:path';
 import { Command } from 'commander';
 import { setup } from './browser';
 import { getConfigPath, loadConfig, saveConfig } from './configFile';
-import { oneshot } from './oneshot';
+import { VIEWPORT_PRESETS } from './schema';
 import { getSessionPath, loadLocalKey } from './session';
 import { sync } from './sync';
-import type { Config, OneshotCommandOptions, OneshotOptions, Screenshot } from './types';
+import type { Config, Screenshot, ShotCommandOptions } from './types';
 import { error, intro, log, outro, setVerbose, verbose } from './ui';
 import { generateScreenshotFilename } from './utils/generateScreenshotFilename';
 import { generateUid } from './utils/generateUid';
@@ -40,54 +40,12 @@ program
     intro(version);
   });
 
-/** Build oneshot options from CLI args and config defaults */
-// eslint-disable-next-line complexity -- many options to map
-function buildOneshotOptions(
-  url: string,
-  commandOptions: OneshotCommandOptions | undefined,
-  existingConfig: Config | undefined,
-  sessionKey: string | undefined
-): OneshotOptions {
-  const configOutputDirectory = existingConfig?.outputDirectory;
-  const configScale = existingConfig?.browser?.deviceScaleFactor;
-  const configFormat = existingConfig?.outputFormat;
-  const configQuality = existingConfig?.jpegQuality;
+/** Build a screenshot entry from CLI options */
+function buildScreenshotEntry(url: string, options: ShotCommandOptions | undefined): Screenshot {
+  const selectorValue = options?.selector?.[0];
+  const filename = options?.output ?? generateScreenshotFilename(url, selectorValue);
 
-  return {
-    url,
-    selector: commandOptions?.selector,
-    output: commandOptions?.output,
-    outputDirectory: commandOptions?.output ? undefined : configOutputDirectory,
-    padding: commandOptions?.padding,
-    width: commandOptions?.width,
-    height: commandOptions?.height,
-    mobile: commandOptions?.mobile,
-    tablet: commandOptions?.tablet,
-    desktop: commandOptions?.desktop,
-    dark: commandOptions?.dark,
-    light: commandOptions?.light,
-    scale: commandOptions?.scale ?? (commandOptions?.retina ? undefined : configScale),
-    retina: commandOptions?.retina,
-    format: configFormat,
-    quality: commandOptions?.quality ?? (configFormat === 'jpeg' ? configQuality : undefined),
-    omitBackground: commandOptions?.omitBackground,
-    timeout: commandOptions?.timeout,
-    sessionKey,
-  };
-}
-
-/** Save screenshot to config file */
-function saveScreenshotToConfig(
-  configPath: string,
-  url: string,
-  oneshotOptions: OneshotOptions,
-  existingConfig: Config | undefined
-): void {
-  const configForSave = existingConfig ?? loadConfig('');
-  const selectorValue = oneshotOptions.selector?.[0];
-  const filename = oneshotOptions.output ?? generateScreenshotFilename(url, selectorValue);
-
-  const screenshotEntry: Screenshot = {
+  const screenshot: Screenshot = {
     id: generateUid(),
     name: path.basename(filename, path.extname(filename)),
     url,
@@ -95,57 +53,148 @@ function saveScreenshotToConfig(
     selector: selectorValue,
   };
 
-  if (oneshotOptions.padding) {
-    screenshotEntry.padding = {
-      top: oneshotOptions.padding,
-      right: oneshotOptions.padding,
-      bottom: oneshotOptions.padding,
-      left: oneshotOptions.padding,
+  // Add padding if specified
+  if (options?.padding) {
+    screenshot.padding = {
+      top: options.padding,
+      right: options.padding,
+      bottom: options.padding,
+      left: options.padding,
     };
   }
 
-  if (oneshotOptions.mobile) {
-    screenshotEntry.viewports = ['mobile'];
-  } else if (oneshotOptions.tablet) {
-    screenshotEntry.viewports = ['tablet'];
-  } else if (oneshotOptions.desktop) {
-    screenshotEntry.viewports = ['desktop'];
+  // Add viewport variant if specified
+  if (options?.mobile) {
+    screenshot.viewports = ['mobile'];
+  } else if (options?.tablet) {
+    screenshot.viewports = ['tablet'];
+  } else if (options?.desktop) {
+    screenshot.viewports = ['desktop'];
   }
 
-  if (oneshotOptions.dark) {
-    configForSave.browser = { ...configForSave.browser, colorScheme: 'dark' };
-  } else if (oneshotOptions.light) {
-    configForSave.browser = { ...configForSave.browser, colorScheme: 'light' };
-  }
-
-  if (oneshotOptions.scale || oneshotOptions.retina) {
-    configForSave.browser = {
-      ...configForSave.browser,
-      deviceScaleFactor: oneshotOptions.retina ? 2 : oneshotOptions.scale,
-    };
-  }
-
-  configForSave.screenshots.push(screenshotEntry);
-  saveConfig(configPath, configForSave);
-  verbose(`Saved to config: ${screenshotEntry.name}`);
+  return screenshot;
 }
 
-/** Handle one-shot URL capture */
-async function handleOneshotCapture(
+/** Get color scheme from CLI options */
+function getColorScheme(options: ShotCommandOptions | undefined): 'light' | 'dark' | undefined {
+  if (options?.dark) return 'dark';
+  if (options?.light) return 'light';
+  return undefined;
+}
+
+/** Get device scale factor from CLI options */
+function getDeviceScaleFactor(
+  options: ShotCommandOptions | undefined,
+  existingConfig: Config | undefined
+): number | undefined {
+  if (options?.retina) return 2;
+  if (options?.scale) return options.scale;
+  return existingConfig?.browser?.deviceScaleFactor;
+}
+
+/** Get viewport from CLI options */
+// eslint-disable-next-line complexity -- handles multiple viewport sources
+function getViewport(
+  options: ShotCommandOptions | undefined,
+  existingConfig: Config | undefined
+): { width: number; height: number } | undefined {
+  // Check preset flags first
+  if (options?.mobile) return VIEWPORT_PRESETS.mobile;
+  if (options?.tablet) return VIEWPORT_PRESETS.tablet;
+  if (options?.desktop) return VIEWPORT_PRESETS.desktop;
+
+  // Check custom dimensions
+  if (options?.width || options?.height) {
+    const base = existingConfig?.browser?.viewport;
+    return {
+      width: options?.width ?? base?.width ?? 1280,
+      height: options?.height ?? base?.height ?? 800,
+    };
+  }
+
+  return existingConfig?.browser?.viewport;
+}
+
+/** Build a Config object from CLI options for URL capture */
+function buildShotConfig(
   url: string,
-  commandOptions: OneshotCommandOptions | undefined,
+  options: ShotCommandOptions | undefined,
+  existingConfig: Config | undefined
+): Config {
+  const screenshot = buildScreenshotEntry(url, options);
+  const outputFormat = options?.quality ? 'jpeg' : (existingConfig?.outputFormat ?? 'png');
+
+  return {
+    outputDirectory: '.',
+    outputFormat,
+    jpegQuality: options?.quality ?? existingConfig?.jpegQuality ?? 80,
+    browser: {
+      viewport: getViewport(options, existingConfig),
+      colorScheme: getColorScheme(options),
+      deviceScaleFactor: getDeviceScaleFactor(options, existingConfig),
+    },
+    screenshots: [screenshot],
+  };
+}
+
+/** Save screenshot to config file */
+function saveScreenshotToConfig(
+  configPath: string,
+  screenshot: Screenshot,
+  shotConfig: Config,
+  existingConfig: Config | undefined
+): void {
+  const configForSave = existingConfig ?? loadConfig('');
+
+  // Copy browser settings from shot config
+  if (shotConfig.browser?.colorScheme) {
+    configForSave.browser = {
+      ...configForSave.browser,
+      colorScheme: shotConfig.browser.colorScheme,
+    };
+  }
+  if (shotConfig.browser?.deviceScaleFactor) {
+    configForSave.browser = {
+      ...configForSave.browser,
+      deviceScaleFactor: shotConfig.browser.deviceScaleFactor,
+    };
+  }
+
+  configForSave.screenshots.push(screenshot);
+  saveConfig(configPath, configForSave);
+  verbose(`Saved to config: ${screenshot.name}`);
+}
+
+/** Handle URL capture */
+async function handleUrlCapture(
+  url: string,
+  options: ShotCommandOptions | undefined,
   configPath: string,
   sessionKey: string | undefined
 ): Promise<boolean> {
   const existingConfig = existsSync(configPath) ? loadConfig(configPath) : undefined;
-  const oneshotOptions = buildOneshotOptions(url, commandOptions, existingConfig, sessionKey);
-  const result = await oneshot(oneshotOptions);
+  const shotConfig = buildShotConfig(url, options, existingConfig);
 
-  if (commandOptions?.save && result.success) {
-    saveScreenshotToConfig(configPath, url, oneshotOptions, existingConfig);
+  // Determine output directory
+  const outputDirectory = options?.output
+    ? path.dirname(path.resolve(options.output))
+    : process.cwd();
+
+  const result = await sync({
+    config: shotConfig,
+    outputDirectory,
+    sessionKey,
+  });
+
+  if (options?.save && result.failed === 0) {
+    // eslint-disable-next-line prefer-destructuring -- clearer with explicit index
+    const screenshot = shotConfig.screenshots[0];
+    if (screenshot) {
+      saveScreenshotToConfig(configPath, screenshot, shotConfig, existingConfig);
+    }
   }
 
-  return result.success;
+  return result.failed === 0;
 }
 
 /** Handle default command (setup or sync) */
@@ -172,15 +221,15 @@ async function handleDefaultCommand(
   return true;
 }
 
-// Default command: handle URL for one-shot OR run setup/sync
+// Default command: handle URL capture OR run setup/sync
 program
   .command('shot [url]', { isDefault: true, hidden: true })
-  .description('Take a screenshot (one-shot mode with URL, or sync if no URL)')
+  .description('Take a screenshot (URL capture mode, or sync if no URL)')
   .option('--selector <selector...>', 'CSS selector(s) to capture')
   .option('-o, --output <file>', 'Output filename')
   .option('-p, --padding <pixels>', 'Padding around element', parseInt)
   .option('-w, --width <pixels>', 'Viewport width', parseInt)
-  .option('-H, --height <pixels>', 'Viewport height', parseInt)
+  .option('--height <pixels>', 'Viewport height', parseInt)
   .option('--mobile', 'Use mobile viewport (375x667)')
   .option('--tablet', 'Use tablet viewport (768x1024)')
   .option('--desktop', 'Use desktop viewport (1280x800)')
@@ -192,17 +241,12 @@ program
   .option('--omit-background', 'Transparent background (PNG only)')
   .option('--timeout <ms>', 'Timeout in milliseconds', parseInt)
   .option('--save', 'Save screenshot definition to config')
-  .action(async (url?: string, commandOptions?: OneshotCommandOptions) => {
+  .action(async (url?: string, options?: ShotCommandOptions) => {
     const globalOptions = program.opts<GlobalOptions>();
     const configPath = globalOptions.config ? path.resolve(globalOptions.config) : getConfigPath();
 
     if (url?.startsWith('http')) {
-      const success = await handleOneshotCapture(
-        url,
-        commandOptions,
-        configPath,
-        globalOptions.sessionKey
-      );
+      const success = await handleUrlCapture(url, options, configPath, globalOptions.sessionKey);
       if (!success) process.exitCode = 1;
     } else if (url) {
       // URL doesn't look like a URL - treat as pattern for sync

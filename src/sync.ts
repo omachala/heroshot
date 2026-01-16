@@ -402,7 +402,12 @@ async function captureAndLog(
 type SyncOptions = {
   /** Pattern to filter screenshots by id, name, or filename (case-insensitive substring match) */
   filter?: string;
+  /** Path to config file (loads config from file) */
   configPath?: string;
+  /** Config object (use directly, skip file loading) */
+  config?: Config;
+  /** Output directory override (for URL capture mode where there's no config file) */
+  outputDirectory?: string;
   sessionKey?: string;
 };
 
@@ -464,9 +469,11 @@ function showResults(results: ScreenshotResult[], outputDirectory: string): Sync
 /**
  * Sync all screenshots defined in config
  */
+// eslint-disable-next-line complexity -- main entry point, complexity is acceptable
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
+  // Use provided config or load from file
   const configPath = options.configPath ?? getConfigPath();
-  const config: Config = loadConfig(configPath);
+  const config: Config = options.config ?? loadConfig(configPath);
 
   if (config.screenshots.length === 0) {
     warn('No screenshots defined.');
@@ -498,10 +505,17 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     verbose(`Matched ${screenshots.length}: ${names}`);
   }
 
-  // Get output directory (relative to project root, which is parent of .heroshot/)
-  const configDirectory = path.dirname(configPath);
-  const projectRoot = path.dirname(configDirectory);
-  const outputDirectory = path.resolve(projectRoot, config.outputDirectory);
+  // Get output directory
+  // - If outputDirectory override provided (URL capture mode), use it directly
+  // - Otherwise, resolve relative to project root (parent of .heroshot/)
+  let outputDirectory: string;
+  if (options.outputDirectory) {
+    outputDirectory = path.resolve(options.outputDirectory);
+  } else {
+    const configDirectory = path.dirname(configPath);
+    const projectRoot = path.dirname(configDirectory);
+    outputDirectory = path.resolve(projectRoot, config.outputDirectory);
+  }
 
   // Try to load encrypted session if available
   const storageState = loadEncryptedSession(options.sessionKey);

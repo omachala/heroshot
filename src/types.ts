@@ -7,10 +7,8 @@
 import type { z } from 'zod';
 import type {
   configSchema,
-  oneshotCommandOptionsSchema,
-  oneshotOptionsSchema,
-  oneshotResultSchema,
   screenshotSchema,
+  shotCommandOptionsSchema,
   viewportSchema,
 } from './schema';
 
@@ -23,14 +21,8 @@ export type Screenshot = z.infer<typeof screenshotSchema>;
 /** Heroshot configuration */
 export type Config = z.infer<typeof configSchema>;
 
-/** CLI command options for oneshot mode */
-export type OneshotCommandOptions = z.infer<typeof oneshotCommandOptionsSchema>;
-
-/** Full oneshot options (CLI + runtime values) */
-export type OneshotOptions = z.infer<typeof oneshotOptionsSchema>;
-
-/** Oneshot capture result */
-export type OneshotResult = z.infer<typeof oneshotResultSchema>;
+/** CLI command options for URL capture */
+export type ShotCommandOptions = z.infer<typeof shotCommandOptionsSchema>;
 
 /** Parsed viewport with name for filename suffix */
 export type ParsedViewport = {

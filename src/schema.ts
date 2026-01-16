@@ -85,8 +85,8 @@ export const browserSchema = z.object({
   deviceScaleFactor: z.number().min(1).max(3).optional(),
 });
 
-/** Shared CLI options for oneshot capture (used by both CLI parsing and oneshot function) */
-const oneshotCliOptionsSchema = z.object({
+/** Shared CLI options for URL capture */
+const shotCliOptionsSchema = z.object({
   /** CSS selector(s) to capture - if multiple, captures bounding box of all */
   selector: z.array(z.string()).optional(),
   /** Output filename (auto-generated from URL if not provided) */
@@ -119,29 +119,10 @@ const oneshotCliOptionsSchema = z.object({
   timeout: z.number().int().positive().optional(),
 });
 
-/** CLI command options (includes --save flag) */
-export const oneshotCommandOptionsSchema = oneshotCliOptionsSchema.extend({
+/** CLI command options for URL capture (includes --save flag) */
+export const shotCommandOptionsSchema = shotCliOptionsSchema.extend({
   /** Save screenshot definition to config file */
   save: z.boolean().optional(),
-});
-
-/** Full oneshot options (CLI options + runtime values) */
-export const oneshotOptionsSchema = oneshotCliOptionsSchema.extend({
-  /** Target URL to capture */
-  url: z.url(),
-  /** Output directory (from config or CLI) */
-  outputDirectory: z.string().optional(),
-  /** Output format (png or jpeg) */
-  format: z.enum(['png', 'jpeg']).optional(),
-  /** Session key for encrypted auth */
-  sessionKey: z.string().optional(),
-});
-
-/** One-shot result */
-export const oneshotResultSchema = z.object({
-  success: z.boolean(),
-  files: z.array(z.string()),
-  error: z.string().optional(),
 });
 
 /** Global config */

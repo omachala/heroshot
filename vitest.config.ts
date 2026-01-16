@@ -17,7 +17,6 @@ export default defineConfig({
         'src/types.ts',
         'src/browser.ts',
         'src/cli.ts',
-        'src/oneshot.ts',
         'src/sync.ts',
         'src/ui.ts',
       ],
