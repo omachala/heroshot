@@ -16,9 +16,28 @@
   Your UI evolves. Heroshot keeps your docs and marketing in sync - automatically.
 </p>
 
-<p align="center">
-  <img src="https://github.com/omachala/heroshot/blob/main/toolbar/tests/snapshots/manage-screenshots.test.ts/after-rename.png?raw=true" alt="heroshot toolbar demo" width="800">
-</p>
+<table align="center">
+  <tr>
+    <th></th>
+    <th>Light</th>
+    <th>Dark</th>
+  </tr>
+  <tr>
+    <th>Desktop</th>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-desktop-light.png?raw=true" alt="Desktop Light"></td>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-desktop-dark.png?raw=true" alt="Desktop Dark"></td>
+  </tr>
+  <tr>
+    <th>Tablet</th>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-tablet-light.png?raw=true" alt="Tablet Light"></td>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-tablet-dark.png?raw=true" alt="Tablet Dark"></td>
+  </tr>
+  <tr>
+    <th>Mobile</th>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-mobile-light.png?raw=true" alt="Mobile Light"></td>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-mobile-dark.png?raw=true" alt="Mobile Dark"></td>
+  </tr>
+</table>
 
 ## Get Started
 
