@@ -38,6 +38,9 @@ jobs:
       - name: Typecheck toolbar
         run: pnpm typecheck:toolbar
 
+      - name: Svelte warnings check
+        run: pnpm check:svelte
+
       - name: Knip (unused code)
         run: pnpm knip
 

@@ -570,29 +570,37 @@
 {#if showOverlay && overlayRects}
   <div class="fixed inset-0 w-screen h-screen z-[2147483646] pointer-events-none">
     <!-- Dark overlay areas around element (clickable when element is selected) -->
-    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
     <div
+      role="button"
+      tabindex="-1"
       class="fixed bg-black/50 {selectedElement ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'}"
       style="top:{overlayRects.top.top}px;left:{overlayRects.top.left}px;width:{overlayRects.top.width}px;height:{overlayRects.top.height}px;"
       onclick={handleOverlayClick}
+      onkeydown={(event) => event.key === 'Enter' && handleOverlayClick()}
     ></div>
-    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
     <div
+      role="button"
+      tabindex="-1"
       class="fixed bg-black/50 {selectedElement ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'}"
       style="top:{overlayRects.bottom.top}px;left:{overlayRects.bottom.left}px;width:{overlayRects.bottom.width}px;height:{overlayRects.bottom.height}px;"
       onclick={handleOverlayClick}
+      onkeydown={(event) => event.key === 'Enter' && handleOverlayClick()}
     ></div>
-    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
     <div
+      role="button"
+      tabindex="-1"
       class="fixed bg-black/50 {selectedElement ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'}"
       style="top:{overlayRects.left.top}px;left:{overlayRects.left.left}px;width:{overlayRects.left.width}px;height:{overlayRects.left.height}px;"
       onclick={handleOverlayClick}
+      onkeydown={(event) => event.key === 'Enter' && handleOverlayClick()}
     ></div>
-    <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
     <div
+      role="button"
+      tabindex="-1"
       class="fixed bg-black/50 {selectedElement ? 'pointer-events-auto cursor-pointer' : 'pointer-events-none'}"
       style="top:{overlayRects.right.top}px;left:{overlayRects.right.left}px;width:{overlayRects.right.width}px;height:{overlayRects.right.height}px;"
       onclick={handleOverlayClick}
+      onkeydown={(event) => event.key === 'Enter' && handleOverlayClick()}
     ></div>
 
     <!-- Element highlight -->
@@ -601,45 +609,53 @@
 
       <!-- Padding area overlays (clickable to toggle mask mode) -->
       {#if hasPadding}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         {#if selectedPadding.top > 0}
           <div
+            role="button"
+            tabindex="-1"
             class="fixed pointer-events-auto cursor-pointer"
             style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
             onclick={handlePaddingClick}
+            onkeydown={(event) => event.key === 'Enter' && handlePaddingClick()}
             onmouseenter={handlePaddingMouseMove}
             onmousemove={handlePaddingMouseMove}
             onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         {#if selectedPadding.bottom > 0}
           <div
+            role="button"
+            tabindex="-1"
             class="fixed pointer-events-auto cursor-pointer"
             style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
             onclick={handlePaddingClick}
+            onkeydown={(event) => event.key === 'Enter' && handlePaddingClick()}
             onmouseenter={handlePaddingMouseMove}
             onmousemove={handlePaddingMouseMove}
             onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         {#if selectedPadding.left > 0}
           <div
+            role="button"
+            tabindex="-1"
             class="fixed pointer-events-auto cursor-pointer"
             style="top:{overlayRects.highlight.top}px;left:{expandedRect.left}px;width:{selectedPadding.left}px;height:{overlayRects.highlight.height}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
             onclick={handlePaddingClick}
+            onkeydown={(event) => event.key === 'Enter' && handlePaddingClick()}
             onmouseenter={handlePaddingMouseMove}
             onmousemove={handlePaddingMouseMove}
             onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
-        <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
         {#if selectedPadding.right > 0}
           <div
+            role="button"
+            tabindex="-1"
             class="fixed pointer-events-auto cursor-pointer"
             style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left + overlayRects.highlight.width}px;width:{selectedPadding.right}px;height:{overlayRects.highlight.height}px;background:{maskPadding ? detectedBgColor : 'rgba(34, 197, 94, 0.25)'};"
             onclick={handlePaddingClick}
+            onkeydown={(event) => event.key === 'Enter' && handlePaddingClick()}
             onmouseenter={handlePaddingMouseMove}
             onmousemove={handlePaddingMouseMove}
             onmouseleave={handlePaddingMouseLeave}

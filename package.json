@@ -28,6 +28,7 @@
     "typecheck:toolbar": "tsc --noEmit -p toolbar/tsconfig.json --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo-toolbar",
     "lint": "eslint --cache --cache-location node_modules/.cache/eslint src/",
     "lint:toolbar": "eslint --cache --cache-location node_modules/.cache/eslint-toolbar toolbar/src/",
+    "check:svelte": "pnpm build:toolbar 2>&1 | grep -q '\\[vite-plugin-svelte\\].*warning' && echo 'Svelte warnings found!' && exit 1 || exit 0",
     "lint:fix": "eslint --cache --cache-location node_modules/.cache/eslint src/ --fix",
     "format": "prettier --write . --cache --cache-location node_modules/.cache/prettier",
     "format:check": "prettier --check . --cache --cache-location node_modules/.cache/prettier",
