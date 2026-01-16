@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { BrowserSettings, ColorScheme } from '../types';
 
-  interface Props {
+  type Props = {
     visible: boolean;
     settings: BrowserSettings;
     onClose: () => void;

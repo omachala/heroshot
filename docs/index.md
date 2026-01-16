@@ -4,7 +4,7 @@ layout: home
 hero:
   name: HeroShot
   text: Screenshots that stay true
-  tagline: Documentation screenshot automation. Define once, regenerate forever.
+  tagline: The free, open-source screenshot automation tool you can self-host.
   image:
     src: /logo.svg
     alt: Heroshot Logo

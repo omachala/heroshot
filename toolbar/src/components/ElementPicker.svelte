@@ -3,7 +3,7 @@
   import { findElementBySelector } from '../lib/selector';
   import type { Padding, ScreenshotItem, ScrollPosition } from '../types';
 
-  interface Props {
+  type Props = {
     /** Whether picker mode is active */
     active: boolean;
     /** Screenshots list (for loading saved padding) */
@@ -383,7 +383,7 @@
   let dragStartPadding = $state<Padding>({ top: 0, right: 0, bottom: 0, left: 0 });
 
   // Cursor tooltip state
-  interface TooltipData {
+  type TooltipData = {
     size?: string;    // e.g., "300 x 400"
     path?: string;    // e.g., "div.container >>> ha-card"
     padding?: string; // e.g., "24" or "24 24 24 24"

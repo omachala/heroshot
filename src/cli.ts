@@ -3,11 +3,13 @@ import path from 'node:path';
 import { Command } from 'commander';
 import { setup } from './browser';
 import { getConfigPath, loadConfig, saveConfig } from './configFile';
-import { type OneshotOptions, oneshot } from './oneshot';
+import { oneshot } from './oneshot';
 import { getSessionPath, loadLocalKey } from './session';
 import { sync } from './sync';
-import type { Config, Screenshot } from './types';
+import type { Config, OneshotCommandOptions, OneshotOptions, Screenshot } from './types';
 import { error, intro, log, outro, setVerbose, verbose } from './ui';
+import { generateScreenshotFilename } from './utils/generateScreenshotFilename';
+import { generateUid } from './utils/generateUid';
 
 // Read version from package.json
 const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
@@ -19,30 +21,11 @@ const version =
 
 const program = new Command();
 
-interface GlobalOptions {
+type GlobalOptions = {
   verbose?: boolean;
   config?: string;
   sessionKey?: string;
-}
-
-interface OneshotCommandOptions {
-  selector?: string[];
-  output?: string;
-  padding?: number;
-  width?: number;
-  height?: number;
-  mobile?: boolean;
-  tablet?: boolean;
-  desktop?: boolean;
-  dark?: boolean;
-  light?: boolean;
-  scale?: number;
-  retina?: boolean;
-  quality?: number;
-  omitBackground?: boolean;
-  timeout?: number;
-  save?: boolean;
-}
+};
 
 program
   .name('heroshot')
@@ -56,34 +39,6 @@ program
     setVerbose(options.verbose ?? false);
     intro(version);
   });
-
-/** Generate a unique ID for screenshots */
-function generateUid(): string {
-  // Using crypto for better randomness - eslint-disable-next-line sonarjs/pseudo-random
-  return crypto.randomUUID().slice(0, 8);
-}
-
-/** Generate a filename from URL and selector */
-function generateScreenshotFilename(url: string, selector?: string): string {
-  try {
-    const parsed = new URL(url);
-    const parts = [parsed.hostname, ...parsed.pathname.split('/').filter(Boolean)];
-    let base = parts
-      .join('-')
-      .replaceAll(/[^\w-]/g, '-')
-      .replaceAll(/-+/g, '-');
-    if (selector) {
-      const selectorPart = selector
-        .replaceAll(/[^\w-]/g, '-')
-        .replaceAll(/-+/g, '-')
-        .slice(0, 20);
-      base = `${base}-${selectorPart}`;
-    }
-    return `${base || 'screenshot'}.png`;
-  } catch {
-    return 'screenshot.png';
-  }
-}
 
 /** Build oneshot options from CLI args and config defaults */
 // eslint-disable-next-line complexity -- many options to map

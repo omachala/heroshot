@@ -8,7 +8,7 @@
   import SettingsModal from './SettingsModal.svelte';
   import Sidebar from './Sidebar.svelte';
 
-  interface Props {
+  type Props = {
     initialScreenshots?: ScreenshotItem[];
     initialSettings?: BrowserSettings;
     pendingJob?: ToolbarJob | null;

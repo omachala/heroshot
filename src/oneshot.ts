@@ -2,88 +2,12 @@ import { existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { BrowserContextOptions } from 'playwright';
 import { launchBrowser } from './browser';
+import { VIEWPORT_PRESETS } from './schema';
 import { getSessionKey, loadSession, sessionExists } from './session';
+import type { OneshotOptions, OneshotResult } from './types';
 import { colors, outro, spinner, verbose } from './ui';
-
-/** Viewport preset dimensions */
-const VIEWPORT_DESKTOP = { width: 1280, height: 800 };
-const VIEWPORT_TABLET = { width: 768, height: 1024 };
-const VIEWPORT_MOBILE = { width: 375, height: 667 };
-
-export interface OneshotOptions {
-  /** Target URL to capture */
-  url: string;
-  /** CSS selector(s) to capture - if multiple, captures bounding box of all */
-  selector?: string[];
-  /** Output filename (auto-generated from URL if not provided) */
-  output?: string;
-  /** Output directory (from config or CLI) */
-  outputDirectory?: string;
-  /** Padding around element in pixels */
-  padding?: number;
-  /** Viewport width */
-  width?: number;
-  /** Viewport height */
-  height?: number;
-  /** Use mobile viewport preset (375x667) */
-  mobile?: boolean;
-  /** Use tablet viewport preset (768x1024) */
-  tablet?: boolean;
-  /** Use desktop viewport preset (1280x800) */
-  desktop?: boolean;
-  /** Force dark color scheme */
-  dark?: boolean;
-  /** Force light color scheme */
-  light?: boolean;
-  /** Device scale factor (1, 2, 3) */
-  scale?: number;
-  /** Shortcut for scale=2 */
-  retina?: boolean;
-  /** Output format (png or jpeg) - from config or inferred from quality flag */
-  format?: 'png' | 'jpeg';
-  /** JPEG quality (1-100) - outputs JPEG instead of PNG */
-  quality?: number;
-  /** Omit background for transparent PNG */
-  omitBackground?: boolean;
-  /** Timeout in milliseconds */
-  timeout?: number;
-  /** Session key for encrypted auth */
-  sessionKey?: string;
-}
-
-export interface OneshotResult {
-  success: boolean;
-  files: string[];
-  error?: string;
-}
-
-/**
- * Generate a filename from URL
- * e.g., "https://example.com/foo/bar" -> "example-com-foo-bar.png"
- */
-function generateFilename(url: string, format: 'png' | 'jpeg'): string {
-  try {
-    const parsed = new URL(url);
-    const parts = [parsed.hostname, ...parsed.pathname.split('/').filter(Boolean)];
-    const base = parts
-      .join('-')
-      .replaceAll(/[^\w-]/g, '-')
-      .replaceAll(/-+/g, '-');
-    return `${base || 'screenshot'}.${format === 'jpeg' ? 'jpg' : 'png'}`;
-  } catch {
-    return `screenshot.${format === 'jpeg' ? 'jpg' : 'png'}`;
-  }
-}
-
-/**
- * Add suffix to filename before extension
- */
-function addSuffix(filename: string, suffix: string): string {
-  const extension = path.extname(filename);
-  const base = path.basename(filename, extension);
-  const directory = path.dirname(filename);
-  return path.join(directory, `${base}${suffix}${extension}`);
-}
+import { addSuffix } from './utils/addSuffix';
+import { generateFilename } from './utils/generateFilename';
 
 /**
  * Take a one-shot screenshot without config file
@@ -122,13 +46,13 @@ export async function oneshot(options: OneshotOptions): Promise<OneshotResult> {
   const baseFilename = outputDirectory ? path.join(outputDirectory, filename) : filename;
 
   // Determine viewport
-  let viewport = { ...VIEWPORT_DESKTOP };
+  let viewport = { ...VIEWPORT_PRESETS.desktop };
   if (mobile) {
-    viewport = { ...VIEWPORT_MOBILE };
+    viewport = { ...VIEWPORT_PRESETS.mobile };
   } else if (tablet) {
-    viewport = { ...VIEWPORT_TABLET };
+    viewport = { ...VIEWPORT_PRESETS.tablet };
   } else if (desktop) {
-    viewport = { ...VIEWPORT_DESKTOP };
+    viewport = { ...VIEWPORT_PRESETS.desktop };
   }
   if (width) viewport.width = width;
   if (height) viewport.height = height;

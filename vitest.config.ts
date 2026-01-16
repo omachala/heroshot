@@ -10,12 +10,14 @@ export default defineConfig({
       reporter: ['text', 'html', 'lcov'],
       reportsDirectory: './coverage',
       include: ['src/**/*.ts'],
-      // Exclude: tests, types (no runtime code), CLI display, and integration-test files (covered by e2e)
+      // Exclude: tests, types (no runtime code), CLI display, and integration-test files (covered by e2e/cli tests)
       exclude: [
+        'src/**/*.test.ts',
         'src/tests/**',
         'src/types.ts',
         'src/browser.ts',
         'src/cli.ts',
+        'src/oneshot.ts',
         'src/sync.ts',
         'src/ui.ts',
       ],

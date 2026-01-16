@@ -6,14 +6,17 @@
  */
 
 import { z } from 'zod';
+import { generateUid } from './utils/generateUid';
 
-/**
- * Generate a simple random UID (8 chars)
- */
-function generateUid(): string {
-  // eslint-disable-next-line sonarjs/pseudo-random -- Not used for security, just unique IDs
-  return Math.random().toString(36).slice(2, 10);
-}
+/** Viewport preset names */
+export type ViewportPreset = 'desktop' | 'tablet' | 'mobile';
+
+/** Viewport preset dimensions */
+export const VIEWPORT_PRESETS: Record<ViewportPreset, { width: number; height: number }> = {
+  desktop: { width: 1280, height: 800 },
+  tablet: { width: 768, height: 1024 },
+  mobile: { width: 375, height: 667 },
+};
 
 /** Browser viewport settings */
 export const viewportSchema = z.object({
@@ -45,7 +48,7 @@ export const scrollPositionSchema = z.object({
 export const viewportVariantSchema = z.string().refine(
   value => {
     // Check if it's a preset
-    if (['desktop', 'tablet', 'mobile'].includes(value)) return true;
+    if (value in VIEWPORT_PRESETS) return true;
     // Check if it's custom format "WIDTHxHEIGHT"
     const match = /^(\d+)x(\d+)$/.exec(value);
     if (!match) return false;
@@ -80,6 +83,65 @@ export const browserSchema = z.object({
   colorScheme: colorSchemeSchema.optional(),
   /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
   deviceScaleFactor: z.number().min(1).max(3).optional(),
+});
+
+/** Shared CLI options for oneshot capture (used by both CLI parsing and oneshot function) */
+const oneshotCliOptionsSchema = z.object({
+  /** CSS selector(s) to capture - if multiple, captures bounding box of all */
+  selector: z.array(z.string()).optional(),
+  /** Output filename (auto-generated from URL if not provided) */
+  output: z.string().optional(),
+  /** Padding around element in pixels */
+  padding: z.number().int().min(0).optional(),
+  /** Viewport width */
+  width: z.number().int().positive().optional(),
+  /** Viewport height */
+  height: z.number().int().positive().optional(),
+  /** Use mobile viewport preset (375x667) */
+  mobile: z.boolean().optional(),
+  /** Use tablet viewport preset (768x1024) */
+  tablet: z.boolean().optional(),
+  /** Use desktop viewport preset (1280x800) */
+  desktop: z.boolean().optional(),
+  /** Force dark color scheme */
+  dark: z.boolean().optional(),
+  /** Force light color scheme */
+  light: z.boolean().optional(),
+  /** Device scale factor (1, 2, 3) */
+  scale: z.number().min(1).max(3).optional(),
+  /** Shortcut for scale=2 */
+  retina: z.boolean().optional(),
+  /** JPEG quality (1-100) - outputs JPEG instead of PNG */
+  quality: z.number().int().min(1).max(100).optional(),
+  /** Omit background for transparent PNG */
+  omitBackground: z.boolean().optional(),
+  /** Timeout in milliseconds */
+  timeout: z.number().int().positive().optional(),
+});
+
+/** CLI command options (includes --save flag) */
+export const oneshotCommandOptionsSchema = oneshotCliOptionsSchema.extend({
+  /** Save screenshot definition to config file */
+  save: z.boolean().optional(),
+});
+
+/** Full oneshot options (CLI options + runtime values) */
+export const oneshotOptionsSchema = oneshotCliOptionsSchema.extend({
+  /** Target URL to capture */
+  url: z.url(),
+  /** Output directory (from config or CLI) */
+  outputDirectory: z.string().optional(),
+  /** Output format (png or jpeg) */
+  format: z.enum(['png', 'jpeg']).optional(),
+  /** Session key for encrypted auth */
+  sessionKey: z.string().optional(),
+});
+
+/** One-shot result */
+export const oneshotResultSchema = z.object({
+  success: z.boolean(),
+  files: z.array(z.string()),
+  error: z.string().optional(),
 });
 
 /** Global config */

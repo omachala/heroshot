@@ -116,7 +116,7 @@ export default tseslint.config(
       // ===== TypeScript Import/Export =====
       '@typescript-eslint/consistent-type-exports': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
-      '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/no-require-imports': 'error',
       'no-restricted-imports': [
         'error',
