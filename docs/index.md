@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: HeroShot
-  text: free, open-source screenshot automation tool
+  text: free, open-source screenshot automation framework
   tagline: Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.
   image:
     src: /logo.svg
