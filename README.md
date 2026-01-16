@@ -5,13 +5,15 @@
 <h1 align="center">heroshot</h1>
 
 <p align="center">
-  <strong>Screenshots that stay true.</strong><br>
-  Your UI evolves. Heroshot keeps your docs and marketing in sync - automatically.
+  <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/v/heroshot?style=for-the-badge&logo=npm" alt="npm version"></a>
+  <a href="https://github.com/omachala/heroshot/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/heroshot?style=for-the-badge" alt="license"></a>
+  <a href="https://codecov.io/gh/omachala/heroshot"><img src="https://img.shields.io/codecov/c/github/omachala/heroshot?style=for-the-badge" alt="coverage"></a>
+  <a href="https://bundlephobia.com/package/heroshot"><img src="https://img.shields.io/bundlephobia/minzip/heroshot?style=for-the-badge&label=size" alt="bundle size"></a>
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/v/heroshot" alt="npm"></a>
-  <a href="https://heroshot.sh"><img src="https://img.shields.io/badge/docs-heroshot.sh-blue" alt="docs"></a>
+  <strong>Screenshots that stay true.</strong><br>
+  Your UI evolves. Heroshot keeps your docs and marketing in sync - automatically.
 </p>
 
 <p align="center">
