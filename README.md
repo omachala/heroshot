@@ -12,10 +12,13 @@
   <a href="https://heroshot.sh"><img src="https://img.shields.io/badge/docs-heroshot.sh-blue?style=for-the-badge" alt="docs"></a>
 </p>
 
-<p align="center">
-  <strong>Screenshots that stay true.</strong><br>
-  Your UI evolves. Heroshot keeps your docs and marketing in sync - automatically.
-</p>
+Documentation screenshots rot. Your UI changes, but the images in your README, docs, and tutorials become outdated. The manual fix is painful: navigate, log in, screenshot, crop, save, commit. Repeat for every image.
+
+**Heroshot treats screenshots as code** - define them once, regenerate with one command.
+
+- **Visual picker** - Point and click to select elements, generates config for you
+- **Multi-variant** - Desktop, tablet, mobile + light/dark from a single definition
+- **CI/CD ready** - Automate updates with encrypted session support
 
 <table align="center">
   <tr>
