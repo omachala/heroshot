@@ -21,6 +21,8 @@ export default defineConfig({
 
     nav: [
       { text: 'Docs', link: '/docs/' },
+      { text: 'Guides', link: '/docs/guide/automated-updates' },
+      { text: 'Integrations', link: '/docs/integrations/vitepress' },
       { text: 'GitHub', link: 'https://github.com/omachala/heroshot', target: '_blank' },
       { text: 'NPM', link: 'https://www.npmjs.com/package/heroshot', target: '_blank' },
     ],
@@ -44,6 +46,16 @@ export default defineConfig({
         {
           text: 'Guides',
           items: [{ text: 'Automated Updates', link: '/docs/guide/automated-updates' }],
+        },
+        {
+          text: 'Integrations',
+          items: [
+            { text: 'VitePress', link: '/docs/integrations/vitepress' },
+            { text: 'Docusaurus', link: '/docs/integrations/docusaurus' },
+            { text: 'MkDocs', link: '/docs/integrations/mkdocs' },
+            { text: 'Sphinx', link: '/docs/integrations/sphinx' },
+            { text: 'GitBook', link: '/docs/integrations/gitbook' },
+          ],
         },
       ],
     },
