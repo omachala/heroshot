@@ -14,6 +14,7 @@
   --navy-dark: #162d4a;
   --navy-base: #2a5580;
   --navy-light: #3d6a99;
+  --navy-soft: rgba(42, 85, 128, 0.08);
 
   /* VitePress brand colors - using palette */
   --vp-c-brand-1: var(--brand-dark);
@@ -38,6 +39,9 @@
   --vp-c-text-1: #e2e8f0; /* very light */
   --vp-c-text-2: #94a3b8; /* muted light navy */
   --vp-c-text-3: #64748b; /* darker muted */
+
+  /* Navy soft for dark mode - subtle blue tint */
+  --navy-soft: rgba(61, 106, 153, 0.15);
 }
 
 /* Hero name - solid orange from logo */
@@ -56,6 +60,8 @@
 
 .VPHero .text {
   color: var(--navy-base);
+  font-size: 2.5rem;
+  line-height: 1.2;
 }
 
 .VPHero .tagline {

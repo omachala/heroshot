@@ -3,7 +3,7 @@ layout: home
 
 hero:
   name: HeroShot
-  text: free, open-source screenshot automation
+  text: free, open-source screenshot automation tool
   tagline: Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.
   image:
     src: /logo.svg
@@ -37,11 +37,23 @@ features:
       src: /icons/rocket.svg
     title: CI/CD Ready
     details: Run heroshot sync in your pipeline. Screenshots update on every deploy.
+  - icon:
+      src: /icons/server.svg
+    title: Self-Hosted
+    details: Own your screenshots. No vendor lock-in, no monthly fees. Everything runs on your machine or CI.
+  - icon:
+      src: /icons/lock.svg
+    title: Persistent Auth
+    details: Encrypted sessions let you log in once and capture protected pages headlessly.
+  - icon:
+      src: /icons/sliders.svg
+    title: Visual Editor
+    details: Refine your screenshots with adjustable padding, margins, and borders - all without touching code.
 ---
 
 <div class="showcase">
   <h2>See It In Action</h2>
-  <p class="subtitle">The hero section above is captured by heroshot across three viewport sizes, in both light and dark mode. That's 6 screenshots from a <a href="https://github.com/omachala/heroshot/blob/main/.heroshot/config.json" target="_blank">single config entry</a> — always in sync with the live site.</p>
+  <p class="subtitle">The hero section above is captured by heroshot across three viewport sizes, in both light and dark mode. That's 6 screenshots from a <a href="https://github.com/omachala/heroshot/blob/main/.heroshot/config.json" target="_blank">single config entry</a> - always in sync with the live site.</p>
 
   <div class="theme-tabs">
     <button class="active" data-theme="light">Light Mode</button>

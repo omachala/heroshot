@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="2" y="3" width="14" height="10" rx="1"/>
-  <path d="M5 16h8"/>
-  <path d="M9 13v3"/>
-  <rect x="15" y="8" width="6" height="11" rx="1"/>
-  <path d="M17 19h2"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Desktop monitor -->
+  <rect x="1" y="2" width="14" height="10" rx="1"/>
+  <path d="M4 15h8"/>
+  <path d="M8 12v3"/>
+  <!-- Mobile phone -->
+  <rect x="17" y="5" width="6" height="12" rx="1"/>
+  <path d="M19 15h2"/>
 </svg>
