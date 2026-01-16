@@ -53,5 +53,5 @@ Both folders are safe to commit to your repository.
 
 ## Next Steps
 
-- Set up [Automated Updates](/guide/automated-updates) in CI
-- Learn about the [CLI options](/api/cli)
+- Set up [Automated Updates](/docs/guide/automated-updates) in CI
+- Learn about the [CLI options](/docs/cli)

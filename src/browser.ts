@@ -29,13 +29,13 @@ const DEFAULT_VIEWPORT: Viewport = { width: 1280, height: 800 };
  */
 const BROWSER_CHANNELS: readonly string[] = ['chrome', 'chromium'];
 
-interface LaunchOptions {
+type LaunchOptions = {
   headless?: boolean;
   viewport?: Viewport;
   deviceScaleFactor?: number;
   storageState?: BrowserContextOptions['storageState'];
   colorScheme?: 'light' | 'dark';
-}
+};
 
 /**
  * Launch browser and create context with optional storage state.
@@ -89,7 +89,7 @@ export async function launchBrowser(
   return { browser, context };
 }
 
-interface ScreenshotData {
+type ScreenshotData = {
   id: string;
   name: string;
   url: string;
@@ -106,7 +106,7 @@ interface ScreenshotData {
     y: number;
   };
   maskPadding?: boolean;
-}
+};
 
 // Job types that CLI can send to toolbar
 type ToolbarJob =
@@ -115,11 +115,11 @@ type ToolbarJob =
 
 // Browser settings from toolbar
 // colorScheme: 'auto' = browser default, 'light'/'dark' = explicit, undefined = both
-interface BrowserSettings {
+type BrowserSettings = {
   viewport: { width: number; height: number };
   colorScheme?: 'auto' | 'light' | 'dark';
   deviceScaleFactor?: number;
-}
+};
 
 // Events that toolbar sends to CLI
 type ToolbarEvent =
@@ -133,13 +133,13 @@ type ToolbarEvent =
 
 const exposedPages = new WeakSet<Page>();
 
-interface InjectToolbarOptions {
+type InjectToolbarOptions = {
   screenshots: ScreenshotData[];
   pendingJob: ToolbarJob | null;
   selectedId: string | null;
   sidebarExpanded: boolean;
   onEvent: (event: ToolbarEvent) => void;
-}
+};
 
 async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise<void> {
   const { screenshots, pendingJob, selectedId, sidebarExpanded, onEvent } = options;
@@ -192,10 +192,10 @@ async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise
   await page.addScriptTag({ content: script });
 }
 
-export interface SetupOptions {
+export type SetupOptions = {
   /** Force browser color scheme (light/dark) for testing */
   colorScheme?: 'light' | 'dark';
-}
+};
 
 // eslint-disable-next-line complexity -- main entry point, complexity is acceptable
 export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshots: boolean }> {

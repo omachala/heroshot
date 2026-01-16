@@ -32,25 +32,14 @@ jobs:
       - name: Run heroshot sync
         run: node dist/cli.js
 
-      - name: Check for changes
-        id: changes
+      - name: Commit updated screenshots
         run: |
           if [ -n "$(git status --porcelain docs/public/screenshots/)" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/public/screenshots/
+            git commit -m "chore: update screenshots"
+            git push
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No screenshot changes detected"
           fi
-
-      - name: Create PR with updated screenshots
-        if: steps.changes.outputs.changed == 'true'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          BRANCH="chore/update-screenshots-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b "$BRANCH"
-          git add docs/public/screenshots/
-          git commit -m "chore: update screenshots"
-          git push -u origin "$BRANCH"
-          gh pr create --title "chore: update screenshots" --body "Automated screenshot update from heroshot sync." --base main
-        env:
-          GH_TOKEN: ${{ github.token }}

@@ -1,7 +1,7 @@
 /**
  * Padding around element (expands capture area)
  */
-export interface Padding {
+export type Padding = {
   top: number;
   right: number;
   bottom: number;
@@ -11,7 +11,7 @@ export interface Padding {
 /**
  * Scroll position at time of capture
  */
-export interface ScrollPosition {
+export type ScrollPosition = {
   x: number;
   y: number;
 }
@@ -19,7 +19,7 @@ export interface ScrollPosition {
 /**
  * Screenshot item stored in the toolbar
  */
-export interface ScreenshotItem {
+export type ScreenshotItem = {
   id: string;
   name: string;
   url: string;
@@ -41,7 +41,7 @@ export type ColorScheme = 'auto' | 'light' | 'dark';
 /**
  * Browser settings
  */
-export interface BrowserSettings {
+export type BrowserSettings = {
   viewport: { width: number; height: number };
   colorScheme?: ColorScheme;
   /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
@@ -70,14 +70,14 @@ export type ToolbarEvent =
 /**
  * Utility functions exposed for sync script
  */
-export interface HeroshotUtilities {
+export type HeroshotUtilities = {
   getBackgroundColor: (element: Element) => string;
 }
 
 /**
  * Global heroshot namespace
  */
-export interface HeroshotGlobal {
+export type HeroshotGlobal = {
   initialized: boolean;
   screenshots: ScreenshotItem[];
   settings: BrowserSettings;
