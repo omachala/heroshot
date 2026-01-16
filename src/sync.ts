@@ -6,49 +6,9 @@ import { getConfigPath, loadConfig } from './configFile';
 import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
 import { colors, error as logError, outro, spinner, verbose, warn } from './ui';
-
-/** Viewport preset dimensions */
-const VIEWPORT_DESKTOP = { width: 1280, height: 800 };
-const VIEWPORT_TABLET = { width: 768, height: 1024 };
-const VIEWPORT_MOBILE = { width: 375, height: 667 };
-
-/** Parsed viewport with name for filename suffix */
-interface ParsedViewport {
-  name: string;
-  width: number;
-  height: number;
-}
-
-/**
- * Parse viewport variant string to dimensions
- * Supports: "desktop", "tablet", "mobile", or "WIDTHxHEIGHT"
- */
-function parseViewport(variant: string): ParsedViewport {
-  // Check presets first
-  if (variant === 'desktop') {
-    return { name: 'desktop', ...VIEWPORT_DESKTOP };
-  }
-  if (variant === 'tablet') {
-    return { name: 'tablet', ...VIEWPORT_TABLET };
-  }
-  if (variant === 'mobile') {
-    return { name: 'mobile', ...VIEWPORT_MOBILE };
-  }
-
-  // Parse custom format "WIDTHxHEIGHT"
-  const match = /^(\d+)x(\d+)$/.exec(variant);
-  if (match) {
-    const [, widthValue, heightValue] = match;
-    if (widthValue && heightValue) {
-      const width = parseInt(widthValue, 10);
-      const height = parseInt(heightValue, 10);
-      return { name: variant, width, height };
-    }
-  }
-
-  // Fallback to desktop (shouldn't happen with schema validation)
-  return { name: 'desktop', ...VIEWPORT_DESKTOP };
-}
+import { addSuffix } from './utils/addSuffix';
+import { getColorSchemes } from './utils/getColorSchemes';
+import { parseViewport } from './utils/parseViewport';
 
 /**
  * Get the visible background color of an element by walking up the DOM tree.
@@ -221,23 +181,12 @@ async function findElement(
   return null;
 }
 
-/**
- * Add suffix to filename before extension
- * e.g., "hero.png" + "-dark" => "hero-dark.png"
- */
-function addFilenameSuffix(filename: string, suffix: string): string {
-  const extension = path.extname(filename);
-  const base = path.basename(filename, extension);
-  const directory = path.dirname(filename);
-  return path.join(directory, `${base}${suffix}${extension}`);
-}
-
-interface CaptureOptions {
+type CaptureOptions = {
   /** Output format (png or jpeg) */
   format: 'png' | 'jpeg';
   /** JPEG quality (1-100) */
   quality: number;
-}
+};
 
 /**
  * Take a screenshot with the given options
@@ -283,7 +232,7 @@ async function captureScreenshot(
 ): Promise<{ success: boolean; error?: string }> {
   const { name, url, selector, filename, padding, scroll, maskPadding } = screenshot;
   const { format, quality } = captureOptions;
-  const finalFilename = filenameSuffix ? addFilenameSuffix(filename, filenameSuffix) : filename;
+  const finalFilename = filenameSuffix ? addSuffix(filename, filenameSuffix) : filename;
 
   verbose(`Capturing: ${name}${filenameSuffix}`);
 
@@ -395,27 +344,12 @@ async function captureScreenshot(
   return { success: true };
 }
 
-/**
- * Get array of color schemes to capture based on config setting
- * - 'auto' = use browser default (no explicit scheme)
- * - 'light' = light only
- * - 'dark' = dark only
- * - undefined/null/anything else = both (light and dark)
- */
-function getColorSchemes(setting?: 'auto' | 'light' | 'dark'): ('light' | 'dark')[] {
-  if (setting === 'auto') return [];
-  if (setting === 'light') return ['light'];
-  if (setting === 'dark') return ['dark'];
-  // Default: capture both
-  return ['light', 'dark'];
-}
-
-interface ScreenshotResult {
+type ScreenshotResult = {
   id: string;
   name: string;
   success: boolean;
   error?: string;
-}
+};
 
 /**
  * Retry delays in milliseconds (exponential backoff up to 5s)
@@ -432,7 +366,7 @@ async function captureAndLog(
   captureOptions: CaptureOptions,
   suffix: string
 ): Promise<ScreenshotResult> {
-  const filename = suffix ? addFilenameSuffix(screenshot.filename, suffix) : screenshot.filename;
+  const filename = suffix ? addSuffix(screenshot.filename, suffix) : screenshot.filename;
   const { length: maxRetries } = RETRY_DELAYS;
   let result: { success: boolean; error?: string } = { success: false };
 
@@ -465,12 +399,17 @@ async function captureAndLog(
   };
 }
 
-interface SyncOptions {
+type SyncOptions = {
   /** Pattern to filter screenshots by id, name, or filename (case-insensitive substring match) */
   filter?: string;
+  /** Path to config file (loads config from file) */
   configPath?: string;
+  /** Config object (use directly, skip file loading) */
+  config?: Config;
+  /** Output directory override (for URL capture mode where there's no config file) */
+  outputDirectory?: string;
   sessionKey?: string;
-}
+};
 
 /**
  * Load encrypted session if available
@@ -495,12 +434,12 @@ function loadEncryptedSession(
   return undefined;
 }
 
-interface SyncResult {
+type SyncResult = {
   total: number;
   success: number;
   failed: number;
   results: ScreenshotResult[];
-}
+};
 
 /**
  * Show capture results and return summary
@@ -530,9 +469,11 @@ function showResults(results: ScreenshotResult[], outputDirectory: string): Sync
 /**
  * Sync all screenshots defined in config
  */
+// eslint-disable-next-line complexity -- main entry point, complexity is acceptable
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
+  // Use provided config or load from file
   const configPath = options.configPath ?? getConfigPath();
-  const config: Config = loadConfig(configPath);
+  const config: Config = options.config ?? loadConfig(configPath);
 
   if (config.screenshots.length === 0) {
     warn('No screenshots defined.');
@@ -564,10 +505,17 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     verbose(`Matched ${screenshots.length}: ${names}`);
   }
 
-  // Get output directory (relative to project root, which is parent of .heroshot/)
-  const configDirectory = path.dirname(configPath);
-  const projectRoot = path.dirname(configDirectory);
-  const outputDirectory = path.resolve(projectRoot, config.outputDirectory);
+  // Get output directory
+  // - If outputDirectory override provided (URL capture mode), use it directly
+  // - Otherwise, resolve relative to project root (parent of .heroshot/)
+  let outputDirectory: string;
+  if (options.outputDirectory) {
+    outputDirectory = path.resolve(options.outputDirectory);
+  } else {
+    const configDirectory = path.dirname(configPath);
+    const projectRoot = path.dirname(configDirectory);
+    outputDirectory = path.resolve(projectRoot, config.outputDirectory);
+  }
 
   // Try to load encrypted session if available
   const storageState = loadEncryptedSession(options.sessionKey);

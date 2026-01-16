@@ -6,6 +6,7 @@ on:
     branches: [main]
 
 jobs:
+  # Fast checks - must pass before expensive tests run
   check:
     runs-on: ubuntu-latest
     steps:
@@ -56,7 +57,9 @@ jobs:
         if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
         run: pnpm changeset status --since=origin/main
 
+  # E2E tests - run after check passes
   e2e:
+    needs: check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -86,3 +89,28 @@ jobs:
           name: playwright-report
           path: toolbar/test-results/
           retention-days: 7
+
+  # CLI integration tests - run after check passes (parallel with e2e)
+  cli:
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build CLI
+        run: pnpm build
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium
+
+      - name: Run CLI integration tests
+        run: pnpm test:cli

@@ -5,7 +5,7 @@
   import TrashIcon from '../icons/TrashIcon.svelte';
   import type { ScreenshotItem } from '../types';
 
-  interface Props {
+  type Props = {
     screenshots: ScreenshotItem[];
     /** Whether the content list is expanded */
     expanded: boolean;
