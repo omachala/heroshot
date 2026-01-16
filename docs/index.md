@@ -3,8 +3,8 @@ layout: home
 
 hero:
   name: HeroShot
-  text: Screenshots that stay true
-  tagline: The free, open-source screenshot automation tool you can self-host.
+  text: free, open-source screenshot automation
+  tagline: Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.
   image:
     src: /logo.svg
     alt: Heroshot Logo
