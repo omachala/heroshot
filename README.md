@@ -58,7 +58,7 @@ Heroshot automates **documentation screenshots** - not visual regression testing
 
 ## Automated Updates
 
-Run heroshot in CI to keep screenshots always current. See the [full guide](https://heroshot.sh/guide/automated-updates).
+Run heroshot in CI to keep screenshots always current. See the [full guide](https://heroshot.sh/docs/guide/automated-updates).
 
 **Quick setup:**
 
