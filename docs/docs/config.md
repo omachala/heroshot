@@ -34,7 +34,6 @@ your-project/
       "id": "abc123",
       "name": "Dashboard",
       "url": "https://myapp.com/dashboard",
-      "filename": "dashboard.png",
       "selector": ".main-panel",
       "padding": {
         "top": 20,
@@ -47,13 +46,16 @@ your-project/
         "y": 100
       },
       "maskPadding": true,
-      "viewports": ["desktop", "mobile"]
+      "viewports": ["desktop", "mobile"],
+      "textOverrides": {
+        ".user-name": "John Doe",
+        ".email": "john@example.com"
+      }
     },
     {
       "id": "def456",
       "name": "Homepage",
-      "url": "https://myapp.com",
-      "filename": "homepage.png"
+      "url": "https://myapp.com"
     }
   ]
 }
@@ -71,43 +73,44 @@ your-project/
 
 ## Browser Settings
 
-| Property            | Type                              | Default | Description                          |
-| ------------------- | --------------------------------- | ------- | ------------------------------------ |
-| `viewport.width`    | number                            | `1280`  | Browser viewport width in pixels     |
-| `viewport.height`   | number                            | `800`   | Browser viewport height in pixels    |
-| `colorScheme`       | `"auto"` \| `"light"` \| `"dark"` | -       | Color scheme for capture (see below) |
-| `deviceScaleFactor` | number (1-3)                      | `1`     | Retina scale (2 = 2x resolution)     |
+| Property            | Type                  | Default | Description                          |
+| ------------------- | --------------------- | ------- | ------------------------------------ |
+| `viewport.width`    | number                | `1280`  | Browser viewport width in pixels     |
+| `viewport.height`   | number                | `800`   | Browser viewport height in pixels    |
+| `colorScheme`       | `"light"` \| `"dark"` | -       | Color scheme for capture (see below) |
+| `deviceScaleFactor` | number (1-3)          | `1`     | Retina scale (2 = 2x resolution)     |
 
 ### Color Scheme Values
 
 | Value       | Behavior                                                              |
 | ----------- | --------------------------------------------------------------------- |
 | _(not set)_ | Captures **both** light and dark variants (`-light.png`, `-dark.png`) |
-| `"auto"`    | Uses browser's default color scheme preference                        |
 | `"light"`   | Forces light mode only                                                |
 | `"dark"`    | Forces dark mode only                                                 |
 
 ## Screenshot Definition
 
-| Property      | Type     | Required | Description                                       |
-| ------------- | -------- | -------- | ------------------------------------------------- |
-| `id`          | string   | auto     | Unique identifier (auto-generated if omitted)     |
-| `name`        | string   | yes      | Display name for the screenshot                   |
-| `url`         | string   | yes      | Full URL to capture                               |
-| `filename`    | string   | yes      | Base filename (suffixes added automatically)      |
-| `selector`    | string   | no       | CSS selector for element capture                  |
-| `padding`     | object   | no       | Expand capture area beyond element                |
-| `scroll`      | object   | no       | Scroll position before capture                    |
-| `maskPadding` | boolean  | no       | Fill padding with detected background color       |
-| `viewports`   | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`) |
+| Property        | Type     | Required | Description                                       |
+| --------------- | -------- | -------- | ------------------------------------------------- |
+| `id`            | string   | auto     | Unique identifier (auto-generated if omitted)     |
+| `name`          | string   | yes      | Display name (also used for filename)             |
+| `url`           | string   | yes      | Full URL to capture                               |
+| `selector`      | string   | no       | CSS selector for element capture                  |
+| `padding`       | object   | no       | Expand capture area beyond element                |
+| `scroll`        | object   | no       | Scroll position before capture                    |
+| `maskPadding`   | boolean  | no       | Fill padding with detected background color       |
+| `viewports`     | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`) |
+| `textOverrides` | object   | no       | Replace text content in elements before capture   |
 
-::: tip Filename is a Template
-The `filename` is a base name. Heroshot automatically appends suffixes based on variants:
+::: tip Filename Generation
+Filenames are automatically derived from the screenshot `name`. Heroshot slugifies the name and appends suffixes for variants:
 
-- `dashboard.png` → `dashboard-light.png`, `dashboard-dark.png` (color schemes)
-- `dashboard.png` → `dashboard-desktop.png`, `dashboard-mobile.png` (viewports)
+- Name "Dashboard" → `dashboard-light.png`, `dashboard-dark.png` (color schemes)
+- With viewports → `dashboard-desktop.png`, `dashboard-mobile.png`
 - Combined: `dashboard-desktop-light.png`, `dashboard-mobile-dark.png`
-  :::
+
+Renaming a screenshot will rename its output files on the next sync.
+:::
 
 ### Selector
 
@@ -172,7 +175,6 @@ Generate screenshots at multiple viewport sizes. Supports preset names and custo
 {
   "name": "Dashboard",
   "url": "https://myapp.com/dashboard",
-  "filename": "dashboard.png",
   "viewports": ["desktop", "tablet", "mobile"]
 }
 ```
@@ -200,6 +202,40 @@ Combined with default color scheme (both), this generates 6 files:
 - `dashboard-1920x1080-light.png`
 - `dashboard-1920x1080-dark.png`
 
+### Text Overrides
+
+Replace text content in specific elements before capturing. Useful for:
+
+- Hiding sensitive data (emails, names, account numbers)
+- Showing placeholder content for documentation
+- Ensuring consistent screenshots across environments
+
+```json
+{
+  "name": "User Profile",
+  "url": "https://myapp.com/profile",
+  "selector": ".profile-card",
+  "textOverrides": {
+    ".user-name": "Jane Smith",
+    ".email": "jane@example.com",
+    ".account-id": "****1234"
+  }
+}
+```
+
+The keys are CSS selectors, and values are the replacement text. All matching elements will have their `textContent` replaced before the screenshot is taken.
+
+::: tip Shadow DOM Support
+Text overrides support shadow DOM piercing with the `>>>` syntax:
+
+```json
+"textOverrides": {
+  "my-component >>> .inner-text": "Replaced"
+}
+```
+
+:::
+
 ## Minimal Config
 
 The simplest valid config:
@@ -209,11 +245,10 @@ The simplest valid config:
   "screenshots": [
     {
       "name": "Homepage",
-      "url": "https://example.com",
-      "filename": "homepage.png"
+      "url": "https://example.com"
     }
   ]
 }
 ```
 
-This captures a full-page screenshot of example.com in both light and dark modes.
+This captures a full-page screenshot of example.com in both light and dark modes, generating `homepage-light.png` and `homepage-dark.png`.

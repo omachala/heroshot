@@ -23,13 +23,13 @@ jobs:
       - name: Build heroshot
         run: pnpm build
 
-      - name: Build toolbar
-        run: pnpm build:toolbar
+      - name: Build editor
+        run: pnpm build:editor
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium
 
-      - name: Run heroshot sync
+      - name: Run heroshot
         run: node dist/cli.js
 
       - name: Commit updated screenshots

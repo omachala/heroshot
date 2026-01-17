@@ -25,7 +25,7 @@ export const viewportSchema = z.object({
 });
 
 /** Color scheme for light/dark mode (undefined = both, captures two screenshots) */
-export const colorSchemeSchema = z.enum(['auto', 'light', 'dark']);
+export const colorSchemeSchema = z.enum(['light', 'dark']);
 
 /** Output format for screenshots */
 export const outputFormatSchema = z.enum(['png', 'jpeg']).default('png');
@@ -64,8 +64,6 @@ export const screenshotSchema = z.object({
   id: z.string().min(1).default(generateUid),
   name: z.string().min(1),
   url: z.url(),
-  /** Base filename - suffixes like -light, -mobile are appended automatically */
-  filename: z.string().min(1),
   selector: z.string().optional(),
   /** Padding to expand capture area beyond element bounds */
   padding: paddingSchema.optional(),
@@ -75,6 +73,8 @@ export const screenshotSchema = z.object({
   maskPadding: z.boolean().optional(),
   /** Viewport variants - generates screenshot for each (e.g., ["desktop", "mobile", "400x500"]) */
   viewports: z.array(viewportVariantSchema).optional(),
+  /** Text overrides - selector (relative to main element) -> replacement text */
+  textOverrides: z.record(z.string(), z.string()).optional(),
 });
 
 /** Browser settings */
@@ -119,10 +119,12 @@ const shotCliOptionsSchema = z.object({
   timeout: z.number().int().positive().optional(),
 });
 
-/** CLI command options for URL capture (includes --save flag) */
+/** CLI command options for URL capture (includes --save and --clean flags) */
 export const shotCommandOptionsSchema = shotCliOptionsSchema.extend({
   /** Save screenshot definition to config file */
   save: z.boolean().optional(),
+  /** Delete stale files in output directory */
+  clean: z.boolean().optional(),
 });
 
 /** Global config */
