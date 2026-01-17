@@ -51,15 +51,34 @@ export default defineConfig({
     ],
   ],
 
+  lastUpdated: true,
+
   themeConfig: {
     logo: '/nav-logo.svg',
+    siteTitle: 'Heroshot',
+
+    search: {
+      provider: 'local',
+    },
+
+    editLink: {
+      pattern: 'https://github.com/omachala/heroshot/edit/main/docs/:path',
+      text: 'Edit this page on GitHub',
+    },
+
+    lastUpdated: {
+      text: 'Last updated',
+    },
+
+    outline: {
+      level: [2, 3],
+      label: 'On this page',
+    },
 
     nav: [
       { text: 'Docs', link: '/docs/' },
       { text: 'Guides', link: '/docs/guide/automated-updates' },
       { text: 'Integrations', link: '/docs/integrations/vitepress' },
-      { text: 'GitHub', link: 'https://github.com/omachala/heroshot', target: '_blank' },
-      { text: 'NPM', link: 'https://www.npmjs.com/package/heroshot', target: '_blank' },
     ],
 
     sidebar: {
@@ -95,7 +114,10 @@ export default defineConfig({
       ],
     },
 
-    socialLinks: [],
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/omachala/heroshot' },
+      { icon: 'npm', link: 'https://www.npmjs.com/package/heroshot' },
+    ],
 
     footer: {
       copyright: '© 2026 Heroshot',
