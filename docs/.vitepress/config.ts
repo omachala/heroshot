@@ -8,6 +8,41 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+    // Open Graph
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:title', content: 'Heroshot' }],
+    [
+      'meta',
+      {
+        property: 'og:description',
+        content:
+          'Free, open-source screenshot automation. Define once, regenerate forever with one command.',
+      },
+    ],
+    ['meta', { property: 'og:url', content: 'https://heroshot.sh' }],
+    [
+      'meta',
+      { property: 'og:image', content: 'https://heroshot.sh/screenshots/hero-desktop-light.png' },
+    ],
+    ['meta', { property: 'og:image:width', content: '2560' }],
+    ['meta', { property: 'og:image:height', content: '1048' }],
+    ['meta', { property: 'og:site_name', content: 'Heroshot' }],
+    // Twitter
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'Heroshot' }],
+    [
+      'meta',
+      {
+        name: 'twitter:description',
+        content:
+          'Free, open-source screenshot automation. Define once, regenerate forever with one command.',
+      },
+    ],
+    [
+      'meta',
+      { name: 'twitter:image', content: 'https://heroshot.sh/screenshots/hero-desktop-light.png' },
+    ],
+    // Analytics
     ['script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-3MGBYS1GNM' }],
     [
       'script',
