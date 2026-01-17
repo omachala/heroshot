@@ -93,9 +93,64 @@
   background-clip: text;
 }
 
-/* Hide glow */
+/* Custom logo glow using brand palette */
 .VPHero .image-bg {
   display: none;
+}
+
+.VPHero .image-container {
+  position: relative;
+}
+
+.VPHero .image-container::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(
+    circle at center,
+    rgba(234, 88, 12, 0.2) 0%,
+    rgba(251, 146, 60, 0.12) 30%,
+    rgba(42, 85, 128, 0.08) 50%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  z-index: -1;
+  animation: logo-glow 4s ease-in-out infinite alternate;
+}
+
+@keyframes logo-glow {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.dark .VPHero .image-container::before {
+  background: radial-gradient(
+    circle at center,
+    rgba(251, 146, 60, 0.25) 0%,
+    rgba(234, 88, 12, 0.15) 30%,
+    rgba(61, 106, 153, 0.1) 50%,
+    transparent 70%
+  );
+  filter: blur(50px);
+}
+
+/* Transparent navbar */
+:root {
+  --vp-nav-bg-color: rgba(255, 255, 255, 0.9);
+}
+
+.dark {
+  --vp-nav-bg-color: rgba(22, 45, 74, 0.9);
+}
+
+.VPNavBar {
+  backdrop-filter: blur(12px);
 }
 
 /* Hide nav title on home page (redundant with hero) */
