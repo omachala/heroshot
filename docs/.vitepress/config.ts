@@ -1,6 +1,10 @@
 import { defineConfig } from 'vitepress';
+import llmstxt from 'vitepress-plugin-llms';
 
 export default defineConfig({
+  vite: {
+    plugins: [llmstxt()],
+  },
   title: 'Heroshot',
   description:
     'Free, open-source screenshot automation. Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.',
