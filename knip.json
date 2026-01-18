@@ -1,6 +1,26 @@
 {
   "ignoreDependencies": ["tailwindcss"],
-  "ignore": ["editor/**", "src/capture.ts", "src/ui.ts", "docs/public/palette.css"],
+  "ignore": [
+    "editor/**",
+    "src/capture.ts",
+    "src/ui.ts",
+    "docs/public/palette.css",
+    "integrations/examples/**",
+    "integrations/shared/virtual.d.ts"
+  ],
   "ignoreExportsUsedInFile": true,
-  "entry": ["src/config.ts"]
+  "workspaces": {
+    "docs": {
+      "entry": [".vitepress/config.ts"]
+    },
+    "integrations/vue": {
+      "entry": ["src/index.ts", "src/__tests__/*.ts"]
+    },
+    "integrations/react": {
+      "entry": ["src/index.ts", "src/__tests__/*.tsx"]
+    },
+    "integrations/shared": {
+      "entry": ["index.ts", "vitePlugin.ts", "docusaurusPlugin.ts"]
+    }
+  }
 }

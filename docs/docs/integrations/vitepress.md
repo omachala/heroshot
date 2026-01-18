@@ -2,7 +2,83 @@
 
 [VitePress](https://vitepress.dev/) is what I use for this very documentation site, so it's the integration I know best. If you're using VitePress, you're in good company - it's a great choice for docs.
 
-## The Entry Point
+## The Magic: One Component, All Variants
+
+Here's the thing about screenshots in docs - you end up with a lot of them. Light mode, dark mode, desktop, tablet, mobile... suddenly one screenshot becomes six files to manage.
+
+The `<Heroshot>` component handles all of this for you:
+
+```md
+<Heroshot name="Dashboard" alt="Dashboard overview" />
+```
+
+That's it. One line. The component automatically:
+
+- Shows the dark screenshot when someone toggles dark mode
+- Serves responsive `srcset` for different viewport sizes
+- Switches instantly - no page reload
+
+Your markdown stays clean. Six image variants, one line of code.
+
+### Setting It Up
+
+Two quick steps. First, add the heroshot plugin to your VitePress config:
+
+```ts
+// .vitepress/config.ts
+import { defineConfig } from 'vitepress';
+import { heroshot } from 'heroshot/plugins/vite';
+
+export default defineConfig({
+  vite: {
+    plugins: [heroshot()],
+  },
+});
+```
+
+Then register the component in your theme:
+
+```ts
+// .vitepress/theme/index.ts
+import DefaultTheme from 'vitepress/theme';
+import type { Theme } from 'vitepress';
+import { Heroshot, setManifest } from 'heroshot/vitepress';
+import manifest from 'virtual:heroshot-manifest';
+
+setManifest(manifest);
+
+export default {
+  extends: DefaultTheme,
+  enhanceApp({ app }) {
+    app.component('Heroshot', Heroshot);
+  },
+} satisfies Theme;
+```
+
+Now you can use `<Heroshot>` anywhere in your markdown:
+
+```md
+<!-- By name (from the toolbar) -->
+<Heroshot name="Dashboard" alt="Dashboard overview" />
+
+<!-- Or by ID (from config.json) -->
+<Heroshot id="abc123" alt="Dashboard overview" />
+```
+
+::: tip TypeScript support
+Add `"heroshot/virtual"` to your `tsconfig.json` types to get autocomplete for the virtual module:
+
+```json
+{
+  "compilerOptions": {
+    "types": ["heroshot/virtual"]
+  }
+}
+```
+
+:::
+
+## Getting Started
 
 Navigate to your project root and run:
 
@@ -29,11 +105,9 @@ my-docs/
 └── package.json
 ```
 
-## Getting Started
+Point heroshot at your public folder. You can do this when you first run `npx heroshot` - just go to Settings and set the output directory to `public/screenshots/`.
 
-First, point heroshot at your public folder. You can do this when you first run `npx heroshot` - just go to Settings and set the output directory to `public/screenshots/`.
-
-Or if you prefer, edit `.heroshot/config.json` directly:
+Or edit `.heroshot/config.json` directly:
 
 ```json
 {
@@ -46,31 +120,29 @@ Or if you prefer, edit `.heroshot/config.json` directly:
 If your VitePress site lives in a subdirectory (like `docs/`), use the full path: `docs/public/screenshots/`
 :::
 
-Then just run heroshot, navigate to your dev server, click on stuff you want to capture, and you're done:
-
-```bash
-npx heroshot
-```
-
 ## Using Screenshots in Markdown
 
-Nothing fancy here - just standard markdown:
+If you've set up the `<Heroshot>` component (you should!), just use that:
+
+```md
+<Heroshot name="Dashboard" alt="Dashboard overview" />
+```
+
+For simple cases without variants, standard markdown works fine:
 
 ```md
 ![Dashboard overview](/screenshots/dashboard.png)
-```
-
-Or if you need more control:
-
-```md
-<img src="/screenshots/dashboard.png" alt="Dashboard overview" />
 ```
 
 ## Light & Dark Mode
 
 VitePress has dark mode built in, and heroshot can capture both variants automatically. Just set **Color Scheme** to "Both" in the toolbar, and you'll get `name-light.png` and `name-dark.png`.
 
-To show the right one based on user preference, you can use a `<picture>` element:
+If you're using the `<Heroshot>` component, it handles theme switching automatically. When someone toggles dark mode, the screenshot switches instantly.
+
+### Manual Approach
+
+If you prefer more control, you can use a `<picture>` element:
 
 ```md
 <picture>
@@ -79,7 +151,7 @@ To show the right one based on user preference, you can use a `<picture>` elemen
 </picture>
 ```
 
-Or if you want something simpler, add some CSS classes. First, add this to your custom styles (`.vitepress/theme/style.css`):
+Or use CSS classes. First, add this to your custom styles (`.vitepress/theme/style.css`):
 
 ```css
 .dark .light-only {
@@ -121,7 +193,17 @@ This gives you:
 - `hero-tablet.png` (768px)
 - `hero-mobile.png` (375px)
 
-You can display them in a simple table:
+If you're using the `<Heroshot>` component, it automatically generates a `srcset` for all viewport variants. The browser picks the best size - mobile users download smaller images, desktop users get the full resolution:
+
+```md
+<Heroshot name="hero" alt="Hero section" />
+```
+
+That's it. The component figures out which variants exist and builds the srcset for you.
+
+### Manual Display
+
+If you want to show all variants side by side (like for a showcase), use a table:
 
 ```md
 | Desktop                                   | Tablet                                  | Mobile                                  |
@@ -181,4 +263,4 @@ jobs:
 
 ## Real-World Example
 
-This documentation site uses heroshot to capture its own screenshots. You can check out the [actual config](https://github.com/omachala/heroshot/blob/main/.heroshot/config.json) to see how it's set up.
+This documentation site uses heroshot to capture its own screenshots. You can check out the [actual config](https://github.com/omachala/heroshot/blob/main/docs/.heroshot/config.json) to see how it's set up.

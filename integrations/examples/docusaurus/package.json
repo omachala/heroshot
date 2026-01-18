@@ -1,0 +1,15 @@
+{
+  "name": "heroshot-docusaurus-example",
+  "private": true,
+  "scripts": {
+    "dev": "docusaurus start",
+    "build": "docusaurus build"
+  },
+  "dependencies": {
+    "@docusaurus/core": "^3.7.0",
+    "@docusaurus/preset-classic": "^3.7.0",
+    "heroshot": "file:../../..",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

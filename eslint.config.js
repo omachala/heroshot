@@ -333,6 +333,40 @@ export default tseslint.config(
     },
   },
   {
+    // Vue integration
+    files: ['integrations/vue/**/*.ts', 'integrations/vue/**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        project: './integrations/vue/tsconfig.app.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // Vue files use PascalCase
+      'unicorn/filename-case': ['error', { cases: { pascalCase: true, camelCase: true } }],
+      // Disable rules that conflict with Vue
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+    },
+  },
+  {
+    // React integration
+    files: ['integrations/react/**/*.ts', 'integrations/react/**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        project: './integrations/react/tsconfig.app.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // React files use PascalCase for components
+      'unicorn/filename-case': ['error', { cases: { pascalCase: true, camelCase: true } }],
+    },
+  },
+  {
     // Ignore generated files, config files, and tests (tests only need to pass typecheck)
     ignores: [
       '**/node_modules/**',
@@ -340,8 +374,11 @@ export default tseslint.config(
       '*.config.js',
       '*.config.ts',
       'editor/*.config.ts',
+      'integrations/*/*.config.ts',
       '**/*.test.ts',
+      '**/*.test.tsx',
       '**/tests/**',
+      '**/setupTests.ts',
     ],
   }
 );

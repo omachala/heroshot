@@ -1,0 +1,6 @@
+packages:
+  - '.'
+  - 'docs'
+  - 'editor'
+  - 'integrations/vue'
+  - 'integrations/react'

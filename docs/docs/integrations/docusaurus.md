@@ -2,7 +2,70 @@
 
 [Docusaurus](https://docusaurus.io/) is Meta's documentation framework, and it's everywhere in the open source world. If you're using it, you probably already know it's React-based and uses MDX - which gives you some nice options for displaying screenshots.
 
-## The Entry Point
+## The Magic: One Component, All Variants
+
+Here's the thing about screenshots in docs - you end up with a lot of them. Light mode, dark mode, desktop, tablet, mobile... suddenly one screenshot becomes six files to manage.
+
+The `<Heroshot>` component handles all of this for you:
+
+```mdx
+<Screenshot name="Dashboard" alt="Dashboard overview" />
+```
+
+That's it. One line. The component automatically:
+
+- Shows the dark screenshot when someone toggles dark mode
+- Serves responsive `srcset` for different viewport sizes
+- Switches instantly - no page reload
+
+Your MDX stays clean. Six image variants, one line of code.
+
+### Setting It Up
+
+First, add the heroshot plugin to your Docusaurus config:
+
+```js
+// docusaurus.config.js
+const { heroshot } = require('heroshot/plugins/docusaurus');
+
+module.exports = {
+  plugins: [heroshot()],
+  // ... rest of your config
+};
+```
+
+Then create a simple wrapper component:
+
+```tsx
+// src/components/Screenshot.tsx
+import { Heroshot } from 'heroshot/docusaurus';
+import manifest from '@heroshot/manifest';
+
+export function Screenshot(props: { name?: string; id?: string; alt?: string }) {
+  return <Heroshot {...props} manifest={manifest} />;
+}
+```
+
+Now use it anywhere in your MDX:
+
+```mdx
+import { Screenshot } from '@site/src/components/Screenshot';
+
+<Screenshot name="Dashboard" alt="Dashboard overview" />
+```
+
+One line, and you get automatic dark/light switching plus responsive images.
+
+::: tip Without the plugin
+If you prefer not to use the plugin, you can import the manifest directly from your heroshots folder:
+
+```tsx
+import manifest from '@site/heroshots/manifest.json';
+```
+
+:::
+
+## Getting Started
 
 Navigate to your project root and run:
 
@@ -29,8 +92,6 @@ my-website/
 └── package.json
 ```
 
-## Getting Started
-
 Set your output directory to the static folder:
 
 ```json
@@ -54,29 +115,35 @@ Navigate to `http://localhost:3000`, click on what you want to capture, done.
 
 ## Using Screenshots
 
-Plain markdown works fine:
+If you've set up the `<Screenshot>` wrapper (you should!), just use that:
+
+```mdx
+import { Screenshot } from '@site/src/components/Screenshot';
+
+<Screenshot name="Dashboard" alt="Dashboard overview" />
+```
+
+For simple cases without variants, plain markdown works fine:
 
 ```md
 ![Feature overview](/img/screenshots/feature.png)
 ```
 
-But since you're in MDX land, you can also do stuff like:
+Since you're in MDX land, you can also do stuff like:
 
 ```mdx
 <img src="/img/screenshots/feature.png" alt="Feature overview" style={{ maxWidth: '600px' }} />
 ```
 
-Or import for webpack's asset handling:
-
-```mdx
-import featureImg from '@site/static/img/screenshots/feature.png';
-
-<img src={featureImg} alt="Feature overview" />
-```
-
 ## Light & Dark Mode
 
-Docusaurus has a really nice built-in component for this called `ThemedImage`. It pairs perfectly with heroshot's `colorScheme: "both"` setting:
+Docusaurus has dark mode built in, and heroshot can capture both variants automatically. Just set **Color Scheme** to "Both" in the toolbar, and you'll get `name-light.png` and `name-dark.png`.
+
+If you're using the `<Heroshot>` component, it handles theme switching automatically. When someone toggles dark mode, the screenshot switches instantly.
+
+### Using ThemedImage
+
+Docusaurus also has a built-in `ThemedImage` component that works well with heroshot's `colorScheme: "both"` setting:
 
 ```mdx
 import ThemedImage from '@theme/ThemedImage';
@@ -92,9 +159,40 @@ import ThemedImage from '@theme/ThemedImage';
 
 Just set color scheme to "Both" in heroshot, and you get `-light.png` and `-dark.png` variants automatically.
 
-## Viewport Variants with Tabs
+## Viewport Variants
 
-Docusaurus Tabs are great for showing responsive variants:
+If you want to show desktop, tablet, and mobile versions, heroshot can generate all three from a single config entry:
+
+```json
+{
+  "screenshots": [
+    {
+      "name": "hero",
+      "url": "http://localhost:3000",
+      "selector": ".hero",
+      "viewports": ["desktop", "tablet", "mobile"]
+    }
+  ]
+}
+```
+
+This gives you:
+
+- `hero-desktop.png` (1280px)
+- `hero-tablet.png` (768px)
+- `hero-mobile.png` (375px)
+
+If you're using the `<Heroshot>` component, it automatically generates a `srcset` for all viewport variants. The browser picks the best size - mobile users download smaller images, desktop users get the full resolution:
+
+```mdx
+<Screenshot name="hero" alt="Hero section" />
+```
+
+That's it. The component figures out which variants exist and builds the srcset for you.
+
+### Using Tabs
+
+If you want to show all variants explicitly, Docusaurus Tabs work great:
 
 ```mdx
 import Tabs from '@theme/Tabs';
@@ -112,42 +210,6 @@ import TabItem from '@theme/TabItem';
   </TabItem>
 </Tabs>
 ```
-
-## Ideal Image Plugin
-
-If you want responsive image optimization, Docusaurus has a plugin for that:
-
-```bash
-npm install @docusaurus/plugin-ideal-image
-```
-
-```js
-// docusaurus.config.js
-module.exports = {
-  plugins: [
-    [
-      '@docusaurus/plugin-ideal-image',
-      {
-        quality: 85,
-        max: 1280,
-        min: 640,
-        steps: 4,
-      },
-    ],
-  ],
-};
-```
-
-Then you'd use it like:
-
-```mdx
-import Image from '@theme/IdealImage';
-import screenshot from '@site/static/img/screenshots/dashboard.png';
-
-<Image img={screenshot} />
-```
-
-Honestly though, for most docs this is overkill. Plain `![](path)` works fine.
 
 ## Automating in CI
 
