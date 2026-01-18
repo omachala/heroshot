@@ -195,7 +195,7 @@ export default tseslint.config(
       'security/detect-non-literal-regexp': 'warn',
       'security/detect-child-process': 'error',
       'security/detect-new-buffer': 'error',
-      'security/detect-non-literal-fs-filename': 'warn',
+      'security/detect-non-literal-fs-filename': 'off', // CLI tool - dynamic paths are intentional
       'security/detect-object-injection': 'off', // Too many false positives
 
       // ===== Code Quality =====
