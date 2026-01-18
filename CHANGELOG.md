@@ -1,5 +1,17 @@
 # heroshot
 
+## 0.4.0
+
+### Minor Changes
+
+- ff81ace: Add text overrides and rename toolbar to editor
+  - Add textOverrides support for inline text editing in screenshots
+  - Rename toolbar/ to editor/ for clarity
+  - Merge sidebar and toolbar into unified EditorBar component
+  - Add commit-msg hook to block AI co-authors
+  - Remove sync command, add --clean flag to default command
+  - Real-time config saving on screenshot changes
+
 ## 0.3.0
 
 ### Minor Changes
