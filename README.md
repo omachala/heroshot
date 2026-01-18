@@ -55,6 +55,10 @@ First run opens a browser with a visual picker. Click what you want, name it, do
 
 **VitePress**
 
+```bash
+npm install heroshot
+```
+
 ```ts
 // .vitepress/config.ts
 import { heroshot } from 'heroshot/plugins/vite';
@@ -66,6 +70,10 @@ export default defineConfig({ vite: { plugins: [heroshot()] } });
 ```
 
 **Docusaurus**
+
+```bash
+npm install heroshot
+```
 
 ```js
 // docusaurus.config.js

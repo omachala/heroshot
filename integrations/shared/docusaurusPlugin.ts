@@ -93,6 +93,16 @@ export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
     mkdirSync(dirname(generatedManifestPath), { recursive: true });
     writeFileSync(generatedManifestPath, JSON.stringify(manifest, null, 2));
 
+    // Generate client module that auto-registers manifest
+    const clientModulePath = join(generatedFilesDir, 'heroshot-client.js');
+    writeFileSync(
+      clientModulePath,
+      `import { setManifest } from 'heroshot/docusaurus';
+import manifest from '@heroshot/manifest';
+setManifest(manifest);
+`
+    );
+
     return {
       name: 'heroshot',
 
@@ -104,6 +114,10 @@ export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
             },
           },
         };
+      },
+
+      getClientModules() {
+        return [clientModulePath];
       },
 
       getPathsToWatch() {

@@ -30,7 +30,8 @@ jobs:
         run: pnpm exec playwright install chromium
 
       - name: Run heroshot
-        run: node dist/cli.js
+        run: node ../dist/cli.js
+        working-directory: docs
 
       - name: Commit updated screenshots
         run: |

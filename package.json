@@ -88,7 +88,7 @@
     "knip": "knip",
     "check": "pnpm typecheck && pnpm format:check && pnpm lint && pnpm knip && pnpm test:run",
     "check:editor": "pnpm typecheck:editor && pnpm lint:editor && pnpm test:editor",
-    "docs:dev": "pnpm --dir docs run dev",
+    "docs:dev": "rm -rf docs/.vitepress/cache && pnpm --dir docs run dev",
     "docs:build": "pnpm --dir docs run build",
     "fix": "pnpm format && pnpm lint:fix",
     "changeset": "changeset",

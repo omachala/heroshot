@@ -94,7 +94,11 @@ export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
 
     load(id): string | undefined {
       if (id === RESOLVED_VIRTUAL_MODULE_ID) {
-        return `export default ${JSON.stringify(manifest, null, 2)}`;
+        // Auto-register manifest when imported (side effect)
+        return `import { setManifest } from 'heroshot/vitepress';
+const manifest = ${JSON.stringify(manifest, null, 2)};
+setManifest(manifest);
+export default manifest;`;
       }
       return undefined;
     },
