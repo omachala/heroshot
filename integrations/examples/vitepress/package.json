@@ -1,0 +1,16 @@
+{
+  "name": "heroshot-vitepress-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "dependencies": {
+    "heroshot": "file:../../.."
+  },
+  "devDependencies": {
+    "vitepress": "^1.5.0"
+  }
+}

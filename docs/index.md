@@ -69,54 +69,15 @@ features:
 
 <div class="showcase">
   <h2>See It In Action</h2>
-  <p class="subtitle">The hero section above is captured by heroshot across three viewport sizes, in both light and dark mode. That's 6 screenshots from a <a href="https://github.com/omachala/heroshot/blob/main/.heroshot/config.json" target="_blank">single config entry</a> - always in sync with the live site.</p>
+  <p class="subtitle">This screenshot is captured by heroshot with responsive variants (desktop, tablet, mobile) and color scheme support (light/dark). Toggle the theme or resize your browser - the right image loads automatically.</p>
 
-  <div class="theme-tabs">
-    <button class="active" data-theme="light">Light Mode</button>
-    <button data-theme="dark">Dark Mode</button>
+  <div class="screenshot-showcase">
+    <Heroshot name="Hero" alt="Heroshot landing page screenshot" class="hero-screenshot" />
   </div>
 
-  <div id="light-screenshots" class="screenshot-grid">
-    <div class="screenshot-item">
-      <img src="/screenshots/hero-desktop-light.png" alt="Desktop - Light" />
-    </div>
-    <div class="screenshot-item">
-      <img src="/screenshots/hero-tablet-light.png" alt="Tablet - Light" />
-    </div>
-    <div class="screenshot-item">
-      <img src="/screenshots/hero-mobile-light.png" alt="Mobile - Light" />
-    </div>
-  </div>
-
-  <div id="dark-screenshots" class="screenshot-grid" style="display: none;">
-    <div class="screenshot-item">
-      <img src="/screenshots/hero-desktop-dark.png" alt="Desktop - Dark" />
-    </div>
-    <div class="screenshot-item">
-      <img src="/screenshots/hero-tablet-dark.png" alt="Tablet - Dark" />
-    </div>
-    <div class="screenshot-item">
-      <img src="/screenshots/hero-mobile-dark.png" alt="Mobile - Dark" />
-    </div>
-  </div>
+  <p class="showcase-note">That's 6 image variants from a <a href="https://github.com/omachala/heroshot/blob/main/.heroshot/config.json" target="_blank">single config entry</a> - always in sync with the live site.</p>
 
   <div class="try-link">
     <a href="/docs/getting-started">Try it yourself</a>
   </div>
 </div>
-
-<script setup>
-import { onMounted } from 'vue'
-
-onMounted(() => {
-  const buttons = document.querySelectorAll('.theme-tabs button[data-theme]')
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const theme = btn.dataset.theme
-      document.getElementById('light-screenshots').style.display = theme === 'light' ? 'grid' : 'none'
-      document.getElementById('dark-screenshots').style.display = theme === 'dark' ? 'grid' : 'none'
-      buttons.forEach(b => b.classList.toggle('active', b.dataset.theme === theme))
-    })
-  })
-})
-</script>

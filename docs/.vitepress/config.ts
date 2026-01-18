@@ -1,9 +1,10 @@
 import { defineConfig } from 'vitepress';
 import llmstxt from 'vitepress-plugin-llms';
+import { heroshot } from '../../integrations/shared/vitePlugin';
 
 export default defineConfig({
   vite: {
-    plugins: [llmstxt()],
+    plugins: [llmstxt(), heroshot()],
   },
   title: 'Heroshot',
   description:

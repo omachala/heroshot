@@ -1,6 +1,12 @@
 {
   "ignoreDependencies": ["tailwindcss"],
-  "ignore": ["editor/**", "src/capture.ts", "src/ui.ts", "docs/public/palette.css"],
+  "ignore": [
+    "editor/**",
+    "src/capture.ts",
+    "src/ui.ts",
+    "docs/public/palette.css",
+    "integrations/**"
+  ],
   "ignoreExportsUsedInFile": true,
   "entry": ["src/config.ts"]
 }

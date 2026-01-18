@@ -1,0 +1,58 @@
+Metadata-Version: 2.4
+Name: heroshot
+Version: 0.1.0
+Summary: Screenshot automation integrations for Python documentation tools
+Author-email: Ondrej Machala <ondrej@macha.la>
+License: MIT
+Project-URL: Homepage, https://heroshot.sh
+Project-URL: Repository, https://github.com/omachala/heroshot
+Project-URL: Documentation, https://heroshot.sh/docs/integrations/mkdocs
+Project-URL: Issues, https://github.com/omachala/heroshot/issues
+Keywords: screenshot,automation,documentation,mkdocs,mkdocs-material,dark-mode
+Classifier: Development Status :: 4 - Beta
+Classifier: Environment :: Console
+Classifier: Environment :: Plugins
+Classifier: Framework :: MkDocs
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Documentation
+Classifier: Topic :: Multimedia :: Graphics :: Capture :: Screen Capture
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Provides-Extra: mkdocs
+Requires-Dist: mkdocs-macros-plugin>=1.0.0; extra == "mkdocs"
+
+# Heroshot
+
+Screenshot automation for Python documentation tools.
+
+## Quick Start
+
+```bash
+pip install heroshot[mkdocs]
+```
+
+Add to `mkdocs.yml`:
+
+```yaml
+plugins:
+  - macros:
+      modules: [heroshot]
+```
+
+Use in markdown:
+
+```md
+{{ heroshot("dashboard", "Dashboard overview") }}
+```
+
+## Links
+
+- [Full Documentation](https://heroshot.sh/docs/integrations/mkdocs)
+- [GitHub](https://github.com/omachala/heroshot)

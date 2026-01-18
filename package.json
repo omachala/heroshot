@@ -8,6 +8,53 @@
   "bin": {
     "heroshot": "dist/cli.js"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vue": {
+      "types": "./dist/integrations/vue/index.d.ts",
+      "import": "./dist/integrations/vue/index.js"
+    },
+    "./react": {
+      "types": "./dist/integrations/react/index.d.ts",
+      "import": "./dist/integrations/react/index.js"
+    },
+    "./vitepress": {
+      "types": "./dist/integrations/vue/index.d.ts",
+      "import": "./dist/integrations/vue/index.js"
+    },
+    "./vuepress": {
+      "types": "./dist/integrations/vue/index.d.ts",
+      "import": "./dist/integrations/vue/index.js"
+    },
+    "./nuxt": {
+      "types": "./dist/integrations/vue/index.d.ts",
+      "import": "./dist/integrations/vue/index.js"
+    },
+    "./docusaurus": {
+      "types": "./dist/integrations/react/index.d.ts",
+      "import": "./dist/integrations/react/index.js"
+    },
+    "./nextra": {
+      "types": "./dist/integrations/react/index.d.ts",
+      "import": "./dist/integrations/react/index.js"
+    },
+    "./mdx": {
+      "types": "./dist/integrations/react/index.d.ts",
+      "import": "./dist/integrations/react/index.js"
+    },
+    "./plugins/vite": {
+      "types": "./dist/integrations/shared/vitePlugin.d.ts",
+      "import": "./dist/integrations/shared/vitePlugin.js"
+    },
+    "./plugins/docusaurus": {
+      "types": "./dist/integrations/shared/docusaurusPlugin.d.ts",
+      "import": "./dist/integrations/shared/docusaurusPlugin.js",
+      "require": "./dist/integrations/shared/docusaurusPlugin.cjs"
+    }
+  },
   "files": [
     "dist",
     "editor/dist",
@@ -18,6 +65,10 @@
     "dev": "tsx src/cli.ts",
     "build": "tsup",
     "build:editor": "vite build --config editor/vite.config.ts",
+    "build:integrations": "pnpm --filter './integrations/*' build",
+    "build:integrations:vue": "pnpm --filter './integrations/vue' build",
+    "build:integrations:react": "pnpm --filter './integrations/react' build",
+    "test:integrations": "pnpm --filter './integrations/*' test:run",
     "test": "vitest",
     "test:run": "vitest run",
     "test:cli": "vitest run --config vitest.cli.config.ts",
@@ -43,7 +94,7 @@
   },
   "simple-git-hooks": {
     "pre-commit": "./scripts/pre-commit.sh",
-    "commit-msg": "./scripts/commit-msg.sh"
+    "commit-msg": "./scripts/commit-msg.sh $1"
   },
   "keywords": [
     "screenshot",
@@ -95,5 +146,21 @@
     "playwright": "^1.49.0",
     "sharp": "^0.33.0",
     "zod": "^4.3.5"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "vue": ">=3.0.0",
+    "vitepress": ">=1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    },
+    "vitepress": {
+      "optional": true
+    }
   }
 }

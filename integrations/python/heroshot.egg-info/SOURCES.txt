@@ -1,0 +1,9 @@
+README.md
+pyproject.toml
+heroshot/__init__.py
+heroshot/mkdocs.py
+heroshot.egg-info/PKG-INFO
+heroshot.egg-info/SOURCES.txt
+heroshot.egg-info/dependency_links.txt
+heroshot.egg-info/requires.txt
+heroshot.egg-info/top_level.txt
