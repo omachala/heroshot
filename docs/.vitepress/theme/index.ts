@@ -1,6 +1,7 @@
 import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import Heroshot from '../../../integrations/vue/src/components/Heroshot.vue';
+import IntegrationTabs from './components/IntegrationTabs.vue';
 import { setManifest } from '../../../integrations/shared/manifestStore';
 // @ts-expect-error - virtual module provided by heroshot plugin
 import manifest from 'virtual:heroshot-manifest';
@@ -14,5 +15,6 @@ export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
     app.component('Heroshot', Heroshot);
+    app.component('IntegrationTabs', IntegrationTabs);
   },
 } satisfies Theme;

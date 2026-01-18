@@ -8,9 +8,13 @@ Here's the thing about screenshots in docs - you end up with a lot of them. Ligh
 
 The `heroshot` macro handles all of this for you:
 
-```md
+::: v-pre
+
+```jinja
 {{ heroshot("dashboard", "Dashboard overview") }}
 ```
+
+:::
 
 That's it. One line. The macro automatically generates Material's theme-aware syntax - when users toggle dark mode, the screenshot switches instantly. Your markdown stays clean, six image variants served automatically.
 
@@ -30,13 +34,16 @@ plugins:
       modules: [heroshot]
 ```
 
+::: v-pre
 Now you can use `{{ heroshot() }}` anywhere in your markdown:
 
-```md
+```jinja
 {{ heroshot("dashboard", "Dashboard overview") }}
 {{ heroshot("hero", "Hero section", width="600") }}
 {{ heroshot("sidebar", "Sidebar", align="right", width="300") }}
 ```
+
+:::
 
 Under the hood, the macro expands to Material's `#only-light` / `#only-dark` syntax:
 
@@ -51,9 +58,13 @@ You don't have to think about it - just use the macro and Material handles the r
 
 The defaults work for most setups, but you can tweak everything:
 
-```md
+::: v-pre
+
+```jinja
 {{ heroshot("name", "alt text", path="images/screens", width="500") }}
 ```
+
+:::
 
 | Parameter      | Default                | When to change it                         |
 | -------------- | ---------------------- | ----------------------------------------- |
@@ -67,9 +78,13 @@ The defaults work for most setups, but you can tweak everything:
 
 For screenshots without theme variants (diagrams, architecture charts), use `heroshot_single`:
 
-```md
+::: v-pre
+
+```jinja
 {{ heroshot_single("architecture", "System architecture") }}
 ```
+
+:::
 
 ## Getting Started
 

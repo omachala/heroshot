@@ -81,3 +81,9 @@ features:
     <a href="/docs/getting-started">Try it yourself</a>
   </div>
 </div>
+
+<div class="integrations-section">
+  <h2>Works With Your Docs</h2>
+
+  <IntegrationTabs />
+</div>
