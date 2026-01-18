@@ -116,7 +116,7 @@ export default tseslint.config(
       // ===== TypeScript Import/Export =====
       '@typescript-eslint/consistent-type-exports': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
-      '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/no-require-imports': 'error',
       'no-restricted-imports': [
         'error',
@@ -261,11 +261,11 @@ export default tseslint.config(
     },
   },
   {
-    // Toolbar folder - uses its own tsconfig
-    files: ['toolbar/**/*.ts'],
+    // Editor folder - uses its own tsconfig
+    files: ['editor/**/*.ts'],
     languageOptions: {
       parserOptions: {
-        project: './toolbar/tsconfig.json',
+        project: './editor/tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -277,12 +277,12 @@ export default tseslint.config(
   // Svelte files configuration
   ...svelte.configs['flat/recommended'],
   {
-    files: ['toolbar/**/*.svelte'],
+    files: ['editor/**/*.svelte'],
     languageOptions: {
       parser: svelteParser,
       parserOptions: {
         parser: tseslint.parser,
-        project: './toolbar/tsconfig.json',
+        project: './editor/tsconfig.json',
         tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: ['.svelte'],
       },
@@ -318,6 +318,8 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-assignment': 'off', // Svelte bindings cause issues
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off', // Svelte #each type inference issues
+      '@typescript-eslint/no-unsafe-return': 'off', // Svelte #each type inference issues
 
       // Svelte uses PascalCase for component files
       'unicorn/filename-case': ['error', { case: 'pascalCase' }],
@@ -337,7 +339,7 @@ export default tseslint.config(
       '**/dist/**',
       '*.config.js',
       '*.config.ts',
-      'toolbar/*.config.ts',
+      'editor/*.config.ts',
       '**/*.test.ts',
       '**/tests/**',
     ],

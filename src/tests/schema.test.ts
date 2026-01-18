@@ -51,12 +51,8 @@ describe('colorSchemeSchema', () => {
     expect(colorSchemeSchema.parse('dark')).toBe('dark');
   });
 
-  it('accepts auto', () => {
-    expect(colorSchemeSchema.parse('auto')).toBe('auto');
-  });
-
   it('rejects invalid value', () => {
-    expect(() => colorSchemeSchema.parse('both')).toThrow();
+    expect(() => colorSchemeSchema.parse('auto')).toThrow();
   });
 });
 
@@ -165,11 +161,9 @@ describe('screenshotSchema', () => {
     const result = screenshotSchema.parse({
       name: 'Hero Section',
       url: 'https://example.com',
-      filename: 'hero.png',
     });
     expect(result.name).toBe('Hero Section');
     expect(result.url).toBe('https://example.com');
-    expect(result.filename).toBe('hero.png');
     expect(result.id).toBeDefined();
     expect(result.id.length).toBe(8);
   });
@@ -179,7 +173,6 @@ describe('screenshotSchema', () => {
       id: 'custom-id',
       name: 'Hero',
       url: 'https://example.com',
-      filename: 'hero.png',
       selector: '#hero',
       padding: { top: 10, right: 10, bottom: 10, left: 10 },
       scroll: { x: 0, y: 100 },
@@ -194,12 +187,10 @@ describe('screenshotSchema', () => {
     const result1 = screenshotSchema.parse({
       name: 'Test',
       url: 'https://example.com',
-      filename: 'test.png',
     });
     const result2 = screenshotSchema.parse({
       name: 'Test',
       url: 'https://example.com',
-      filename: 'test.png',
     });
     expect(result1.id).not.toBe(result2.id);
   });
@@ -209,7 +200,6 @@ describe('screenshotSchema', () => {
       screenshotSchema.parse({
         name: '',
         url: 'https://example.com',
-        filename: 'test.png',
       })
     ).toThrow();
   });
@@ -219,17 +209,6 @@ describe('screenshotSchema', () => {
       screenshotSchema.parse({
         name: 'Test',
         url: 'not-a-url',
-        filename: 'test.png',
-      })
-    ).toThrow();
-  });
-
-  it('rejects empty filename', () => {
-    expect(() =>
-      screenshotSchema.parse({
-        name: 'Test',
-        url: 'https://example.com',
-        filename: '',
       })
     ).toThrow();
   });
@@ -282,7 +261,6 @@ describe('configSchema', () => {
         {
           name: 'Hero',
           url: 'https://example.com',
-          filename: 'hero.png',
         },
       ],
     });
@@ -305,7 +283,7 @@ describe('configSchema', () => {
   it('validates nested screenshot schemas', () => {
     expect(() =>
       configSchema.parse({
-        screenshots: [{ name: '', url: 'https://example.com', filename: 'test.png' }],
+        screenshots: [{ name: '', url: 'https://example.com' }],
       })
     ).toThrow();
   });

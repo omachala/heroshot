@@ -1,6 +1,6 @@
 {
   "name": "heroshot",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Define your screenshots once, update them forever with one command",
   "type": "module",
   "author": "Ondrej Machala",
@@ -10,7 +10,7 @@
   },
   "files": [
     "dist",
-    "toolbar/dist",
+    "editor/dist",
     "README.md"
   ],
   "packageManager": "pnpm@9.15.0",
@@ -19,22 +19,24 @@
     "build": "tsup",
     "build:binary": "bun run scripts/build-binary.ts",
     "build:binary:single": "bun run scripts/build-binary.ts --single",
-    "build:toolbar": "vite build --config toolbar/vite.config.ts",
+    "build:editor": "vite build --config editor/vite.config.ts",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:toolbar": "vitest run --config toolbar/vite.config.ts",
-    "test:toolbar:coverage": "vitest run --config toolbar/vite.config.ts --coverage",
-    "test:toolbar:e2e": "playwright test --config toolbar/playwright.config.ts",
+    "test:cli": "vitest run --config vitest.cli.config.ts",
+    "test:editor": "vitest run --config editor/vite.config.ts",
+    "test:editor:coverage": "vitest run --config editor/vite.config.ts --coverage",
+    "test:editor:e2e": "playwright test --config editor/playwright.config.ts",
     "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo",
-    "typecheck:toolbar": "tsc --noEmit -p toolbar/tsconfig.json --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo-toolbar",
+    "typecheck:editor": "tsc --noEmit -p editor/tsconfig.json --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo-editor",
     "lint": "eslint --cache --cache-location node_modules/.cache/eslint src/",
-    "lint:toolbar": "eslint --cache --cache-location node_modules/.cache/eslint-toolbar toolbar/src/",
+    "lint:editor": "eslint --cache --cache-location node_modules/.cache/eslint-editor editor/src/",
+    "check:svelte": "pnpm build:editor 2>&1 | grep -q '\\[vite-plugin-svelte\\].*warning' && echo 'Svelte warnings found!' && exit 1 || exit 0",
     "lint:fix": "eslint --cache --cache-location node_modules/.cache/eslint src/ --fix",
     "format": "prettier --write . --cache --cache-location node_modules/.cache/prettier",
     "format:check": "prettier --check . --cache --cache-location node_modules/.cache/prettier",
     "knip": "knip",
     "check": "pnpm typecheck && pnpm format:check && pnpm lint && pnpm knip && pnpm test:run",
-    "check:toolbar": "pnpm typecheck:toolbar && pnpm lint:toolbar && pnpm test:toolbar",
+    "check:editor": "pnpm typecheck:editor && pnpm lint:editor && pnpm test:editor",
     "docs:dev": "pnpm --dir docs run dev",
     "docs:build": "pnpm --dir docs run build",
     "fix": "pnpm format && pnpm lint:fix",
@@ -42,7 +44,8 @@
     "prepare": "simple-git-hooks"
   },
   "simple-git-hooks": {
-    "pre-commit": "./scripts/pre-commit.sh"
+    "pre-commit": "./scripts/pre-commit.sh",
+    "commit-msg": "./scripts/commit-msg.sh"
   },
   "keywords": [
     "screenshot",

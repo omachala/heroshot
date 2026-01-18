@@ -14,6 +14,7 @@
   --navy-dark: #162d4a;
   --navy-base: #2a5580;
   --navy-light: #3d6a99;
+  --navy-soft: rgba(42, 85, 128, 0.08);
 
   /* VitePress brand colors - using palette */
   --vp-c-brand-1: var(--brand-dark);
@@ -38,6 +39,24 @@
   --vp-c-text-1: #e2e8f0; /* very light */
   --vp-c-text-2: #94a3b8; /* muted light navy */
   --vp-c-text-3: #64748b; /* darker muted */
+
+  /* Navy soft for dark mode - subtle blue tint */
+  --navy-soft: rgba(61, 106, 153, 0.15);
+}
+
+/* Home page background glow */
+.VPHome {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(42, 85, 128, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(234, 88, 12, 0.08), transparent),
+    radial-gradient(ellipse 50% 50% at 10% 60%, rgba(42, 85, 128, 0.1), transparent);
+}
+
+.dark .VPHome {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(42, 85, 128, 0.25), transparent),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(251, 146, 60, 0.1), transparent),
+    radial-gradient(ellipse 50% 50% at 10% 60%, rgba(42, 85, 128, 0.15), transparent);
 }
 
 /* Hero name - solid orange from logo */
@@ -56,6 +75,8 @@
 
 .VPHero .text {
   color: var(--navy-base);
+  font-size: 2.5rem;
+  line-height: 1.2;
 }
 
 .VPHero .tagline {
@@ -72,9 +93,64 @@
   background-clip: text;
 }
 
-/* Hide glow */
+/* Custom logo glow using brand palette */
 .VPHero .image-bg {
   display: none;
+}
+
+.VPHero .image-container {
+  position: relative;
+}
+
+.VPHero .image-container::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(
+    circle at center,
+    rgba(234, 88, 12, 0.2) 0%,
+    rgba(251, 146, 60, 0.12) 30%,
+    rgba(42, 85, 128, 0.08) 50%,
+    transparent 70%
+  );
+  filter: blur(40px);
+  z-index: -1;
+  animation: logo-glow 4s ease-in-out infinite alternate;
+}
+
+@keyframes logo-glow {
+  0% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.dark .VPHero .image-container::before {
+  background: radial-gradient(
+    circle at center,
+    rgba(251, 146, 60, 0.25) 0%,
+    rgba(234, 88, 12, 0.15) 30%,
+    rgba(61, 106, 153, 0.1) 50%,
+    transparent 70%
+  );
+  filter: blur(50px);
+}
+
+/* Transparent navbar */
+:root {
+  --vp-nav-bg-color: rgba(255, 255, 255, 0.9);
+}
+
+.dark {
+  --vp-nav-bg-color: rgba(22, 45, 74, 0.9);
+}
+
+.VPNavBar {
+  backdrop-filter: blur(12px);
 }
 
 /* Hide nav title on home page (redundant with hero) */
@@ -93,12 +169,20 @@
     max-width: 200px;
     max-height: 200px;
   }
+
+  .VPHero .text {
+    font-size: 1.75rem;
+  }
 }
 
 @media (max-width: 640px) {
   .VPHero .image-src {
     max-width: 180px;
     max-height: 180px;
+  }
+
+  .VPHero .text {
+    font-size: 1.5rem;
   }
 
   .VPHero .name {

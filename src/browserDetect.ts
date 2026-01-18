@@ -7,11 +7,11 @@ import { platform } from 'node:os';
  */
 export type BrowserChannel = 'chrome' | 'msedge' | 'chromium';
 
-interface DetectedBrowser {
+type DetectedBrowser = {
   channel: BrowserChannel;
   name: string;
   path: string;
-}
+};
 
 /**
  * Browser detection paths by platform

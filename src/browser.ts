@@ -20,19 +20,19 @@ import {
   sessionExists,
 } from './session';
 import type { Screenshot, Viewport } from './types';
-import { info, log, note, spinner, success, verbose } from './ui';
+import { log, note, spinner, verbose } from './ui';
 
-const TOOLBAR_DIR = path.join(import.meta.dirname, '..', 'toolbar');
+const EDITOR_DIR = path.join(import.meta.dirname, '..', 'editor');
 
 const DEFAULT_VIEWPORT: Viewport = { width: 1280, height: 800 };
 
-interface LaunchOptions {
+type LaunchOptions = {
   headless?: boolean;
   viewport?: Viewport;
   deviceScaleFactor?: number;
   storageState?: BrowserContextOptions['storageState'];
   colorScheme?: 'light' | 'dark';
-}
+};
 
 /**
  * Prompt user for yes/no confirmation
@@ -188,7 +188,7 @@ export async function launchBrowser(
   return { browser, context };
 }
 
-interface ScreenshotData {
+type ScreenshotData = {
   id: string;
   name: string;
   url: string;
@@ -205,7 +205,8 @@ interface ScreenshotData {
     y: number;
   };
   maskPadding?: boolean;
-}
+  textOverrides?: Record<string, string>;
+};
 
 // Job types that CLI can send to toolbar
 type ToolbarJob =
@@ -213,12 +214,12 @@ type ToolbarJob =
   | { type: 'navigate-and-highlight'; url: string; selector: string; screenshotId?: string };
 
 // Browser settings from toolbar
-// colorScheme: 'auto' = browser default, 'light'/'dark' = explicit, undefined = both
-interface BrowserSettings {
+// colorScheme: 'light'/'dark' = explicit, undefined = both
+type BrowserSettings = {
   viewport: { width: number; height: number };
-  colorScheme?: 'auto' | 'light' | 'dark';
+  colorScheme?: 'light' | 'dark';
   deviceScaleFactor?: number;
-}
+};
 
 // Events that toolbar sends to CLI
 type ToolbarEvent =
@@ -232,13 +233,60 @@ type ToolbarEvent =
 
 const exposedPages = new WeakSet<Page>();
 
-interface InjectToolbarOptions {
+/**
+ * Convert ScreenshotData to Screenshot for config
+ * Filename is derived from name at sync time - not stored in config
+ */
+function toConfigScreenshot(data: ScreenshotData): Screenshot {
+  return {
+    id: data.id,
+    name: data.name,
+    url: data.url,
+    selector: data.selector,
+    ...(data.padding && { padding: data.padding }),
+    ...(data.scroll && { scroll: data.scroll }),
+    ...(data.maskPadding && { maskPadding: data.maskPadding }),
+    ...(data.textOverrides &&
+      Object.keys(data.textOverrides).length > 0 && { textOverrides: data.textOverrides }),
+  };
+}
+
+/**
+ * Save current state to config file
+ */
+function saveCurrentConfig(
+  configPath: string,
+  allScreenshots: ScreenshotData[],
+  browserSettings: BrowserSettings | null
+): void {
+  const config = loadConfig(configPath);
+
+  // Rebuild screenshots array from current state
+  config.screenshots = allScreenshots.map(toConfigScreenshot);
+
+  // Update browser settings if changed
+  if (browserSettings) {
+    config.browser = {
+      ...config.browser,
+      viewport: browserSettings.viewport,
+      ...(browserSettings.colorScheme && { colorScheme: browserSettings.colorScheme }),
+      ...(browserSettings.deviceScaleFactor && {
+        deviceScaleFactor: browserSettings.deviceScaleFactor,
+      }),
+    };
+  }
+
+  saveConfig(configPath, config);
+  verbose('Config saved');
+}
+
+type InjectToolbarOptions = {
   screenshots: ScreenshotData[];
   pendingJob: ToolbarJob | null;
   selectedId: string | null;
   sidebarExpanded: boolean;
   onEvent: (event: ToolbarEvent) => void;
-}
+};
 
 async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise<void> {
   const { screenshots, pendingJob, selectedId, sidebarExpanded, onEvent } = options;
@@ -285,18 +333,17 @@ async function injectToolbar(page: Page, options: InjectToolbarOptions): Promise
     };
   `);
 
-  // Inject toolbar JS (CSS is bundled via Shadow DOM)
-  const scriptPath = path.join(TOOLBAR_DIR, 'dist', 'toolbar.js');
+  // Inject editor JS (CSS is bundled via Shadow DOM)
+  const scriptPath = path.join(EDITOR_DIR, 'dist', 'editor.js');
   const script = readFileSync(scriptPath, 'utf8');
   await page.addScriptTag({ content: script });
 }
 
-export interface SetupOptions {
+export type SetupOptions = {
   /** Force browser color scheme (light/dark) for testing */
   colorScheme?: 'light' | 'dark';
-}
+};
 
-// eslint-disable-next-line complexity -- main entry point, complexity is acceptable
 export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshots: boolean }> {
   const setupSpinner = spinner();
   setupSpinner.start('Launching browser...');
@@ -339,18 +386,20 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
     ...(screenshot.padding && { padding: screenshot.padding }),
     ...(screenshot.scroll && { scroll: screenshot.scroll }),
     ...(screenshot.maskPadding && { maskPadding: screenshot.maskPadding }),
+    ...(screenshot.textOverrides && { textOverrides: screenshot.textOverrides }),
   }));
 
-  // Track only NEW items added this session (for saving to config at the end)
-  const newlyAddedIds = new Set<string>();
-  // Track deleted items this session
-  const deletedIds = new Set<string>();
   let pendingJob: ToolbarJob | null = null;
   // Track selected screenshot and sidebar state for cross-URL navigation
   let selectedId: string | null = null;
   let sidebarExpanded = false;
   // Track updated browser settings
   let updatedBrowserSettings: BrowserSettings | null = null;
+
+  // Helper to save config after changes
+  const save = () => {
+    saveCurrentConfig(configPath, allScreenshots, updatedBrowserSettings);
+  };
 
   const { browser, context } = await launchBrowser({
     headless: false,
@@ -360,37 +409,33 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
   });
 
   setupSpinner.stop('Browser ready');
-  info('Pick elements to screenshot. Close browser or click Done when finished.');
 
   // Handle events from toolbar
   const handleEvent = (event: ToolbarEvent) => {
     switch (event.type) {
       case 'screenshot-added': {
         allScreenshots.push(event.data);
-        newlyAddedIds.add(event.data.id);
         verbose(`Added: ${event.data.name}`);
+        save();
         break;
       }
 
       case 'screenshot-updated': {
-        const index = allScreenshots.findIndex(item => item.id === event.data.id);
+        const index = allScreenshots.findIndex(({ id }) => id === event.data.id);
         if (index !== -1) {
           allScreenshots[index] = event.data;
-          // Mark as newly added so it gets saved
-          newlyAddedIds.add(event.data.id);
           verbose(`Updated: ${event.data.name}`);
+          save();
         }
         break;
       }
 
       case 'screenshot-removed': {
-        const index = allScreenshots.findIndex(item => item.id === event.id);
+        const index = allScreenshots.findIndex(({ id }) => id === event.id);
         if (index !== -1) {
           const [removed] = allScreenshots.splice(index, 1);
-          deletedIds.add(event.id);
-          // If it was newly added this session, no need to track deletion
-          newlyAddedIds.delete(event.id);
           verbose(`Removed: ${removed?.name ?? event.id}`);
+          save();
         }
         break;
       }
@@ -430,6 +475,7 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
       case 'settings-updated': {
         updatedBrowserSettings = event.data;
         verbose(`Settings updated: ${JSON.stringify(event.data)}`);
+        save();
         break;
       }
 
@@ -501,74 +547,10 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
   // Navigate to heroshot.sh welcome page
   await page.goto('https://heroshot.sh/welcome', { waitUntil: 'domcontentloaded' });
 
-  // Wait for browser to close (either via Done button or manual close)
+  // Wait for browser to close (either via Close button or manual close)
   await new Promise<void>(resolve => {
     browser.once('disconnected', () => resolve());
   });
-
-  // Reload config in case it was modified while browser was open
-  const latestConfig = loadConfig(configPath);
-
-  // Save newly added items to config
-  for (const element of allScreenshots) {
-    if (!newlyAddedIds.has(element.id)) continue;
-
-    // Slugify name for output filename (just filename, no path)
-    const filename =
-      element.name
-        .toLowerCase()
-        .replaceAll(/[^a-z0-9]+/g, '-')
-        .replaceAll(/(?:^-|-$)/g, '') + '.png';
-
-    const screenshot: Screenshot = {
-      id: element.id,
-      name: element.name,
-      url: element.url,
-      selector: element.selector,
-      filename,
-      ...(element.padding && { padding: element.padding }),
-      ...(element.scroll && { scroll: element.scroll }),
-      ...(element.maskPadding && { maskPadding: element.maskPadding }),
-    };
-
-    // Add or update screenshot
-    const existingIndex = latestConfig.screenshots.findIndex(item => item.id === element.id);
-    if (existingIndex === -1) {
-      latestConfig.screenshots.push(screenshot);
-      verbose(`+ ${element.name}`);
-    } else {
-      latestConfig.screenshots[existingIndex] = screenshot;
-      verbose(`~ ${element.name} (updated)`);
-    }
-  }
-
-  // Remove deleted items from config
-  for (const id of deletedIds) {
-    const index = latestConfig.screenshots.findIndex(item => item.id === id);
-    if (index !== -1) {
-      const [removed] = latestConfig.screenshots.splice(index, 1);
-      verbose(`- ${removed?.name ?? id} (deleted)`);
-    }
-  }
-
-  // Update browser settings if changed
-  // eslint-disable-next-line no-restricted-syntax -- callback assignment breaks TS narrowing
-  const finalSettings = updatedBrowserSettings as BrowserSettings | null;
-  if (finalSettings) {
-    latestConfig.browser = {
-      ...latestConfig.browser,
-      viewport: finalSettings.viewport,
-      ...(finalSettings.colorScheme && { colorScheme: finalSettings.colorScheme }),
-      ...(finalSettings.deviceScaleFactor && {
-        deviceScaleFactor: finalSettings.deviceScaleFactor,
-      }),
-    };
-    verbose('Browser settings saved');
-  }
-
-  // Always save config (ensures config file exists)
-  saveConfig(configPath, latestConfig);
-  verbose(`Config saved: ${configPath}`);
 
   // Display session key info for CI setup
   if (isNewKey) {
@@ -576,17 +558,6 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
       'To print your session key:\n  npx heroshot session-key\n\nFor CI, add HEROSHOT_SESSION_KEY as a repository secret.',
       'Session encrypted'
     );
-  }
-
-  // Show config saved message
-  if (newlyAddedIds.size > 0 || deletedIds.size > 0 || finalSettings) {
-    const { size: addedCount } = newlyAddedIds;
-    const { size: deletedCount } = deletedIds;
-    const parts: string[] = [];
-    if (addedCount > 0) parts.push(`${addedCount} added`);
-    if (deletedCount > 0) parts.push(`${deletedCount} removed`);
-    if (finalSettings) parts.push('settings updated');
-    success(`Config updated: ${parts.join(', ')}`);
   }
 
   // Return whether there are screenshots to sync

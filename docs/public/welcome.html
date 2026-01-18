@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="stylesheet" href="/palette.css" />
     <title>Welcome - Heroshot</title>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-3MGBYS1GNM"></script>
     <script>
@@ -15,6 +16,8 @@
       gtag('config', 'G-3MGBYS1GNM');
     </script>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
+
       * {
         margin: 0;
         padding: 0;
@@ -22,66 +25,77 @@
       }
       body {
         font-family:
+          'Nunito Sans',
           system-ui,
           -apple-system,
           sans-serif;
         min-height: 100vh;
-        background: linear-gradient(135deg, #faf5ff 0%, #fff7ed 100%);
-        color: #374151;
+        background: linear-gradient(
+          135deg,
+          var(--bg-gradient-start) 0%,
+          var(--bg-gradient-end) 100%
+        );
+        color: var(--text-primary);
         display: flex;
         flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
       }
-      .header {
+      .container {
+        max-width: 560px;
+        width: 100%;
         text-align: center;
-        padding: 2.5rem 2rem 1.5rem;
       }
       .logo {
-        width: 64px;
-        height: 64px;
-        margin-bottom: 0.75rem;
+        width: 72px;
+        height: 72px;
+        margin-bottom: 1rem;
       }
       h1 {
-        font-size: 2rem;
-        font-weight: 600;
-        background: linear-gradient(135deg, #7c3aed 0%, #f97316 100%);
+        font-size: 1.75rem;
+        font-weight: 700;
+        font-style: italic;
+        background: linear-gradient(135deg, var(--brand-main) 0%, var(--brand-light) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.5rem;
       }
       .subtitle {
-        font-size: 1.1rem;
-        color: #6b7280;
-        margin-bottom: 1.25rem;
+        font-size: 1rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
       }
       .url-bar {
         display: flex;
-        max-width: 600px;
-        margin: 0 auto;
-        background: white;
+        background: var(--bg-card);
         border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px var(--shadow-color-strong);
         overflow: hidden;
+        border: 1px solid var(--border-color);
+        margin-bottom: 0.5rem;
       }
       .url-bar input {
         flex: 1;
-        padding: 0.875rem 1rem;
+        padding: 1rem 1.25rem;
         border: none;
         font-size: 1rem;
         font-family: ui-monospace, monospace;
-        color: #374151;
+        color: var(--text-primary);
+        background: var(--input-bg);
         outline: none;
       }
       .url-bar input::placeholder {
-        color: #9ca3af;
+        color: var(--text-muted);
       }
       .url-bar button {
-        padding: 0.875rem 1.5rem;
-        background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+        padding: 1rem 1.75rem;
+        background: linear-gradient(135deg, var(--brand-main) 0%, var(--brand-dark) 100%);
         border: none;
         color: white;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 1rem;
         cursor: pointer;
         transition: opacity 0.15s;
       }
@@ -89,162 +103,152 @@
         opacity: 0.9;
       }
       .url-hint {
-        margin-top: 0.5rem;
         font-size: 0.8rem;
-        color: #9ca3af;
+        color: var(--text-muted);
+        margin-bottom: 2.5rem;
       }
       .url-hint kbd {
-        background: #f3f4f6;
-        border: 1px solid #e5e7eb;
+        background: var(--kbd-bg);
+        border: 1px solid var(--border-color);
         border-radius: 3px;
         padding: 1px 5px;
         font-family: ui-monospace, monospace;
         font-size: 0.75rem;
+        color: var(--text-primary);
       }
-      .main {
-        flex: 1;
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1.5rem;
-        padding: 1rem 2rem 2rem;
-        max-width: 1400px;
-        margin: 0 auto;
-        width: 100%;
+
+      .shortcuts {
+        background: var(--bg-card);
+        border-radius: 10px;
+        padding: 1.25rem 1.5rem;
+        border: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+        text-align: left;
       }
-      .card {
-        background: white;
-        border-radius: 12px;
-        padding: 1.25rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-      }
-      .card-title {
-        font-size: 0.75rem;
+      .shortcuts-title {
+        font-size: 0.7rem;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #9ca3af;
-        margin-bottom: 1rem;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
       }
-      .shortcut-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.6rem;
+      .shortcut-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem 1.5rem;
       }
       .shortcut {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
       }
       .shortcut kbd {
-        background: #f3f4f6;
-        border: 1px solid #e5e7eb;
+        background: var(--kbd-bg);
+        border: 1px solid var(--border-color);
         border-radius: 4px;
-        padding: 3px 8px;
+        padding: 2px 6px;
         font-family: ui-monospace, monospace;
-        font-size: 0.8rem;
-        color: #374151;
-        min-width: 70px;
+        font-size: 0.75rem;
+        color: var(--text-primary);
+        min-width: 50px;
         text-align: center;
       }
       .shortcut span {
-        font-size: 0.9rem;
-        color: #6b7280;
-      }
-      .cmd-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-      .cmd {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem;
-      }
-      .cmd code {
-        font-family: ui-monospace, monospace;
         font-size: 0.85rem;
-        color: #7c3aed;
-        font-weight: 500;
+        color: var(--text-secondary);
       }
-      .cmd span {
-        font-size: 0.8rem;
-        color: #9ca3af;
-      }
-      .action-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.6rem;
-      }
-      .action {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.6rem;
-      }
-      .action-icon {
-        width: 20px;
-        height: 20px;
-        flex-shrink: 0;
-        color: #f97316;
-      }
-      .action-text {
-        font-size: 0.9rem;
-        color: #6b7280;
-        line-height: 1.4;
-      }
-      .action-text strong {
-        color: #374151;
-      }
+
       .links {
         display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
+        justify-content: center;
+        gap: 1.5rem;
       }
       .links a {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        color: #7c3aed;
+        gap: 0.4rem;
+        color: var(--text-muted);
         text-decoration: none;
-        font-size: 0.9rem;
-        padding: 0.4rem 0;
+        font-size: 0.85rem;
         transition: color 0.15s;
       }
       .links a:hover {
-        color: #5b21b6;
+        color: var(--brand-main);
       }
       .links svg {
         width: 16px;
         height: 16px;
       }
-      .version {
-        text-align: center;
-        padding: 1rem;
-        font-size: 0.75rem;
-        color: #9ca3af;
-      }
-      @media (max-width: 900px) {
-        .main {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      @media (max-width: 600px) {
-        .main {
+
+      @media (max-width: 500px) {
+        .shortcut-grid {
           grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
-    <div class="header">
+    <div class="container">
       <img src="/logo.svg" alt="Heroshot" class="logo" />
-      <h1>Welcome back!</h1>
-      <p class="subtitle">Enter your app URL to get started</p>
+      <h1>Welcome to Heroshot</h1>
+      <p class="subtitle">Navigate to your app to start capturing screenshots</p>
+
       <div class="url-bar">
         <input type="url" id="url-input" placeholder="https://your-app.com" autofocus />
         <button type="button" onclick="navigateToUrl()">Go</button>
       </div>
       <p class="url-hint">Press <kbd>Enter</kbd> or use the browser address bar</p>
+
+      <div class="shortcuts">
+        <div class="shortcuts-title">Quick Reference</div>
+        <div class="shortcut-grid">
+          <div class="shortcut">
+            <kbd>Click</kbd>
+            <span>Pick element</span>
+          </div>
+          <div class="shortcut">
+            <kbd>Drag</kbd>
+            <span>Adjust padding</span>
+          </div>
+          <div class="shortcut">
+            <kbd>Esc</kbd>
+            <span>Cancel</span>
+          </div>
+          <div class="shortcut">
+            <kbd>Shift</kbd>
+            <span>Single-side resize</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="links">
+        <a href="https://heroshot.sh/docs/getting-started" target="_blank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          </svg>
+          Docs
+        </a>
+        <a href="https://github.com/omachala/heroshot" target="_blank">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.08-.73.08-.73 1.2.08 1.84 1.23 1.84 1.23 1.07 1.84 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.82.58A12 12 0 0 0 12 0z"
+            />
+          </svg>
+          GitHub
+        </a>
+        <a href="https://www.npmjs.com/package/heroshot" target="_blank">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331zM10.665 10H12v2.667h-1.335V10z"
+            />
+          </svg>
+          npm
+        </a>
+      </div>
     </div>
+
     <script>
       function navigateToUrl() {
         const input = document.getElementById('url-input');
@@ -259,214 +263,5 @@
         if (e.key === 'Enter') navigateToUrl();
       });
     </script>
-
-    <div class="main">
-      <div class="card">
-        <div class="card-title">Toolbar Shortcuts</div>
-        <div class="shortcut-list">
-          <div class="shortcut">
-            <kbd>Click</kbd>
-            <span>Pick element</span>
-          </div>
-          <div class="shortcut">
-            <kbd>Drag</kbd>
-            <span>Symmetric resize (both sides)</span>
-          </div>
-          <div class="shortcut">
-            <kbd>Shift+Drag</kbd>
-            <span>Single side / corner only</span>
-          </div>
-          <div class="shortcut">
-            <kbd>Esc</kbd>
-            <span>Cancel / revert changes</span>
-          </div>
-          <div class="shortcut">
-            <kbd>Click pad</kbd>
-            <span>Toggle mask fill</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">CLI Commands</div>
-        <div class="cmd-list">
-          <div class="cmd">
-            <code>heroshot setup</code>
-            <span>Open browser to configure screenshots</span>
-          </div>
-          <div class="cmd">
-            <code>heroshot sync</code>
-            <span>Capture all configured screenshots</span>
-          </div>
-          <div class="cmd">
-            <code>heroshot sync --dry-run</code>
-            <span>Preview without saving files</span>
-          </div>
-          <div class="cmd">
-            <code>heroshot session-key</code>
-            <span>Print session key for CI</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Quick Actions</div>
-        <div class="action-list">
-          <div class="action">
-            <svg
-              class="action-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-            <span class="action-text"
-              ><strong>Pick</strong> - Click crosshair, then click element</span
-            >
-          </div>
-          <div class="action">
-            <svg
-              class="action-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 9h18M9 3v18" />
-            </svg>
-            <span class="action-text"><strong>Resize</strong> - Drag handles to add padding</span>
-          </div>
-          <div class="action">
-            <svg
-              class="action-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M3 3l18 18" />
-            </svg>
-            <span class="action-text"
-              ><strong>Mask</strong> - Click padding to fill with bg color</span
-            >
-          </div>
-          <div class="action">
-            <svg
-              class="action-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-            <span class="action-text"
-              ><strong>Done</strong> - Save and run <code>heroshot sync</code></span
-            >
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Config Options</div>
-        <div class="cmd-list">
-          <div class="cmd">
-            <code>outputDirectory</code>
-            <span>Where to save screenshots</span>
-          </div>
-          <div class="cmd">
-            <code>browser.viewport</code>
-            <span>Width and height in pixels</span>
-          </div>
-          <div class="cmd">
-            <code>browser.colorScheme</code>
-            <span>light | dark | both</span>
-          </div>
-          <div class="cmd">
-            <code>browser.deviceScaleFactor</code>
-            <span>1 (standard) or 2 (retina)</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Resize Modes</div>
-        <div class="action-list">
-          <div class="action">
-            <svg
-              class="action-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M8 3v18M16 3v18" />
-              <path d="M4 8h4M4 16h4M16 8h4M16 16h4" />
-            </svg>
-            <span class="action-text"
-              ><strong>Edge</strong> - Default: both sides. Shift: single</span
-            >
-          </div>
-          <div class="action">
-            <svg
-              class="action-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <rect x="4" y="4" width="16" height="16" />
-              <circle cx="4" cy="4" r="2" fill="currentColor" />
-              <circle cx="20" cy="20" r="2" fill="currentColor" />
-            </svg>
-            <span class="action-text"><strong>Corner</strong> - Default: all 4. Shift: only 2</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Resources</div>
-        <div class="links">
-          <a href="https://heroshot.sh/guide/getting-started" target="_blank">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-            </svg>
-            Getting Started
-          </a>
-          <a href="https://heroshot.sh/guide/automated-updates" target="_blank">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path
-                d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
-              />
-            </svg>
-            CI/CD Automation
-          </a>
-          <a href="https://www.npmjs.com/package/heroshot" target="_blank">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M0 7.334v8h6.666v1.332H12v-1.332h12v-8H0zm6.666 6.664H5.334v-4H3.999v4H1.335V8.667h5.331v5.331zm4 0v1.336H8.001V8.667h5.334v5.332h-2.669v-.001zm12.001 0h-1.33v-4h-1.336v4h-1.335v-4h-1.33v4h-2.671V8.667h8.002v5.331zM10.665 10H12v2.667h-1.335V10z"
-              />
-            </svg>
-            npm Package
-          </a>
-          <a href="https://github.com/omachala/heroshot" target="_blank">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.08-.73.08-.73 1.2.08 1.84 1.23 1.84 1.23 1.07 1.84 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18a4.65 4.65 0 0 1 1.23 3.22c0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.82.58A12 12 0 0 0 12 0z"
-              />
-            </svg>
-            GitHub
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="version">heroshot v0.0.6</div>
   </body>
 </html>

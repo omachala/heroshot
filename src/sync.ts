@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import type { BrowserContextOptions, ElementHandle, Page } from 'playwright';
 import { launchBrowser } from './browser';
@@ -6,49 +6,9 @@ import { getConfigPath, loadConfig } from './configFile';
 import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
 import { colors, error as logError, outro, spinner, verbose, warn } from './ui';
-
-/** Viewport preset dimensions */
-const VIEWPORT_DESKTOP = { width: 1280, height: 800 };
-const VIEWPORT_TABLET = { width: 768, height: 1024 };
-const VIEWPORT_MOBILE = { width: 375, height: 667 };
-
-/** Parsed viewport with name for filename suffix */
-interface ParsedViewport {
-  name: string;
-  width: number;
-  height: number;
-}
-
-/**
- * Parse viewport variant string to dimensions
- * Supports: "desktop", "tablet", "mobile", or "WIDTHxHEIGHT"
- */
-function parseViewport(variant: string): ParsedViewport {
-  // Check presets first
-  if (variant === 'desktop') {
-    return { name: 'desktop', ...VIEWPORT_DESKTOP };
-  }
-  if (variant === 'tablet') {
-    return { name: 'tablet', ...VIEWPORT_TABLET };
-  }
-  if (variant === 'mobile') {
-    return { name: 'mobile', ...VIEWPORT_MOBILE };
-  }
-
-  // Parse custom format "WIDTHxHEIGHT"
-  const match = /^(\d+)x(\d+)$/.exec(variant);
-  if (match) {
-    const [, widthValue, heightValue] = match;
-    if (widthValue && heightValue) {
-      const width = parseInt(widthValue, 10);
-      const height = parseInt(heightValue, 10);
-      return { name: variant, width, height };
-    }
-  }
-
-  // Fallback to desktop (shouldn't happen with schema validation)
-  return { name: 'desktop', ...VIEWPORT_DESKTOP };
-}
+import { getColorSchemes } from './utils/getColorSchemes';
+import { parseViewport } from './utils/parseViewport';
+import { generateScreenshotFilename } from './utils/screenshotPath';
 
 /**
  * Get the visible background color of an element by walking up the DOM tree.
@@ -221,23 +181,12 @@ async function findElement(
   return null;
 }
 
-/**
- * Add suffix to filename before extension
- * e.g., "hero.png" + "-dark" => "hero-dark.png"
- */
-function addFilenameSuffix(filename: string, suffix: string): string {
-  const extension = path.extname(filename);
-  const base = path.basename(filename, extension);
-  const directory = path.dirname(filename);
-  return path.join(directory, `${base}${suffix}${extension}`);
-}
-
-interface CaptureOptions {
+type CaptureOptions = {
   /** Output format (png or jpeg) */
   format: 'png' | 'jpeg';
   /** JPEG quality (1-100) */
   quality: number;
-}
+};
 
 /**
  * Take a screenshot with the given options
@@ -272,6 +221,130 @@ async function takeScreenshot(
 }
 
 /**
+ * Apply text overrides to elements on the page
+ */
+async function applyTextOverrides(
+  page: Page,
+  selector: string,
+  textOverrides: Record<string, string>
+): Promise<void> {
+  await page.evaluate(`
+    (() => {
+      const mainSelector = ${JSON.stringify(selector)};
+      const overrides = ${JSON.stringify(textOverrides)};
+
+      // Find main element (with shadow-piercing support)
+      const parts = mainSelector.split('>>>').map((p) => p.trim());
+      let mainElement = document;
+      for (const part of parts) {
+        if (!part) continue;
+        const root = mainElement instanceof Element ? (mainElement.shadowRoot ?? mainElement) : mainElement;
+        const found = root.querySelector(part);
+        if (!found) return;
+        mainElement = found;
+      }
+
+      if (!(mainElement instanceof Element)) return;
+
+      // Apply each text override
+      for (const [relativeSelector, newText] of Object.entries(overrides)) {
+        const textEl = mainElement.querySelector(relativeSelector);
+        if (textEl) {
+          textEl.textContent = newText;
+        }
+      }
+    })()
+  `);
+  // Small wait for DOM to update
+  await page.waitForTimeout(50);
+}
+
+type ElementCaptureOptions = {
+  page: Page;
+  element: ElementHandle;
+  selector: string;
+  outputPath: string;
+  format: 'png' | 'jpeg';
+  quality: number;
+  padding?: { top: number; right: number; bottom: number; left: number };
+  maskPadding?: boolean;
+};
+
+/**
+ * Capture element screenshot with optional padding and mask
+ */
+async function captureElementScreenshot(
+  options: ElementCaptureOptions
+): Promise<{ success: boolean; error?: string }> {
+  const { page, element, selector, outputPath, format, quality, padding, maskPadding } = options;
+  const hasPadding =
+    padding && (padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0);
+
+  if (hasPadding) {
+    // Get element bounding box and expand by padding
+    const box = await element.boundingBox();
+    if (!box) {
+      return { success: false, error: 'Could not get element bounding box' };
+    }
+
+    // If maskPadding is enabled, inject temporary divs to fill padding with background color
+    if (maskPadding) {
+      const bgColorResult = await page.evaluate(`
+        (() => {
+          const selector = ${JSON.stringify(selector)};
+          const parts = selector.split('>>>').map((p) => p.trim());
+          let current = document;
+
+          for (const part of parts) {
+            if (!part) continue;
+            const root = current instanceof Element ? (current.shadowRoot ?? current) : current;
+            const found = root.querySelector(part);
+            if (!found) return '#ffffff';
+            current = found;
+          }
+
+          if (!(current instanceof Element)) return '#ffffff';
+
+          const detectBg = ${GET_BACKGROUND_COLOR_SCRIPT};
+          return detectBg(current);
+        })()
+      `);
+
+      const bgColor = typeof bgColorResult === 'string' ? bgColorResult : '#ffffff';
+      verbose(`Background color: ${bgColor}`);
+      await injectPaddingMask(page, element, padding, bgColor);
+    }
+
+    // Calculate expanded clip region
+    const clip = {
+      x: Math.max(0, box.x - padding.left),
+      y: Math.max(0, box.y - padding.top),
+      width: box.width + padding.left + padding.right,
+      height: box.height + padding.top + padding.bottom,
+    };
+
+    await takeScreenshot(page, outputPath, format, quality, clip);
+
+    // Clean up mask after screenshot
+    if (maskPadding) {
+      await removePaddingMask(page);
+    }
+  } else {
+    // No padding - use element screenshot directly
+    await takeScreenshot(element, outputPath, format, quality);
+  }
+
+  return { success: true };
+}
+
+type CaptureVariant = {
+  /** Viewport name for filename suffix (only if multiple viewports) */
+  viewportName?: string;
+  /** Color scheme for filename suffix (only if multiple schemes) */
+  colorScheme?: 'light' | 'dark';
+};
+
+/**
  * Capture a single screenshot
  */
 async function captureScreenshot(
@@ -279,20 +352,28 @@ async function captureScreenshot(
   screenshot: Screenshot,
   outputDirectory: string,
   captureOptions: CaptureOptions,
-  filenameSuffix = ''
-): Promise<{ success: boolean; error?: string }> {
-  const { name, url, selector, filename, padding, scroll, maskPadding } = screenshot;
+  variant: CaptureVariant = {}
+): Promise<{ success: boolean; error?: string; filename: string }> {
+  const { name, url, selector, padding, scroll, maskPadding, textOverrides } = screenshot;
   const { format, quality } = captureOptions;
-  const finalFilename = filenameSuffix ? addFilenameSuffix(filename, filenameSuffix) : filename;
 
-  verbose(`Capturing: ${name}${filenameSuffix}`);
+  // Generate filename from name + variant
+  const filename = generateScreenshotFilename({
+    name,
+    viewport: variant.viewportName,
+    colorScheme: variant.colorScheme,
+    format,
+  });
+
+  const suffix = [variant.viewportName, variant.colorScheme].filter(Boolean).join('-');
+  verbose(`Capturing: ${name}${suffix ? ` (${suffix})` : ''}`);
 
   // Navigate to URL and wait for DOM to be ready
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return { success: false, error: `Failed to navigate: ${message}` };
+    return { success: false, error: `Failed to navigate: ${message}`, filename };
   }
 
   // Wait for page to stabilize (images, fonts, dynamic content)
@@ -305,7 +386,7 @@ async function captureScreenshot(
     await page.waitForTimeout(100);
   }
 
-  const outputPath = path.join(outputDirectory, finalFilename);
+  const outputPath = path.join(outputDirectory, filename);
 
   // Ensure output directory exists
   const outputDirectoryPath = path.dirname(outputPath);
@@ -319,69 +400,27 @@ async function captureScreenshot(
       const element = await findElement(page, selector);
 
       if (!element) {
-        return { success: false, error: `Element not found: ${selector}` };
+        return { success: false, error: `Element not found: ${selector}`, filename };
       }
 
-      // Check if padding is specified
-      const hasPadding =
-        padding && (padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0);
+      // Apply text overrides if any
+      if (textOverrides && Object.keys(textOverrides).length > 0) {
+        await applyTextOverrides(page, selector, textOverrides);
+      }
 
-      if (hasPadding) {
-        // Get element bounding box and expand by padding
-        const box = await element.boundingBox();
-        if (!box) {
-          return { success: false, error: 'Could not get element bounding box' };
-        }
-
-        // If maskPadding is enabled, inject temporary divs to fill padding with background color
-        if (maskPadding) {
-          // Detect background color - re-find element fresh to handle theme re-renders
-          // HA re-renders components when theme changes, invalidating ElementHandles
-          // Use string-based evaluate to run entirely in browser context
-          const bgColorResult = await page.evaluate(`
-            (() => {
-              const selector = ${JSON.stringify(selector)};
-              const parts = selector.split('>>>').map((p) => p.trim());
-              let current = document;
-
-              for (const part of parts) {
-                if (!part) continue;
-                const root = current instanceof Element ? (current.shadowRoot ?? current) : current;
-                const found = root.querySelector(part);
-                if (!found) return '#ffffff';
-                current = found;
-              }
-
-              if (!(current instanceof Element)) return '#ffffff';
-
-              // Run detection script inline
-              const detectBg = ${GET_BACKGROUND_COLOR_SCRIPT};
-              return detectBg(current);
-            })()
-          `);
-
-          const bgColor = typeof bgColorResult === 'string' ? bgColorResult : '#ffffff';
-          verbose(`Background color: ${bgColor}`);
-          await injectPaddingMask(page, element, padding, bgColor);
-        }
-
-        // Calculate expanded clip region
-        const clip = {
-          x: Math.max(0, box.x - padding.left),
-          y: Math.max(0, box.y - padding.top),
-          width: box.width + padding.left + padding.right,
-          height: box.height + padding.top + padding.bottom,
-        };
-
-        await takeScreenshot(page, outputPath, format, quality, clip);
-
-        // Clean up mask after screenshot
-        if (maskPadding) {
-          await removePaddingMask(page);
-        }
-      } else {
-        // No padding - use element screenshot directly
-        await takeScreenshot(element, outputPath, format, quality);
+      // Capture element with or without padding
+      const captureResult = await captureElementScreenshot({
+        page,
+        element,
+        selector,
+        outputPath,
+        format,
+        quality,
+        padding,
+        maskPadding,
+      });
+      if (!captureResult.success) {
+        return { ...captureResult, filename };
       }
     } else {
       // Full page screenshot
@@ -389,33 +428,19 @@ async function captureScreenshot(
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return { success: false, error: `Screenshot failed: ${message}` };
+    return { success: false, error: `Screenshot failed: ${message}`, filename };
   }
 
-  return { success: true };
+  return { success: true, filename };
 }
 
-/**
- * Get array of color schemes to capture based on config setting
- * - 'auto' = use browser default (no explicit scheme)
- * - 'light' = light only
- * - 'dark' = dark only
- * - undefined/null/anything else = both (light and dark)
- */
-function getColorSchemes(setting?: 'auto' | 'light' | 'dark'): ('light' | 'dark')[] {
-  if (setting === 'auto') return [];
-  if (setting === 'light') return ['light'];
-  if (setting === 'dark') return ['dark'];
-  // Default: capture both
-  return ['light', 'dark'];
-}
-
-interface ScreenshotResult {
+type ScreenshotResult = {
   id: string;
   name: string;
+  filename: string;
   success: boolean;
   error?: string;
-}
+};
 
 /**
  * Retry delays in milliseconds (exponential backoff up to 5s)
@@ -430,18 +455,20 @@ async function captureAndLog(
   screenshot: Screenshot,
   outputDirectory: string,
   captureOptions: CaptureOptions,
-  suffix: string
+  variant: CaptureVariant
 ): Promise<ScreenshotResult> {
-  const filename = suffix ? addFilenameSuffix(screenshot.filename, suffix) : screenshot.filename;
   const { length: maxRetries } = RETRY_DELAYS;
-  let result: { success: boolean; error?: string } = { success: false };
+  let result: { success: boolean; error?: string; filename: string } = {
+    success: false,
+    filename: '',
+  };
 
   // Try up to 5 times with exponential backoff
   for (let attempt = 0; attempt < maxRetries; attempt++) {
-    result = await captureScreenshot(page, screenshot, outputDirectory, captureOptions, suffix);
+    result = await captureScreenshot(page, screenshot, outputDirectory, captureOptions, variant);
 
     if (result.success) {
-      verbose(`Saved: ${filename}`);
+      verbose(`Saved: ${result.filename}`);
       break;
     }
 
@@ -449,28 +476,38 @@ async function captureAndLog(
     if (attempt < maxRetries - 1) {
       const delay = RETRY_DELAYS[attempt] ?? 1000;
       verbose(
-        `Retry ${String(attempt + 1)}/${String(maxRetries)} for ${filename} in ${String(delay)}ms...`
+        `Retry ${String(attempt + 1)}/${String(maxRetries)} for ${result.filename} in ${String(delay)}ms...`
       );
       await page.waitForTimeout(delay);
     }
   }
 
-  // Error logging is handled by the main sync loop
+  // Build display name with variant info
+  const suffix = [variant.viewportName, variant.colorScheme].filter(Boolean).join('-');
+  const displayName = suffix ? `${screenshot.name} (${suffix})` : screenshot.name;
 
   return {
-    id: `${screenshot.id}${suffix}`,
-    name: `${screenshot.name}${suffix}`,
+    id: `${screenshot.id}${suffix ? `-${suffix}` : ''}`,
+    name: displayName,
+    filename: result.filename,
     success: result.success,
     error: result.error,
   };
 }
 
-interface SyncOptions {
-  /** Pattern to filter screenshots by id, name, or filename (case-insensitive substring match) */
+type SyncOptions = {
+  /** Pattern to filter screenshots by id or name (case-insensitive substring match) */
   filter?: string;
+  /** Path to config file (loads config from file) */
   configPath?: string;
+  /** Config object (use directly, skip file loading) */
+  config?: Config;
+  /** Output directory override (for URL capture mode where there's no config file) */
+  outputDirectory?: string;
   sessionKey?: string;
-}
+  /** Delete stale files in output directory (only works when running full sync without filter) */
+  clean?: boolean;
+};
 
 /**
  * Load encrypted session if available
@@ -495,17 +532,57 @@ function loadEncryptedSession(
   return undefined;
 }
 
-interface SyncResult {
+type SyncResult = {
   total: number;
   success: number;
   failed: number;
   results: ScreenshotResult[];
+  staleFiles?: string[];
+  deletedFiles?: string[];
+};
+
+/**
+ * Get list of existing screenshot files in output directory
+ */
+function getExistingFiles(outputDirectory: string): string[] {
+  if (!existsSync(outputDirectory)) {
+    return [];
+  }
+  try {
+    return readdirSync(outputDirectory).filter(
+      file => file.endsWith('.png') || file.endsWith('.jpg')
+    );
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Delete stale files from output directory
+ */
+function deleteStaleFiles(outputDirectory: string, staleFiles: string[]): string[] {
+  const deleted: string[] = [];
+  for (const file of staleFiles) {
+    try {
+      unlinkSync(path.join(outputDirectory, file));
+      deleted.push(file);
+      verbose(`Deleted stale: ${file}`);
+    } catch {
+      // Ignore deletion errors
+    }
+  }
+  return deleted;
 }
 
 /**
  * Show capture results and return summary
  */
-function showResults(results: ScreenshotResult[], outputDirectory: string): SyncResult {
+function showResults(
+  results: ScreenshotResult[],
+  outputDirectory: string,
+  staleFiles: string[],
+  deletedFiles: string[]
+): SyncResult {
   const { length: totalCount } = results;
   const successfulResults = results.filter(({ success }) => success);
   const { length: successCount } = successfulResults;
@@ -517,22 +594,49 @@ function showResults(results: ScreenshotResult[], outputDirectory: string): Sync
         logError(`${result.name}: ${result.error ?? 'Unknown error'}`);
       }
     }
-    outro(`${colors.red(`${failedCount} failed`)}, ${successCount} captured`);
-  } else {
-    outro(
-      `${successCount} screenshot${successCount === 1 ? '' : 's'} saved to ${colors.dim(outputDirectory + '/')}`
-    );
   }
 
-  return { total: totalCount, success: successCount, failed: failedCount, results };
+  // Build summary parts
+  const parts: string[] = [];
+
+  if (failedCount > 0) {
+    parts.push(colors.red(`${failedCount} failed`));
+  }
+
+  parts.push(`${successCount} saved`);
+
+  if (deletedFiles.length > 0) {
+    parts.push(colors.yellow(`${deletedFiles.length} deleted`));
+  } else if (staleFiles.length > 0) {
+    parts.push(colors.dim(`${staleFiles.length} stale`));
+  }
+
+  outro(parts.join(', ') + ` to ${colors.dim(outputDirectory + '/')}`);
+
+  // Log stale file hint if any (and not deleted)
+  if (staleFiles.length > 0 && deletedFiles.length === 0) {
+    warn(`Stale files found: ${staleFiles.join(', ')}`);
+    verbose('Run with --clean to delete stale files');
+  }
+
+  return {
+    total: totalCount,
+    success: successCount,
+    failed: failedCount,
+    results,
+    staleFiles: staleFiles.length > 0 ? staleFiles : undefined,
+    deletedFiles: deletedFiles.length > 0 ? deletedFiles : undefined,
+  };
 }
 
 /**
  * Sync all screenshots defined in config
  */
+// eslint-disable-next-line complexity -- main entry point, complexity is acceptable
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
+  // Use provided config or load from file
   const configPath = options.configPath ?? getConfigPath();
-  const config: Config = loadConfig(configPath);
+  const config: Config = options.config ?? loadConfig(configPath);
 
   if (config.screenshots.length === 0) {
     warn('No screenshots defined.');
@@ -540,15 +644,14 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     return { total: 0, success: 0, failed: 0, results: [] };
   }
 
-  // Filter by pattern if specified (matches id, name, or filename - case-insensitive)
+  // Filter by pattern if specified (matches id or name - case-insensitive)
   const { filter: filterPattern } = options;
   const screenshots = filterPattern
     ? config.screenshots.filter(screenshot => {
         const pattern = filterPattern.toLowerCase();
         return (
           screenshot.id.toLowerCase().includes(pattern) ||
-          screenshot.name.toLowerCase().includes(pattern) ||
-          screenshot.filename.toLowerCase().includes(pattern)
+          screenshot.name.toLowerCase().includes(pattern)
         );
       })
     : config.screenshots;
@@ -564,10 +667,17 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     verbose(`Matched ${screenshots.length}: ${names}`);
   }
 
-  // Get output directory (relative to project root, which is parent of .heroshot/)
-  const configDirectory = path.dirname(configPath);
-  const projectRoot = path.dirname(configDirectory);
-  const outputDirectory = path.resolve(projectRoot, config.outputDirectory);
+  // Get output directory
+  // - If outputDirectory override provided (URL capture mode), use it directly
+  // - Otherwise, resolve relative to project root (parent of .heroshot/)
+  let outputDirectory: string;
+  if (options.outputDirectory) {
+    outputDirectory = path.resolve(options.outputDirectory);
+  } else {
+    const configDirectory = path.dirname(configPath);
+    const projectRoot = path.dirname(configDirectory);
+    outputDirectory = path.resolve(projectRoot, config.outputDirectory);
+  }
 
   // Try to load encrypted session if available
   const storageState = loadEncryptedSession(options.sessionKey);
@@ -628,7 +738,10 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
       if (viewportVariants.length === 0) {
         // No viewports specified - use default viewport, just add colorScheme suffix if needed
         capturedCount++;
-        const suffix = hasMultipleSchemes && colorScheme ? `-${colorScheme}` : '';
+        const variant: CaptureVariant = {
+          colorScheme: hasMultipleSchemes ? colorScheme : undefined,
+        };
+        const suffix = variant.colorScheme ? ` (${variant.colorScheme})` : '';
         captureSpinner.message(
           `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
         );
@@ -637,13 +750,13 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
           screenshot,
           outputDirectory,
           captureOptions,
-          suffix
+          variant
         );
         results.push(result);
       } else {
         // Capture for each viewport variant
-        for (const variant of viewportVariants) {
-          const parsedViewport = parseViewport(variant);
+        for (const viewportVariant of viewportVariants) {
+          const parsedViewport = parseViewport(viewportVariant);
 
           // Resize page for this viewport
           await page.setViewportSize({
@@ -652,20 +765,21 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
           });
 
           capturedCount++;
-          // Build suffix: -viewport-colorScheme (only add parts if multiple variants exist)
-          const viewportSuffix = hasMultipleViewports ? `-${parsedViewport.name}` : '';
-          const schemeSuffix = hasMultipleSchemes && colorScheme ? `-${colorScheme}` : '';
-          const suffix = `${viewportSuffix}${schemeSuffix}`;
+          const variant: CaptureVariant = {
+            viewportName: hasMultipleViewports ? parsedViewport.name : undefined,
+            colorScheme: hasMultipleSchemes ? colorScheme : undefined,
+          };
+          const suffix = [variant.viewportName, variant.colorScheme].filter(Boolean).join(', ');
 
           captureSpinner.message(
-            `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix}`
+            `Capturing ${capturedCount}/${totalToCapture}: ${screenshot.name}${suffix ? ` (${suffix})` : ''}`
           );
           const result = await captureAndLog(
             page,
             screenshot,
             outputDirectory,
             captureOptions,
-            suffix
+            variant
           );
           results.push(result);
         }
@@ -687,5 +801,27 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   captureSpinner.stop('Screenshots captured');
 
-  return showResults(results, config.outputDirectory);
+  // Stale file detection (only for full sync without filter)
+  let staleFiles: string[] = [];
+  let deletedFiles: string[] = [];
+
+  if (!filterPattern) {
+    // Get all existing files in output directory
+    const existingFiles = getExistingFiles(outputDirectory);
+
+    // Get all written filenames from results
+    const writtenFiles = new Set(
+      results.filter(({ success }) => success).map(({ filename }) => filename)
+    );
+
+    // Find stale files (exist but weren't written)
+    staleFiles = existingFiles.filter(file => !writtenFiles.has(file));
+
+    // Delete stale files if --clean flag is set
+    if (options.clean && staleFiles.length > 0) {
+      deletedFiles = deleteStaleFiles(outputDirectory, staleFiles);
+    }
+  }
+
+  return showResults(results, outputDirectory, staleFiles, deletedFiles);
 }
