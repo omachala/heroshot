@@ -1,12 +1,14 @@
 # CLI Reference
 
-## Usage
+Everything you can do from the command line. Most of the time you'll just run `npx heroshot` and let it figure out what to do - but when you need more control, here's what's available.
 
 ```bash
 heroshot [options] [command]
 ```
 
 ## Global Options
+
+These work with any command:
 
 | Option                | Alias | Description                                                    |
 | --------------------- | ----- | -------------------------------------------------------------- |
@@ -20,11 +22,13 @@ heroshot [options] [command]
 
 ### `heroshot` (default)
 
-Run heroshot. Behavior depends on the arguments:
+The smart default. Heroshot looks at what you have and does the right thing:
 
-- **With URL**: One-shot mode - capture screenshot directly
-- **No config**: Opens the browser to create screenshots (same as `heroshot config`)
-- **Config exists**: Captures all screenshots headlessly (sync mode)
+- **Pass a URL** → One-shot mode: captures that page immediately
+- **No config file yet** → Opens the visual picker so you can define screenshots
+- **Config exists** → Runs headlessly, regenerates all your screenshots
+
+This means your workflow is usually just `npx heroshot` over and over. First time it helps you set up, after that it syncs.
 
 ```bash
 heroshot                    # Auto-detect mode
@@ -33,14 +37,20 @@ heroshot -c custom.json     # Use custom config file
 
 ### `heroshot <url>` (one-shot mode)
 
-Take a screenshot directly without config file. Perfect for quick captures or building your config from the command line.
+Quick capture without touching your config. Just pass a URL and get a screenshot:
 
-**Two ways to build your screenshot config:**
+```bash
+heroshot https://example.com
+```
 
-1. **Visual mode** - Run `heroshot config` to open a browser, point-and-click to select elements, adjust settings visually
-2. **CLI mode** - Use `heroshot <url> --save` to capture and add screenshots via command line
+This is great for one-off captures, or for building your config from the command line instead of the visual picker. Add `--save` to any one-shot command and it gets added to your config for future syncs.
 
-Both approaches write to the same `.heroshot/config.json` file. Use whichever fits your workflow - or mix them. The visual picker is great for exploring a page, while CLI mode is ideal for scripting or when you know exactly what you want.
+**Two ways to build your screenshot collection:**
+
+1. **Visual picker** - Run `heroshot config`, point and click, adjust settings visually
+2. **CLI** - Run `heroshot <url> --save` to capture and add in one step
+
+Both write to the same `.heroshot/config.json`. Mix and match - visual picker for exploring, CLI for scripting or when you know exactly what you want.
 
 ```bash
 heroshot https://example.com                          # Full page screenshot
@@ -52,18 +62,18 @@ heroshot https://example.com --light --dark           # Light + dark variants
 
 #### What to capture
 
-By default, heroshot captures the full page. Use `--selector` to focus on a specific element.
+By default you get the full page. But usually you want a specific element - a hero section, a card, a form. That's what `--selector` is for.
 
-| Option             | Description                                                              |
-| ------------------ | ------------------------------------------------------------------------ |
-| `--selector <sel>` | CSS selector for the element to capture. Omit for full-page screenshot.  |
-| `-p, --padding`    | Add breathing room around the element (in pixels). Great for context.    |
-| `-o, --output`     | Output filename. Auto-generated from URL if not specified.               |
-| `--save`           | Add this screenshot to your config so `heroshot sync` includes it later. |
+| Option             | Description                                                             |
+| ------------------ | ----------------------------------------------------------------------- |
+| `--selector <sel>` | CSS selector for the element to capture. Omit for full-page screenshot. |
+| `-p, --padding`    | Add breathing room around the element (in pixels). Great for context.   |
+| `-o, --output`     | Output filename. Auto-generated from URL if not specified.              |
+| `--save`           | Add this screenshot to your config for future runs.                     |
 
 #### Viewport size
 
-Control the browser window size. Use presets for common device sizes, or set exact dimensions.
+Need a mobile screenshot? Tablet? The presets handle common sizes, or go custom with exact pixels.
 
 | Option         | Description                                                     |
 | -------------- | --------------------------------------------------------------- |
@@ -75,7 +85,7 @@ Control the browser window size. Use presets for common device sizes, or set exa
 
 #### Color scheme
 
-Capture light mode, dark mode, or both. Useful for documenting themes.
+If your site respects `prefers-color-scheme`, you can capture light, dark, or both variants.
 
 | Option    | Description              |
 | --------- | ------------------------ |
@@ -86,7 +96,7 @@ Use `--light --dark` together to capture both variants, outputting `filename-lig
 
 #### Image quality
 
-Control resolution and format. Higher scale = sharper images but larger files.
+For crisp screenshots on retina displays, bump the scale. For smaller files, use JPEG.
 
 | Option              | Description                                                       |
 | ------------------- | ----------------------------------------------------------------- |
@@ -114,14 +124,14 @@ heroshot https://myapp.com --selector ".hero" --mobile --save
 heroshot https://myapp.com/pricing --selector ".plans" --save
 
 # Later, regenerate all saved screenshots
-heroshot sync
+heroshot
 ```
 
 :::
 
 ### `heroshot config`
 
-Open browser to add/edit screenshot definitions.
+Opens the visual picker - a browser where you point and click to define screenshots. Use this when you want to add new screenshots, remove old ones, or tweak selectors visually.
 
 ```bash
 heroshot config [options]
@@ -144,83 +154,88 @@ The capture behavior is controlled by `browser.colorScheme` in your config:
 - **light** / **dark**: Captures single variant only
   :::
 
-### `heroshot sync [pattern]`
+### `heroshot [pattern]`
 
-Capture screenshots headlessly. Optionally filter by pattern.
+When you have a config, running `heroshot` regenerates all your screenshots headlessly - no browser window, just captures and saves. This is what you run in CI or whenever your app changes.
 
 ```bash
-heroshot sync               # Capture all screenshots
-heroshot sync dashboard     # Capture screenshots matching "dashboard"
-heroshot sync hero          # Matches: hero-light.png, homepage-hero.png, etc.
+heroshot                    # Capture all screenshots
+heroshot dashboard          # Capture screenshots matching "dashboard"
+heroshot hero               # Matches: hero-light.png, homepage-hero.png, etc.
+heroshot --clean            # Capture all and delete stale files
 ```
+
+| Option    | Description                                                           |
+| --------- | --------------------------------------------------------------------- |
+| `--clean` | Delete stale files from output directory (only works without pattern) |
 
 The pattern matches against:
 
 - Screenshot **id**
 - Screenshot **name**
-- Screenshot **filename**
+- Generated **filename**
 
 Matching is case-insensitive and uses substring matching. If multiple screenshots match, all are captured.
 
+::: tip Cleaning Stale Files
+When you rename or delete screenshots, old files may remain in your output directory. Use `--clean` to automatically remove them:
+
+```bash
+heroshot --clean
+```
+
+This compares existing files against what would be generated and deletes any extras. Only works when syncing all screenshots (no pattern filter).
+:::
+
 ### `heroshot session-key`
 
-Print the session key for this project (for CI setup).
+When you log into a site during `heroshot config`, that session is saved encrypted. The encryption key is machine-specific by default, which is fine for local use.
+
+For CI, you need to export that key so the CI runner can decrypt your session:
 
 ```bash
 heroshot session-key
 ```
+
+This prints a key you can add to your CI secrets as `HEROSHOT_SESSION_KEY`. See [Automated Updates](/docs/guide/automated-updates) for the full CI setup.
 
 ## Examples
 
-### Open configuration UI
+Here's a quick reference for common tasks:
 
 ```bash
+# Open the visual picker to define/edit screenshots
 heroshot config
-```
 
-### Run with verbose output
+# Regenerate all screenshots
+heroshot
 
-```bash
-heroshot config -v
-```
+# Only regenerate screenshots matching "dashboard"
+heroshot dashboard
 
-### Use custom config file
+# Regenerate and clean up stale files
+heroshot --clean
 
-```bash
-heroshot config -c ./custom-heroshot.json
-```
-
-### Sync specific screenshots
-
-```bash
-heroshot sync dashboard     # Only screenshots matching "dashboard"
-heroshot sync -v hero       # Verbose output, matching "hero"
-```
-
-### Get session key for CI
-
-```bash
-heroshot session-key
-```
-
-### One-shot screenshots
-
-```bash
-# Quick full-page screenshot
+# Quick one-off screenshot (doesn't touch config)
 heroshot https://example.com
-
-# Capture specific element
 heroshot https://example.com --selector ".hero-section"
 
-# Mobile dark mode with padding
+# Mobile + dark mode + padding
 heroshot https://example.com --selector "nav" --mobile --dark -p 20
 
-# Both color schemes, retina quality
+# Capture light and dark variants, retina quality
 heroshot https://example.com --light --dark --retina -o homepage.png
 
-# JPEG output with quality setting
+# JPEG for smaller file size
 heroshot https://example.com -q 85 -o photo.jpg
 
-# Capture and save to config for future syncs
+# Capture AND save to config for future runs
 heroshot https://myapp.com --selector ".dashboard" --save
+
+# Get session key for CI
+heroshot session-key
+
+# Verbose output (works with any command)
+heroshot -v
+heroshot config -v
 ```

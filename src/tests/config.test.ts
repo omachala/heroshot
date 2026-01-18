@@ -25,7 +25,6 @@ describe('parseConfig', () => {
         {
           name: 'Homepage Hero',
           url: 'https://example.com',
-          filename: 'hero.png',
           selector: '#hero',
         },
       ],
@@ -44,7 +43,6 @@ describe('parseConfig', () => {
         {
           name: 'Test',
           url: 'https://example.com',
-          filename: 'test.png',
         },
       ],
     });
@@ -60,7 +58,6 @@ describe('parseConfig', () => {
           {
             name: 'Test',
             url: 'invalid-url',
-            filename: 'test.png',
           },
         ],
       })

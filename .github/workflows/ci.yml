@@ -29,14 +29,14 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Lint toolbar
-        run: pnpm lint:toolbar
+      - name: Lint editor
+        run: pnpm lint:editor
 
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Typecheck toolbar
-        run: pnpm typecheck:toolbar
+      - name: Typecheck editor
+        run: pnpm typecheck:editor
 
       - name: Svelte warnings check
         run: pnpm check:svelte
@@ -47,13 +47,13 @@ jobs:
       - name: Unit tests with coverage
         run: pnpm vitest run --coverage
 
-      - name: Toolbar unit tests with coverage
-        run: pnpm test:toolbar:coverage
+      - name: Editor unit tests with coverage
+        run: pnpm test:editor:coverage
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          files: ./coverage/lcov.info,./coverage/toolbar/lcov.info
+          files: ./coverage/lcov.info,./coverage/editor/lcov.info
           fail_ci_if_error: false
 
       - name: Changeset status
@@ -76,21 +76,21 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Build toolbar
-        run: pnpm build:toolbar
+      - name: Build editor
+        run: pnpm build:editor
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium
 
       - name: Run e2e tests
-        run: pnpm test:toolbar:e2e
+        run: pnpm test:editor:e2e
 
       - name: Upload test artifacts
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: toolbar/test-results/
+          path: editor/test-results/
           retention-days: 7
 
   # CLI integration tests - run after check passes (parallel with e2e)

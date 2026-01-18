@@ -7,7 +7,6 @@ describe('types', () => {
       id: 'test',
       name: 'Test Screenshot',
       url: 'http://localhost:3000',
-      filename: 'test.png',
       selector: '.main',
     };
 
@@ -20,8 +19,8 @@ describe('types', () => {
       outputDirectory: './screenshots',
       jpegQuality: 80,
       screenshots: [
-        { id: 'one', name: 'One', url: 'http://localhost:3000', filename: 'one.png' },
-        { id: 'two', name: 'Two', url: 'http://localhost:3000/page', filename: 'two.png' },
+        { id: 'one', name: 'One', url: 'http://localhost:3000' },
+        { id: 'two', name: 'Two', url: 'http://localhost:3000/page' },
       ],
     };
 
