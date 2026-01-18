@@ -32,11 +32,17 @@ jobs:
       - name: Lint editor
         run: pnpm lint:editor
 
+      - name: Lint integrations
+        run: pnpm lint:integrations
+
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Typecheck editor
         run: pnpm typecheck:editor
+
+      - name: Typecheck integrations
+        run: pnpm typecheck:integrations
 
       - name: Svelte warnings check
         run: pnpm check:svelte

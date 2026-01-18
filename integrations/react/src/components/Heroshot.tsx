@@ -102,24 +102,15 @@ export function Heroshot({ name, alt = '', manifest: manifestProp, className }: 
   // Use prop manifest, context manifest, or global manifest (in that order)
   const manifest = manifestProp ?? contextManifest ?? getManifest();
 
-  // Warning for missing manifest
-  if (!manifest) {
-    const warning =
-      'Heroshot: No manifest found. Add heroshot() plugin to vite config, use HeroshotProvider, or pass manifest prop.';
-    if (typeof console !== 'undefined') {
-      console.warn(warning);
-    }
-    return <span style={{ color: 'red', fontSize: '12px' }}>{warning}</span>;
-  }
-
   // Get screenshot from manifest
   const screenshot = useMemo(() => {
+    if (!manifest) return null;
     return getScreenshot(manifest, name);
   }, [manifest, name]);
 
   // Get all variant paths
   const paths = useMemo((): VariantPaths | null => {
-    if (!screenshot) return null;
+    if (!screenshot || !manifest) return null;
     return getVariantPaths(manifest, screenshot);
   }, [manifest, screenshot]);
 
@@ -154,6 +145,16 @@ export function Heroshot({ name, alt = '', manifest: manifestProp, className }: 
   }, [paths, screenshot, isDark]);
 
   const sizes = srcset ? '(max-width: 375px) 375px, (max-width: 768px) 768px, 1280px' : undefined;
+
+  // Warning for missing manifest
+  if (!manifest) {
+    const warning =
+      'Heroshot: No manifest found. Add heroshot() plugin to vite config, use HeroshotProvider, or pass manifest prop.';
+    if (typeof console !== 'undefined') {
+      console.warn(warning);
+    }
+    return <span style={{ color: 'red', fontSize: '12px' }}>{warning}</span>;
+  }
 
   // Warning for missing screenshot
   if (!screenshot) {

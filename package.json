@@ -69,6 +69,8 @@
     "build:integrations:vue": "pnpm --filter './integrations/vue' build",
     "build:integrations:react": "pnpm --filter './integrations/react' build",
     "test:integrations": "pnpm --filter './integrations/*' test:run",
+    "lint:integrations": "pnpm --filter './integrations/react' lint",
+    "typecheck:integrations": "pnpm --filter './integrations/vue' --filter './integrations/react' typecheck",
     "test": "vitest",
     "test:run": "vitest run",
     "test:cli": "vitest run --config vitest.cli.config.ts",
