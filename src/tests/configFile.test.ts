@@ -115,7 +115,6 @@ describe('loadConfig', () => {
         {
           name: 'Test',
           url: 'https://example.com',
-          filename: 'test.png',
         },
       ],
     };
@@ -133,7 +132,6 @@ describe('loadConfig', () => {
         {
           name: 'Test',
           url: 'https://example.com',
-          filename: 'test.png',
         },
       ],
     };
@@ -151,7 +149,7 @@ describe('loadConfig', () => {
 
   it('throws on invalid config schema', () => {
     const invalidConfig = {
-      screenshots: [{ name: 'Test' }], // missing url and filename
+      screenshots: [{ name: 'Test' }], // missing url
     };
     writeFileSync(configPath, JSON.stringify(invalidConfig));
     expect(() => loadConfig(configPath)).toThrow();

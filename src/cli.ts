@@ -43,13 +43,18 @@ program
 /** Build a screenshot entry from CLI options */
 function buildScreenshotEntry(url: string, options: ShotCommandOptions | undefined): Screenshot {
   const selectorValue = options?.selector?.[0];
-  const filename = options?.output ?? generateScreenshotFilename(url, selectorValue);
+
+  // Generate name from --output if provided, otherwise from URL
+  // (filename will be derived from name at sync time)
+  const outputFile = options?.output;
+  const name = outputFile
+    ? path.basename(outputFile, path.extname(outputFile))
+    : path.basename(generateScreenshotFilename(url, selectorValue), '.png');
 
   const screenshot: Screenshot = {
     id: generateUid(),
-    name: path.basename(filename, path.extname(filename)),
+    name,
     url,
-    filename,
     selector: selectorValue,
   };
 
@@ -201,10 +206,11 @@ async function handleUrlCapture(
 async function handleDefaultCommand(
   configPath: string,
   sessionKey: string | undefined,
-  hasExplicitConfig: boolean
+  hasExplicitConfig: boolean,
+  clean?: boolean
 ): Promise<boolean> {
   if (existsSync(configPath)) {
-    const result = await sync({ configPath, sessionKey });
+    const result = await sync({ configPath, sessionKey, clean });
     return result.failed === 0;
   }
 
@@ -215,7 +221,7 @@ async function handleDefaultCommand(
 
   const { hasScreenshots } = await setup();
   if (hasScreenshots) {
-    const result = await sync({});
+    const result = await sync({ clean });
     return result.failed === 0;
   }
   return true;
@@ -241,6 +247,7 @@ program
   .option('--omit-background', 'Transparent background (PNG only)')
   .option('--timeout <ms>', 'Timeout in milliseconds', parseInt)
   .option('--save', 'Save screenshot definition to config')
+  .option('--clean', 'Delete stale files in output directory')
   .action(async (url?: string, options?: ShotCommandOptions) => {
     const globalOptions = program.opts<GlobalOptions>();
     const configPath = globalOptions.config ? path.resolve(globalOptions.config) : getConfigPath();
@@ -250,13 +257,19 @@ program
       if (!success) process.exitCode = 1;
     } else if (url) {
       // URL doesn't look like a URL - treat as pattern for sync
-      const result = await sync({ configPath, sessionKey: globalOptions.sessionKey, filter: url });
+      const result = await sync({
+        configPath,
+        sessionKey: globalOptions.sessionKey,
+        filter: url,
+        clean: options?.clean,
+      });
       if (result.failed > 0) process.exitCode = 1;
     } else {
       const success = await handleDefaultCommand(
         configPath,
         globalOptions.sessionKey,
-        !!globalOptions.config
+        !!globalOptions.config,
+        options?.clean
       );
       if (!success) process.exitCode = 1;
     }
@@ -301,29 +314,6 @@ program
       }
     }
   );
-
-program
-  .command('sync [pattern]')
-  .description('Capture screenshots (optionally filter by pattern)')
-  .action(async (pattern?: string) => {
-    const options = program.opts<GlobalOptions>();
-    const configPath = options.config ? path.resolve(options.config) : getConfigPath();
-
-    if (!existsSync(configPath)) {
-      error('No config found. Run "heroshot config" first.');
-      process.exitCode = 1;
-      return;
-    }
-
-    const result = await sync({
-      configPath,
-      sessionKey: options.sessionKey,
-      filter: pattern,
-    });
-    if (result.failed > 0) {
-      process.exitCode = 1;
-    }
-  });
 
 program
   .command('session-key')
