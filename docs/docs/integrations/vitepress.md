@@ -1,5 +1,7 @@
 # VitePress
 
+> Want to see it working? Check out the [full example on GitHub](https://github.com/omachala/heroshot/tree/main/integrations/examples/vitepress) - a minimal setup you can clone and run.
+
 [VitePress](https://vitepress.dev/) is what I use for this very documentation site, so it's the integration I know best. If you're using VitePress, you're in good company - it's a great choice for docs.
 
 ## The Magic: One Component, All Variants

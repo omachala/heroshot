@@ -1,5 +1,7 @@
 # Docusaurus
 
+> Want to see it working? Check out the [full example on GitHub](https://github.com/omachala/heroshot/tree/main/integrations/examples/docusaurus) - a minimal setup you can clone and run.
+
 [Docusaurus](https://docusaurus.io/) is Meta's documentation framework, and it's everywhere in the open source world. If you're using it, you probably already know it's React-based and uses MDX - which gives you some nice options for displaying screenshots.
 
 ## The Magic: One Component, All Variants

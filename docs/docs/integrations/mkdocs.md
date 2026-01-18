@@ -1,5 +1,7 @@
 # MkDocs
 
+> Want to see it working? Check out the [full example on GitHub](https://github.com/omachala/heroshot/tree/main/integrations/examples/mkdocs) - a minimal setup you can clone and run.
+
 [MkDocs](https://www.mkdocs.org/) is huge in the Python world. If you're documenting a Python project, chances are you're using MkDocs - probably with the [Material theme](https://squidfunk.github.io/mkdocs-material/) which is fantastic.
 
 ## The Magic: One Macro, All Variants
