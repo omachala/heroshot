@@ -30,9 +30,9 @@ const activeManifest = computed(() => props.manifest ?? getManifest());
 const isDark = ref(false);
 
 function detectDarkMode(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (globalThis.window === undefined) return false;
   if (document.documentElement.classList.contains('dark')) return true;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 onMounted(() => {
@@ -46,7 +46,7 @@ onMounted(() => {
     attributeFilter: ['class'],
   });
 
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
   const handleMediaChange = () => {
     if (!document.documentElement.classList.contains('dark')) {
       isDark.value = mediaQuery.matches;
@@ -101,7 +101,7 @@ const srcset = computed(() => {
     if (!vpPaths) continue;
 
     const path = isDark.value && vpPaths.dark ? vpPaths.dark : vpPaths.light || vpPaths.default;
-    const width = widthMap[viewport] || parseInt(viewport.split('x')[0] || '1280', 10);
+    const width = widthMap[viewport] || Number.parseInt(viewport.split('x')[0] || '1280', 10);
     parts.push(`${path} ${width}w`);
   }
 

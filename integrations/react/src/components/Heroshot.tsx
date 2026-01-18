@@ -17,10 +17,10 @@ const HeroshotContext = createContext<Manifest | null>(null);
 export function HeroshotProvider({
   manifest,
   children,
-}: {
+}: Readonly<{
   manifest: Manifest;
   children: React.ReactNode;
-}) {
+}>) {
   return <HeroshotContext.Provider value={manifest}>{children}</HeroshotContext.Provider>;
 }
 
@@ -40,23 +40,23 @@ interface HeroshotProps {
  */
 function useIsDark(): boolean {
   const [isDark, setIsDark] = useState(() => {
-    if (typeof window === 'undefined') return false;
+    if (globalThis.window === undefined) return false;
 
     // Check Docusaurus data-theme attribute
-    const dataTheme = document.documentElement.getAttribute('data-theme');
+    const { theme: dataTheme } = document.documentElement.dataset;
     if (dataTheme) return dataTheme === 'dark';
 
     // Check class-based (.dark class)
     if (document.documentElement.classList.contains('dark')) return true;
 
     // Fall back to prefers-color-scheme
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
     const handleMediaChange = (e: MediaQueryListEvent) => {
-      const dataTheme = document.documentElement.getAttribute('data-theme');
+      const { theme: dataTheme } = document.documentElement.dataset;
       if (!dataTheme && !document.documentElement.classList.contains('dark')) {
         setIsDark(e.matches);
       }
@@ -64,13 +64,13 @@ function useIsDark(): boolean {
     mediaQuery.addEventListener('change', handleMediaChange);
 
     const observer = new MutationObserver(() => {
-      const dataTheme = document.documentElement.getAttribute('data-theme');
+      const { theme: dataTheme } = document.documentElement.dataset;
       if (dataTheme) {
         setIsDark(dataTheme === 'dark');
       } else if (document.documentElement.classList.contains('dark')) {
         setIsDark(true);
       } else {
-        setIsDark(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        setIsDark(globalThis.matchMedia('(prefers-color-scheme: dark)').matches);
       }
     });
 
@@ -95,7 +95,12 @@ const VIEWPORT_WIDTHS: Record<string, number> = {
   desktop: 1280,
 };
 
-export function Heroshot({ name, alt = '', manifest: manifestProp, className }: HeroshotProps) {
+export function Heroshot({
+  name,
+  alt = '',
+  manifest: manifestProp,
+  className,
+}: Readonly<HeroshotProps>) {
   const isDark = useIsDark();
   const contextManifest = useContext(HeroshotContext);
 
@@ -137,7 +142,8 @@ export function Heroshot({ name, alt = '', manifest: manifestProp, className }: 
       if (!vpPaths) continue;
 
       const path = isDark && vpPaths.dark ? vpPaths.dark : vpPaths.light || vpPaths.default;
-      const width = VIEWPORT_WIDTHS[viewport] || parseInt(viewport.split('x')[0] || '1280', 10);
+      const width =
+        VIEWPORT_WIDTHS[viewport] || Number.parseInt(viewport.split('x')[0] || '1280', 10);
       parts.push(`${path} ${width}w`);
     }
 
@@ -176,5 +182,3 @@ export function Heroshot({ name, alt = '', manifest: manifestProp, className }: 
     />
   );
 }
-
-export default Heroshot;

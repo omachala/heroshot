@@ -75,50 +75,45 @@ export type VariantPaths = {
   >;
 };
 
+type ColorSchemePaths = { default: string; light?: string; dark?: string };
+
+/**
+ * Build paths for color schemes at a specific viewport (or base level)
+ */
+function buildColorSchemePaths(
+  manifest: Manifest,
+  screenshot: ScreenshotInfo,
+  viewport?: string
+): ColorSchemePaths {
+  const { colorSchemes } = screenshot;
+  const hasColorSchemes = colorSchemes.length > 0;
+
+  const getPath = (colorScheme?: 'light' | 'dark') =>
+    generatePath(manifest, screenshot, { viewport, colorScheme });
+
+  const paths: ColorSchemePaths = {
+    default: hasColorSchemes ? getPath('light') : getPath(),
+  };
+
+  if (colorSchemes.includes('light')) {
+    paths.light = getPath('light');
+  }
+  if (colorSchemes.includes('dark')) {
+    paths.dark = getPath('dark');
+  }
+
+  return paths;
+}
+
 /**
  * Get all paths for a screenshot based on its variants
  */
 export function getVariantPaths(manifest: Manifest, screenshot: ScreenshotInfo): VariantPaths {
-  const { colorSchemes, viewports } = screenshot;
-  const hasColorSchemes = colorSchemes.length > 0;
-  const hasViewports = viewports.length > 0;
+  const basePaths = buildColorSchemePaths(manifest, screenshot);
 
-  // Helper to get path with optional color scheme
-  const getPath = (viewport?: string, colorScheme?: 'light' | 'dark') =>
-    generatePath(manifest, screenshot, { viewport, colorScheme });
-
-  // Base paths (no viewport)
-  const basePaths: { default: string; light?: string; dark?: string } = {
-    default: hasColorSchemes ? getPath(undefined, 'light') : getPath(),
-  };
-
-  if (hasColorSchemes) {
-    if (colorSchemes.includes('light')) {
-      basePaths.light = getPath(undefined, 'light');
-    }
-    if (colorSchemes.includes('dark')) {
-      basePaths.dark = getPath(undefined, 'dark');
-    }
-  }
-
-  // Viewport-specific paths
   const viewportPaths: VariantPaths['viewports'] = {};
-
-  if (hasViewports) {
-    for (const viewport of viewports) {
-      viewportPaths[viewport] = {
-        default: hasColorSchemes ? getPath(viewport, 'light') : getPath(viewport),
-      };
-
-      if (hasColorSchemes) {
-        if (colorSchemes.includes('light')) {
-          viewportPaths[viewport].light = getPath(viewport, 'light');
-        }
-        if (colorSchemes.includes('dark')) {
-          viewportPaths[viewport].dark = getPath(viewport, 'dark');
-        }
-      }
-    }
+  for (const viewport of screenshot.viewports) {
+    viewportPaths[viewport] = buildColorSchemePaths(manifest, screenshot, viewport);
   }
 
   return {

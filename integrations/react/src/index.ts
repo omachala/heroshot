@@ -1,1 +1,1 @@
-export { Heroshot, HeroshotProvider, default } from './components/Heroshot';
+export { Heroshot, HeroshotProvider } from './components/Heroshot';

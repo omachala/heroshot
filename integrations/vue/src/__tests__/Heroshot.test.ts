@@ -7,46 +7,20 @@ import type { Manifest } from '../../../shared';
 const testManifest: Manifest = {
   version: 1,
   outputDirectory: 'heroshots',
-  byName: {
+  screenshots: {
     Dashboard: {
-      id: 'dash-1',
       slug: 'dashboard',
       viewports: [],
       colorSchemes: ['light', 'dark'],
       format: 'png',
     },
     'Homepage Hero': {
-      id: 'hero-1',
       slug: 'homepage-hero',
       viewports: ['mobile', 'desktop'],
       colorSchemes: ['light', 'dark'],
       format: 'png',
     },
     Simple: {
-      id: 'simple-1',
-      slug: 'simple',
-      viewports: [],
-      colorSchemes: [],
-      format: 'png',
-    },
-  },
-  byId: {
-    'dash-1': {
-      id: 'dash-1',
-      slug: 'dashboard',
-      viewports: [],
-      colorSchemes: ['light', 'dark'],
-      format: 'png',
-    },
-    'hero-1': {
-      id: 'hero-1',
-      slug: 'homepage-hero',
-      viewports: ['mobile', 'desktop'],
-      colorSchemes: ['light', 'dark'],
-      format: 'png',
-    },
-    'simple-1': {
-      id: 'simple-1',
       slug: 'simple',
       viewports: [],
       colorSchemes: [],
@@ -58,25 +32,18 @@ const testManifest: Manifest = {
 describe('Heroshot', () => {
   beforeEach(() => {
     document.documentElement.classList.remove('dark');
-    document.documentElement.removeAttribute('data-theme');
+    delete document.documentElement.dataset.theme;
   });
 
   afterEach(() => {
     document.documentElement.classList.remove('dark');
-    document.documentElement.removeAttribute('data-theme');
+    delete document.documentElement.dataset.theme;
   });
 
   describe('manifest lookup', () => {
     it('finds screenshot by name', () => {
       const wrapper = mount(Heroshot, {
         props: { name: 'Dashboard', manifest: testManifest },
-      });
-      expect(wrapper.find('img').exists()).toBe(true);
-    });
-
-    it('finds screenshot by id', () => {
-      const wrapper = mount(Heroshot, {
-        props: { id: 'dash-1', manifest: testManifest },
       });
       expect(wrapper.find('img').exists()).toBe(true);
     });

@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 
 // Mock matchMedia for jsdom
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(globalThis, 'matchMedia', {
   writable: true,
   value: (query: string) => ({
     matches: false,

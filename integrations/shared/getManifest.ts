@@ -118,23 +118,3 @@ export function emptyManifest(): Manifest {
     screenshots: {},
   };
 }
-
-/**
- * Get manifest from config.json in project root
- *
- * @param root - Project root directory
- * @param configPath - Optional explicit path to config.json
- * @returns Manifest or empty manifest if not found
- */
-export function getManifest(root: string, configPath?: string): Manifest {
-  const path = configPath ? resolve(root, configPath) : findConfig(root);
-
-  if (path && existsSync(path)) {
-    const manifest = loadManifest(path);
-    if (manifest) {
-      return manifest;
-    }
-  }
-
-  return emptyManifest();
-}
