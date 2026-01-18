@@ -49,23 +49,52 @@ The manual fix is tedious: open browser, navigate, log in, screenshot, crop, sav
 npx heroshot
 ```
 
-That's it. First time, a browser opens with a visual picker. Navigate to your app, click on elements you want to capture, name them, close when done.
+First run opens a browser with a visual picker. Click what you want, name it, done. Screenshots land in `heroshots/`, config saves to `.heroshot/config.json`. Next run regenerates everything headlessly.
 
-Your screenshots land in `heroshots/` and a config is saved to `.heroshot/config.json`.
+## Use in Your Docs
 
-Next time you run `npx heroshot`, it regenerates everything headlessly. No browser, no clicking - just fresh screenshots.
+**VitePress**
 
-## What Makes It Useful
+```ts
+// .vitepress/config.ts
+import { heroshot } from 'heroshot/plugins/vite';
+export default defineConfig({ vite: { plugins: [heroshot()] } });
+```
 
-**Point and click, not CSS selectors.** The visual picker figures out how to find elements. You just click what you want.
+```vue
+<Heroshot name="dashboard" alt="Dashboard" />
+```
 
-**Light and dark mode in one go.** If your site has themes, heroshot captures both variants automatically. One config, two screenshots.
+**Docusaurus**
 
-**Desktop, tablet, mobile from one definition.** Add `"viewports": ["desktop", "tablet", "mobile"]` and get all three sizes. Combined with both color schemes, that's 6 screenshots from one entry.
+```js
+// docusaurus.config.js
+plugins: [['heroshot/plugins/docusaurus', {}]];
+```
 
-**Log in once, capture forever.** First time, log into your app manually. Heroshot encrypts and saves your session. Headless runs are already authenticated - no login scripts needed.
+```mdx
+import { Heroshot } from 'heroshot/docusaurus';
+<Heroshot name="dashboard" alt="Dashboard" />
+```
 
-**CI-ready.** Export your session key, add it to GitHub secrets, run `heroshot` in a workflow. Screenshots update automatically.
+**MkDocs**
+
+```bash
+pip install heroshot
+```
+
+```yaml
+# mkdocs.yml
+plugins:
+  - macros:
+      modules: [heroshot]
+```
+
+```jinja
+{{ heroshot("dashboard", "Dashboard overview") }}
+```
+
+One component/macro, all variants - light/dark mode switches automatically, responsive sizes via srcset.
 
 ## Automated Updates
 
