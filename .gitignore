@@ -9,6 +9,7 @@ __pycache__/
 !.changeset
 !docs/.vitepress
 !docs/.gitignore
+!docs/.heroshot
 ha-dashboard.png
 heroshots/
 toolbar/test-results/

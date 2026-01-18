@@ -1,5 +1,5 @@
 {
-  "outputDirectory": "docs/public/screenshots",
+  "outputDirectory": "public/screenshots",
   "outputFormat": "png",
   "jpegQuality": 80,
   "browser": {
@@ -8,11 +8,7 @@
   "screenshots": [
     {
       "id": "5dytme8m",
-      "viewports": [
-        "desktop",
-        "tablet",
-        "mobile"
-      ],
+      "viewports": ["desktop", "tablet", "mobile"],
       "name": "Hero",
       "url": "https://heroshot.sh/",
       "selector": "#VPContent > div.VPHome > div.VPHero.has-image:nth-of-type(1)",

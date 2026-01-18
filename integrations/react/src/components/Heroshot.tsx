@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, createContext, useContext } from 'react';
+import React, { useState, useEffect, useMemo, createContext, useContext } from 'react';
 import {
   getScreenshot,
   getVariantPaths,
@@ -95,6 +95,13 @@ const VIEWPORT_WIDTHS: Record<string, number> = {
   desktop: 1280,
 };
 
+interface SourceEntry {
+  viewport: string;
+  srcset: string;
+  width: number;
+  media: string | undefined;
+}
+
 export function Heroshot({
   name,
   alt = '',
@@ -119,7 +126,7 @@ export function Heroshot({
     return getVariantPaths(manifest, screenshot);
   }, [manifest, screenshot]);
 
-  // Current theme-based src
+  // Current theme-based src (fallback for no viewports)
   const themeSrc = useMemo(() => {
     if (!paths) return '';
     const { light, dark } = paths;
@@ -128,29 +135,50 @@ export function Heroshot({
     return paths.default;
   }, [paths, isDark]);
 
-  // Generate srcset for responsive images
-  const srcset = useMemo(() => {
-    if (!paths || !screenshot) return '';
+  // Generate sources for <picture> element (sorted by width ascending - smallest first for max-width matching)
+  // Theme switching is done via JavaScript (isDark), not CSS media queries (prefers-color-scheme)
+  // This allows Docusaurus theme toggle to work properly
+  const sources = useMemo((): SourceEntry[] => {
+    if (!paths || !screenshot) return [];
     const { viewports } = paths;
     const viewportNames = Object.keys(viewports);
 
-    if (viewportNames.length === 0) return '';
+    if (viewportNames.length === 0) return [];
 
-    const parts: string[] = [];
-    for (const viewport of viewportNames) {
-      const vpPaths = viewports[viewport];
-      if (!vpPaths) continue;
+    // Sort viewports by width ascending (smallest first - browser picks FIRST matching source)
+    const sorted = [...viewportNames].sort((a, b) => {
+      const widthA = VIEWPORT_WIDTHS[a] || Number.parseInt(a.split('x')[0] || '1280', 10);
+      const widthB = VIEWPORT_WIDTHS[b] || Number.parseInt(b.split('x')[0] || '1280', 10);
+      return widthA - widthB;
+    });
 
-      const path = isDark && vpPaths.dark ? vpPaths.dark : vpPaths.light || vpPaths.default;
-      const width =
-        VIEWPORT_WIDTHS[viewport] || Number.parseInt(viewport.split('x')[0] || '1280', 10);
-      parts.push(`${path} ${width}w`);
-    }
+    return sorted
+      .map((viewport, index) => {
+        const vpPaths = viewports[viewport];
+        if (!vpPaths) return null;
 
-    return parts.join(', ');
+        const lightSrc = vpPaths.light || vpPaths.default;
+        const darkSrc = vpPaths.dark || vpPaths.light || vpPaths.default;
+        const width =
+          VIEWPORT_WIDTHS[viewport] || Number.parseInt(viewport.split('x')[0] || '1280', 10);
+
+        // Last (largest) viewport doesn't need a max-width constraint - it's the fallback
+        const isLast = index === sorted.length - 1;
+
+        // Use isDark to pick the correct src (JavaScript-based theme detection)
+        const currentSrc = isDark ? darkSrc : lightSrc;
+
+        return {
+          viewport,
+          srcset: currentSrc,
+          width,
+          media: isLast ? undefined : `(max-width: ${width}px)`,
+        };
+      })
+      .filter((s): s is SourceEntry => s !== null);
   }, [paths, screenshot, isDark]);
 
-  const sizes = srcset ? '(max-width: 375px) 375px, (max-width: 768px) 768px, 1280px' : undefined;
+  const hasViewports = sources.length > 0;
 
   // Warning for missing manifest
   if (!manifest) {
@@ -171,14 +199,23 @@ export function Heroshot({
     return <span style={{ color: 'red', fontSize: '12px' }}>{warning}</span>;
   }
 
-  return (
-    <img
-      src={themeSrc}
-      srcSet={srcset || undefined}
-      sizes={sizes}
-      alt={alt}
-      className={className}
-      loading="lazy"
-    />
-  );
+  // Use <picture> for responsive viewport switching
+  // Theme switching is JS-based (isDark state), viewport switching is CSS-based (media queries)
+  if (hasViewports) {
+    return (
+      <picture className={className}>
+        {sources.map(source => (
+          <source
+            key={`${source.viewport}-${isDark}`}
+            srcSet={source.srcset}
+            media={source.media}
+          />
+        ))}
+        <img src={themeSrc} alt={alt} loading="lazy" />
+      </picture>
+    );
+  }
+
+  // Fallback to simple img for no viewports
+  return <img src={themeSrc} alt={alt} className={className} loading="lazy" />;
 }

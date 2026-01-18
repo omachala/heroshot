@@ -69,13 +69,13 @@ features:
 
 <div class="showcase">
   <h2>See It In Action</h2>
-  <p class="subtitle">This screenshot is captured by heroshot with responsive variants (desktop, tablet, mobile) and color scheme support (light/dark). Toggle the theme or resize your browser - the right image loads automatically.</p>
+  <p class="subtitle">This screenshot is captured by heroshot with responsive variants (desktop, tablet, mobile) and color scheme support (light/dark). Toggle the theme or resize your browser to see it switch automatically.</p>
 
   <div class="screenshot-showcase">
     <Heroshot name="Hero" alt="Heroshot landing page screenshot" class="hero-screenshot" />
   </div>
 
-  <p class="showcase-note">That's 6 image variants from a <a href="https://github.com/omachala/heroshot/blob/main/.heroshot/config.json" target="_blank">single config entry</a> - always in sync with the live site.</p>
+  <p class="showcase-note">That's 6 image variants from a <a href="https://github.com/omachala/heroshot/blob/main/docs/.heroshot/config.json" target="_blank">single config entry</a> - always in sync with the live site.</p>
 
   <div class="try-link">
     <a href="/docs/getting-started">Try it yourself</a>

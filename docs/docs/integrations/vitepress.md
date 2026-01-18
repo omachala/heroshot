@@ -263,4 +263,4 @@ jobs:
 
 ## Real-World Example
 
-This documentation site uses heroshot to capture its own screenshots. You can check out the [actual config](https://github.com/omachala/heroshot/blob/main/.heroshot/config.json) to see how it's set up.
+This documentation site uses heroshot to capture its own screenshots. You can check out the [actual config](https://github.com/omachala/heroshot/blob/main/docs/.heroshot/config.json) to see how it's set up.
