@@ -22,15 +22,14 @@ This opens a browser with the visual picker. Start your Docusaurus dev server (`
 
 ## Where to Put Screenshots
 
-Docusaurus serves static files from `static/`. Put screenshots in `static/img/screenshots/`:
+Docusaurus serves static files from `static/`. Put screenshots in `static/heroshots/`:
 
 ```
 my-website/
 ├── docs/
 │   └── intro.md
 ├── static/
-│   └── img/
-│       └── screenshots/    # heroshot outputs here
+│   └── heroshots/    # heroshot outputs here
 ├── docusaurus.config.js
 └── package.json
 ```
@@ -39,7 +38,7 @@ Set the output directory in heroshot's toolbar (Settings), or edit `.heroshot/co
 
 ```json
 {
-  "outputDirectory": "static/img/screenshots"
+  "outputDirectory": "static/heroshots"
 }
 ```
 

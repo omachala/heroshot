@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       heroshot:
-        specifier: file:../../..
-        version: file:../../..(vitepress@1.6.4(@algolia/client-search@5.46.3)(postcss@8.5.6)(search-insights@2.17.3))(vue@3.5.26)
+        specifier: ^0.5.0
+        version: 0.5.0(vitepress@1.6.4(@algolia/client-search@5.46.3)(postcss@8.5.6)(search-insights@2.17.3))(vue@3.5.26)
     devDependencies:
       vitepress:
         specifier: ^1.5.0
@@ -755,8 +755,8 @@ packages:
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
 
-  heroshot@file:../../..:
-    resolution: {directory: ../../.., type: directory}
+  heroshot@0.5.0:
+    resolution: {integrity: sha512-fXp7h75bAR43mM/fpRKJD+/bP851i5fzSz6iLYTwA9yybXtQB+IJdTZZ6forxHmGOGnmOacVnNqtP2UolZRY5A==}
     hasBin: true
     peerDependencies:
       react: '>=18.0.0'
@@ -1672,7 +1672,7 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.4
 
-  heroshot@file:../../..(vitepress@1.6.4(@algolia/client-search@5.46.3)(postcss@8.5.6)(search-insights@2.17.3))(vue@3.5.26):
+  heroshot@0.5.0(vitepress@1.6.4(@algolia/client-search@5.46.3)(postcss@8.5.6)(search-insights@2.17.3))(vue@3.5.26):
     dependencies:
       '@clack/prompts': 0.11.0
       commander: 12.1.0

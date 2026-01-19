@@ -22,14 +22,13 @@ This opens a browser with the visual picker. Start your MkDocs dev server (`mkdo
 
 ## Where to Put Screenshots
 
-MkDocs serves everything from `docs/`. Put screenshots in `docs/assets/screenshots/`:
+MkDocs serves everything from `docs/`. Put screenshots in `docs/heroshots/`:
 
 ```
 my-project/
 ├── docs/
 │   ├── index.md
-│   └── assets/
-│       └── screenshots/    # heroshot outputs here
+│   └── heroshots/    # heroshot outputs here
 ├── mkdocs.yml
 └── requirements.txt
 ```
@@ -38,7 +37,7 @@ Set the output directory in heroshot's toolbar (Settings), or edit `.heroshot/co
 
 ```json
 {
-  "outputDirectory": "docs/assets/screenshots"
+  "outputDirectory": "docs/heroshots"
 }
 ```
 

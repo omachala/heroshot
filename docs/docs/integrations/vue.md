@@ -103,7 +103,7 @@ For Vite projects, put screenshots in `public/`:
 ```
 my-app/
 ├── public/
-│   └── screenshots/    # heroshot outputs here
+│   └── heroshots/    # heroshot outputs here
 ├── src/
 │   ├── App.vue
 │   └── main.ts
@@ -115,11 +115,11 @@ Set the output directory in heroshot config:
 
 ```json
 {
-  "outputDirectory": "public/screenshots"
+  "outputDirectory": "public/heroshots"
 }
 ```
 
-Reference them as `/screenshots/dashboard.png` in your app.
+Reference them as `/heroshots/dashboard.png` in your app.
 
 ## VitePress
 

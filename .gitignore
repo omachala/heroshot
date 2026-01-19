@@ -10,6 +10,7 @@ __pycache__/
 !docs/.vitepress
 !docs/.gitignore
 !docs/.heroshot
+!integrations/examples/*/.heroshot
 ha-dashboard.png
 heroshots/
 toolbar/test-results/

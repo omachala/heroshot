@@ -22,14 +22,14 @@ This opens a browser with the visual picker. Start your VitePress dev server (`n
 
 ## Where to Put Screenshots
 
-VitePress serves anything in `public/` at the root URL. Put screenshots in `public/screenshots/` and reference them as `/screenshots/whatever.png`.
+VitePress serves anything in `public/` at the root URL. Put screenshots in `public/heroshots/` and reference them as `/heroshots/whatever.png`.
 
 ```
 my-docs/
 ├── .vitepress/
 │   └── config.ts
 ├── public/
-│   └── screenshots/    # heroshot outputs here
+│   └── heroshots/    # heroshot outputs here
 ├── guide/
 │   └── getting-started.md
 └── package.json
@@ -39,12 +39,12 @@ Set the output directory in heroshot's toolbar (Settings), or edit `.heroshot/co
 
 ```json
 {
-  "outputDirectory": "public/screenshots"
+  "outputDirectory": "public/heroshots"
 }
 ```
 
 ::: tip
-If your VitePress site lives in a subdirectory (like `docs/`), use the full path: `docs/public/screenshots/`
+If your VitePress site lives in a subdirectory (like `docs/`), use the full path: `docs/public/heroshots/`
 :::
 
 ## Using Screenshots
