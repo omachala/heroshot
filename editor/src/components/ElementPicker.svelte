@@ -661,13 +661,15 @@
   }
 
   /**
-   * Cycle to next padding fill mode: inherit -> solid -> transparent -> inherit
+   * Cycle to next padding fill mode: inherit -> solid -> inherit
+   * NOTE: transparent mode not enabled yet
+   * To re-enable: solid -> transparent, transparent -> inherit
    */
   function cycleNextPaddingFill(current: PaddingFill): PaddingFill {
     switch (current) {
       case 'inherit': { return 'solid';
       }
-      case 'solid': { return 'transparent';
+      case 'solid': { return 'inherit'; // TODO: return 'transparent' to enable transparent mode
       }
       case 'transparent': { return 'inherit';
       }
@@ -675,13 +677,15 @@
   }
 
   /**
-   * Cycle to next element fill mode: original -> solid -> transparent -> original
+   * Cycle to next element fill mode: original -> solid -> original
+   * NOTE: transparent mode not enabled yet
+   * To re-enable: solid -> transparent, transparent -> original
    */
   function cycleNextElementFill(current: ElementFill): ElementFill {
     switch (current) {
       case 'original': { return 'solid';
       }
-      case 'solid': { return 'transparent';
+      case 'solid': { return 'original'; // TODO: return 'transparent' to enable transparent mode
       }
       case 'transparent': { return 'original';
       }

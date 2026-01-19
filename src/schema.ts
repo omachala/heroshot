@@ -48,7 +48,7 @@ export const scrollPositionSchema = z.object({
  * Background fill mode for padding area
  * - 'inherit': show actual page content (default)
  * - 'solid': fill with detected background color
- * - 'transparent': fully transparent (PNG only)
+ * - 'transparent': fully transparent (PNG only) - NOT ENABLED YET
  */
 export const paddingFillSchema = z.enum(['inherit', 'solid', 'transparent']);
 
@@ -56,7 +56,7 @@ export const paddingFillSchema = z.enum(['inherit', 'solid', 'transparent']);
  * Background fill mode for element area
  * - 'original': keep element's actual background (default)
  * - 'solid': replace with detected background color
- * - 'transparent': fully transparent (PNG only)
+ * - 'transparent': fully transparent (PNG only) - NOT ENABLED YET
  */
 export const elementFillSchema = z.enum(['original', 'solid', 'transparent']);
 
