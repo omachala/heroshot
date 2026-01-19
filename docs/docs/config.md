@@ -45,7 +45,7 @@ your-project/
         "x": 0,
         "y": 100
       },
-      "maskPadding": true,
+      "paddingFill": "solid",
       "viewports": ["desktop", "mobile"],
       "textOverrides": {
         ".user-name": "John Doe",
@@ -90,17 +90,18 @@ your-project/
 
 ## Screenshot Definition
 
-| Property        | Type     | Required | Description                                       |
-| --------------- | -------- | -------- | ------------------------------------------------- |
-| `id`            | string   | auto     | Unique identifier (auto-generated if omitted)     |
-| `name`          | string   | yes      | Display name (also used for filename)             |
-| `url`           | string   | yes      | Full URL to capture                               |
-| `selector`      | string   | no       | CSS selector for element capture                  |
-| `padding`       | object   | no       | Expand capture area beyond element                |
-| `scroll`        | object   | no       | Scroll position before capture                    |
-| `maskPadding`   | boolean  | no       | Fill padding with detected background color       |
-| `viewports`     | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`) |
-| `textOverrides` | object   | no       | Replace text content in elements before capture   |
+| Property        | Type     | Required | Description                                                  |
+| --------------- | -------- | -------- | ------------------------------------------------------------ |
+| `id`            | string   | auto     | Unique identifier (auto-generated if omitted)                |
+| `name`          | string   | yes      | Display name (also used for filename)                        |
+| `url`           | string   | yes      | Full URL to capture                                          |
+| `selector`      | string   | no       | CSS selector for element capture                             |
+| `padding`       | object   | no       | Expand capture area beyond element                           |
+| `scroll`        | object   | no       | Scroll position before capture                               |
+| `paddingFill`   | string   | no       | Padding background: `"inherit"`, `"solid"`, `"transparent"`  |
+| `elementFill`   | string   | no       | Element background: `"original"`, `"solid"`, `"transparent"` |
+| `viewports`     | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`)            |
+| `textOverrides` | object   | no       | Replace text content in elements before capture              |
 
 ::: tip Filename Generation
 Filenames are automatically derived from the screenshot `name`. Heroshot slugifies the name and appends suffixes for variants:
@@ -155,17 +156,34 @@ Restore scroll position before capturing (useful for elements below the fold):
 }
 ```
 
-### Mask Padding
+### Background Fill
 
-When `maskPadding: true`, heroshot detects the element's background color and fills the padding area with it, creating seamless screenshots:
+Control how padding and element backgrounds are rendered:
+
+**Padding fill modes** (`paddingFill`):
+
+- `"inherit"` (default) - Shows actual page content in padding area
+- `"solid"` - Fills padding with detected background color
+- `"transparent"` - Makes padding fully transparent (PNG only)
+
+**Element fill modes** (`elementFill`):
+
+- `"original"` (default) - Keeps element's actual background
+- `"solid"` - Replaces element background with detected color
+- `"transparent"` - Makes element background transparent (PNG only)
 
 ```json
 {
   "selector": ".card",
   "padding": { "top": 20, "right": 20, "bottom": 20, "left": 20 },
-  "maskPadding": true
+  "paddingFill": "solid",
+  "elementFill": "original"
 }
 ```
+
+::: tip Visual Editor
+In the visual editor, click the padding area or element to cycle through fill modes. A checkered pattern indicates transparent mode.
+:::
 
 ### Viewports
 

@@ -105,7 +105,8 @@ type ScreenshotData = {
     x: number;
     y: number;
   };
-  maskPadding?: boolean;
+  paddingFill?: 'inherit' | 'solid' | 'transparent';
+  elementFill?: 'original' | 'solid' | 'transparent';
   textOverrides?: Record<string, string>;
 };
 
@@ -146,7 +147,8 @@ function toConfigScreenshot(data: ScreenshotData): Screenshot {
     selector: data.selector,
     ...(data.padding && { padding: data.padding }),
     ...(data.scroll && { scroll: data.scroll }),
-    ...(data.maskPadding && { maskPadding: data.maskPadding }),
+    ...(data.paddingFill && { paddingFill: data.paddingFill }),
+    ...(data.elementFill && { elementFill: data.elementFill }),
     ...(data.textOverrides &&
       Object.keys(data.textOverrides).length > 0 && { textOverrides: data.textOverrides }),
   };
@@ -286,7 +288,8 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
     createdAt: index,
     ...(screenshot.padding && { padding: screenshot.padding }),
     ...(screenshot.scroll && { scroll: screenshot.scroll }),
-    ...(screenshot.maskPadding && { maskPadding: screenshot.maskPadding }),
+    ...(screenshot.paddingFill && { paddingFill: screenshot.paddingFill }),
+    ...(screenshot.elementFill && { elementFill: screenshot.elementFill }),
     ...(screenshot.textOverrides && { textOverrides: screenshot.textOverrides }),
   }));
 
