@@ -5,6 +5,7 @@ import type { Config } from './types';
 
 const HEROSHOT_DIRECTORY_NAME = '.heroshot';
 const CONFIG_FILENAME = 'config.json';
+const README_TEMPLATE_PATH = path.join(import.meta.dirname, 'templates', 'heroshotReadme.txt');
 
 /**
  * Get the .heroshot directory path for a project
@@ -12,35 +13,6 @@ const CONFIG_FILENAME = 'config.json';
 export function getHeroshotDirectory(directory: string = process.cwd()): string {
   return path.join(directory, HEROSHOT_DIRECTORY_NAME);
 }
-
-const README_CONTENT = `# Heroshot
-
-This folder contains heroshot configuration and encrypted session data.
-
-## Files
-
-- \`config.json\` - Screenshot definitions (URLs, selectors, output settings)
-- \`session.enc\` - Encrypted browser session (cookies, localStorage)
-
-## Safe to commit
-
-This folder is safe to commit to source control:
-
-- \`config.json\` contains no secrets
-- \`session.enc\` is encrypted with AES-256-GCM
-
-## CI/CD Usage
-
-To use heroshot in CI, add your session key as a secret:
-
-\`\`\`yaml
-- run: npx heroshot --session-key=\${{ secrets.HEROSHOT_SESSION_KEY }}
-\`\`\`
-
-To get your session key, run: \`npx heroshot session-key\`
-
-Learn more: https://heroshot.sh/docs
-`;
 
 /**
  * Ensure .heroshot directory exists with README
@@ -51,9 +23,11 @@ export function ensureHeroshotDirectory(directory: string = process.cwd()): stri
 
   if (!existsSync(heroshotPath)) {
     mkdirSync(heroshotPath, { recursive: true });
-    writeFileSync(readmePath, README_CONTENT, 'utf8');
+    const readmeContent = readFileSync(README_TEMPLATE_PATH, 'utf8');
+    writeFileSync(readmePath, readmeContent, 'utf8');
   } else if (!existsSync(readmePath)) {
-    writeFileSync(readmePath, README_CONTENT, 'utf8');
+    const readmeContent = readFileSync(README_TEMPLATE_PATH, 'utf8');
+    writeFileSync(readmePath, readmeContent, 'utf8');
   }
 
   return heroshotPath;

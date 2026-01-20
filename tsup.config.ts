@@ -1,3 +1,4 @@
+import { cpSync } from 'node:fs';
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
@@ -8,5 +9,9 @@ export default defineConfig({
   shims: true,
   banner: {
     js: '#!/usr/bin/env node',
+  },
+  onSuccess: async () => {
+    // Copy template files to dist
+    cpSync('src/templates', 'dist/templates', { recursive: true });
   },
 });
