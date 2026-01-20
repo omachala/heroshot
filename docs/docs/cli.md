@@ -146,10 +146,15 @@ Opens the visual picker - a browser where you point and click to define screensh
 heroshot config [options]
 ```
 
+| Option    | Description                            |
+| --------- | -------------------------------------- |
+| `--reset` | Clear existing session and start fresh |
+| `--only`  | Only run config, skip sync afterwards  |
+
+#### Color scheme preview
+
 | Option    | Description                                    |
 | --------- | ---------------------------------------------- |
-| `--reset` | Clear existing session and start fresh         |
-| `--only`  | Only run config, skip sync afterwards          |
 | `--light` | Force light mode (prefers-color-scheme: light) |
 | `--dark`  | Force dark mode (prefers-color-scheme: dark)   |
 
