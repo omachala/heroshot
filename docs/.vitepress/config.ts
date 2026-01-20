@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitepress';
+import { resolve } from 'node:path';
 import llmstxt from 'vitepress-plugin-llms';
 import { heroshot } from '../../integrations/shared/vitePlugin';
 
@@ -11,6 +12,15 @@ const OG_IMAGE = `${SITE_URL}/screenshots/hero-desktop-light.png`;
 export default defineConfig({
   vite: {
     plugins: [llmstxt(), heroshot()],
+    resolve: {
+      alias: {
+        // Resolve heroshot integrations to local source (npm package doesn't include dist/integrations)
+        'heroshot/vitepress': resolve(__dirname, '../../integrations/vue/src/index.ts'),
+        'heroshot/vue': resolve(__dirname, '../../integrations/vue/src/index.ts'),
+        'heroshot/react': resolve(__dirname, '../../integrations/react/src/index.ts'),
+        'heroshot/docusaurus': resolve(__dirname, '../../integrations/react/src/index.ts'),
+      },
+    },
   },
   title: SITE_NAME,
   description: DEFAULT_DESCRIPTION,
