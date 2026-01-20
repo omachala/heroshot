@@ -655,6 +655,8 @@ type SyncOptions = {
   sessionKey?: string;
   /** Delete stale files in output directory (only works when running full sync without filter) */
   clean?: boolean;
+  /** Skip stale file detection (for oneshot mode) */
+  skipStaleCheck?: boolean;
 };
 
 /**
@@ -949,11 +951,11 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   captureSpinner.stop('Screenshots captured');
 
-  // Stale file detection (only for full sync without filter)
+  // Stale file detection (only for full sync without filter, skip in oneshot mode)
   let staleFiles: string[] = [];
   let deletedFiles: string[] = [];
 
-  if (!filterPattern) {
+  if (!filterPattern && !options.skipStaleCheck) {
     // Get all existing files in output directory
     const existingFiles = getExistingFiles(outputDirectory);
 

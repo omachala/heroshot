@@ -194,6 +194,7 @@ async function handleUrlCapture(
     config: shotConfig,
     outputDirectory,
     sessionKey,
+    skipStaleCheck: true, // Don't check for stale files in oneshot mode
   });
 
   if (options?.save && result.failed === 0) {
