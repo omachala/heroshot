@@ -223,6 +223,7 @@
           class="h-8 px-2.5 rounded-md flex items-center justify-center transition-colors bg-slate-600 hover:bg-slate-500 text-sm font-medium"
           onclick={onDone}
           onpointerdown={(event) => event.stopPropagation()}
+          title="Done"
         >
           Done
         </button>
