@@ -2,4 +2,4 @@
 'heroshot': patch
 ---
 
-Add `heroshot/virtual` TypeScript types for virtual module imports, docs improvements
+Add `heroshot/virtual` TypeScript types for virtual module imports

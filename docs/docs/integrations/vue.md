@@ -93,12 +93,11 @@ The component handles everything:
 
 ### Props
 
-| Prop       | Type       | Description                                     |
-| ---------- | ---------- | ----------------------------------------------- |
-| `name`     | `string`   | Screenshot name (as defined in heroshot config) |
-| `alt`      | `string`   | Alt text for accessibility                      |
-| `class`    | `string`   | CSS class to apply to the image                 |
-| `manifest` | `Manifest` | Optional - override manifest (skips plugin)     |
+| Prop    | Type     | Description                                     |
+| ------- | -------- | ----------------------------------------------- |
+| `name`  | `string` | Screenshot name (as defined in heroshot config) |
+| `alt`   | `string` | Alt text for accessibility                      |
+| `class` | `string` | CSS class to apply to the image                 |
 
 ## Where to Put Screenshots
 
@@ -163,6 +162,10 @@ const features = [
 ```
 
 ## Nuxt
+
+::: warning Untested
+This setup follows Nuxt conventions but hasn't been tested in a real Nuxt project. Please [report any issues](https://github.com/omachala/heroshot/issues).
+:::
 
 For Nuxt apps, the setup is similar. Add the Vite plugin to your `nuxt.config.ts`:
 

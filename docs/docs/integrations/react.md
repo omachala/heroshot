@@ -14,9 +14,7 @@ Install heroshot:
 npm install heroshot
 ```
 
-The component needs access to the manifest (your heroshot config). There are two ways to provide it:
-
-### Option 1: Vite Plugin (Recommended)
+### Vite Plugin Setup
 
 If you're using Vite, add the plugin to your config:
 
@@ -51,9 +49,9 @@ Add `"heroshot/virtual"` to your `tsconfig.json` types for autocomplete:
 
 :::
 
-### Option 2: Provider Component
+### Manual Setup (No Plugin)
 
-If you're not using Vite (or prefer manual control), wrap your app with `HeroshotProvider`:
+If you're not using Vite, wrap your app with `HeroshotProvider`:
 
 ```tsx
 import { HeroshotProvider } from 'heroshot/react';
@@ -64,9 +62,9 @@ function App() {
 }
 ```
 
-### Option 3: Webpack Plugin (Docusaurus)
-
-Docusaurus uses webpack, not Vite. See the [Docusaurus integration](/docs/integrations/docusaurus) for the webpack-based setup.
+::: tip Docusaurus
+Docusaurus uses webpack, not Vite. See the [Docusaurus integration](/docs/integrations/docusaurus) for webpack-based setup.
+:::
 
 ## Using the Component
 
@@ -93,12 +91,11 @@ The component handles everything:
 
 ### Props
 
-| Prop        | Type       | Description                                          |
-| ----------- | ---------- | ---------------------------------------------------- |
-| `name`      | `string`   | Screenshot name (as defined in heroshot config)      |
-| `alt`       | `string`   | Alt text for accessibility                           |
-| `className` | `string`   | CSS class to apply to the image                      |
-| `manifest`  | `Manifest` | Optional - override manifest (skips provider/plugin) |
+| Prop        | Type     | Description                                     |
+| ----------- | -------- | ----------------------------------------------- |
+| `name`      | `string` | Screenshot name (as defined in heroshot config) |
+| `alt`       | `string` | Alt text for accessibility                      |
+| `className` | `string` | CSS class to apply to the image                 |
 
 ## Where to Put Screenshots
 
