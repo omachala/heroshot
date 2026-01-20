@@ -3,7 +3,7 @@ import path from 'node:path';
 import { setup } from '../browser/browser';
 import { getConfigPath, loadConfig, saveConfig } from '../configFile';
 import { getSessionPath, loadLocalKey } from '../session';
-import { sync } from '../sync';
+import { sync } from '../sync/sync';
 import type { Config, Screenshot, ShotCommandOptions } from '../types';
 import { error, log, outro, verbose } from '../ui';
 import { buildShotConfig } from './buildShotConfig';

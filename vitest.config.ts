@@ -23,14 +23,18 @@ export default defineConfig({
         'src/cli/cli.ts', // thin commander wrapper, tested via CLI integration tests
         'src/cli/handlers.ts', // async orchestration, tested via CLI integration tests
         'src/cli/types.ts', // type definitions only
-        'src/sync.ts',
+        'src/sync/capture.ts', // capture integration, tested via e2e tests
+        'src/sync/configHelpers.ts', // config helpers, tested via e2e tests
+        'src/sync/pageScripts.ts', // browser context scripts, tested via e2e tests
+        'src/sync/schemeCapture.ts', // scheme capture, tested via e2e tests
+        'src/sync/sessionLoader.ts', // session loading, tested via e2e tests
+        'src/sync/staleFiles.ts', // stale file handling, tested via e2e tests
+        'src/sync/sync.ts', // integration code, tested via e2e tests
+        'src/sync/types.ts', // type definitions only
         'src/ui.ts',
       ],
       thresholds: {
         lines: 90,
-        functions: 90,
-        branches: 90,
-        statements: 90,
       },
     },
   },

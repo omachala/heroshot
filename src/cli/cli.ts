@@ -6,8 +6,8 @@ import { intro, setVerbose } from '../ui';
 import { configAction, sessionKeyAction, shotAction } from './handlers';
 import type { ConfigActionOptions, GlobalOptions } from './types';
 
-// Read version from package.json
-const packageJsonPath = path.join(import.meta.dirname, '..', '..', 'package.json');
+// Read version from package.json (built file is dist/cli.js, so just one level up)
+const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
 const packageJson: unknown = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
 const version =
   packageJson && typeof packageJson === 'object' && 'version' in packageJson
