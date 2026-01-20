@@ -3,9 +3,8 @@
  * These functions execute in the browser via page.evaluate().
  */
 
-import type { ElementHandle, Page } from 'playwright';
+import type { Page } from 'playwright';
 import { verbose } from '../ui';
-import type { Padding } from './types';
 
 /**
  * Script to detect visible background color by walking up the DOM tree.
@@ -52,67 +51,6 @@ const GET_BACKGROUND_COLOR_SCRIPT = String.raw`
     return '#ffffff';
   }
 `;
-
-/**
- * Inject temporary mask divs to fill padding areas with background color.
- */
-export async function injectPaddingMask(
-  page: Page,
-  element: ElementHandle,
-  padding: Padding,
-  bgColor: string
-): Promise<void> {
-  const box = await element.boundingBox();
-  if (!box) return;
-
-  await page.evaluate(`
-    (() => {
-      const box = ${JSON.stringify(box)};
-      const padding = ${JSON.stringify(padding)};
-      const bgColor = ${JSON.stringify(bgColor)};
-      const maskId = 'heroshot-padding-mask';
-
-      document.querySelector('#' + maskId)?.remove();
-
-      const container = document.createElement('div');
-      container.id = maskId;
-      container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483646;';
-
-      if (padding.top > 0) {
-        const top = document.createElement('div');
-        top.style.cssText = 'position:absolute;top:' + (box.y - padding.top) + 'px;left:' + (box.x - padding.left) + 'px;width:' + (box.width + padding.left + padding.right) + 'px;height:' + padding.top + 'px;background:' + bgColor + ';';
-        container.append(top);
-      }
-
-      if (padding.bottom > 0) {
-        const bottom = document.createElement('div');
-        bottom.style.cssText = 'position:absolute;top:' + (box.y + box.height) + 'px;left:' + (box.x - padding.left) + 'px;width:' + (box.width + padding.left + padding.right) + 'px;height:' + padding.bottom + 'px;background:' + bgColor + ';';
-        container.append(bottom);
-      }
-
-      if (padding.left > 0) {
-        const left = document.createElement('div');
-        left.style.cssText = 'position:absolute;top:' + box.y + 'px;left:' + (box.x - padding.left) + 'px;width:' + padding.left + 'px;height:' + box.height + 'px;background:' + bgColor + ';';
-        container.append(left);
-      }
-
-      if (padding.right > 0) {
-        const right = document.createElement('div');
-        right.style.cssText = 'position:absolute;top:' + box.y + 'px;left:' + (box.x + box.width) + 'px;width:' + padding.right + 'px;height:' + box.height + 'px;background:' + bgColor + ';';
-        container.append(right);
-      }
-
-      document.body.append(container);
-    })()
-  `);
-}
-
-/**
- * Remove injected padding mask.
- */
-export async function removePaddingMask(page: Page): Promise<void> {
-  await page.evaluate(`document.querySelector('#heroshot-padding-mask')?.remove()`);
-}
 
 /**
  * Store original background and apply new background color to element.
@@ -174,55 +112,6 @@ export async function restoreElementBackground(page: Page, selector: string): Pr
       }
     })()
   `);
-}
-
-/**
- * Find element using shadow-piercing selector with retries.
- * The >>> syntax pierces shadow DOM boundaries.
- */
-export async function findElement(
-  page: Page,
-  selector: string,
-  maxAttempts = 10,
-  intervalMs = 500
-): Promise<ElementHandle | null> {
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const handle = await page.evaluateHandle(`
-      (() => {
-        const selector = ${JSON.stringify(selector)};
-        const parts = selector.split('>>>').map((part) => part.trim());
-        let current = document;
-
-        for (const part of parts) {
-          if (!part) continue;
-
-          const root = current instanceof Element
-            ? (current.shadowRoot ?? current)
-            : current;
-
-          const found = root.querySelector(part);
-          if (!found) return null;
-
-          current = found;
-        }
-
-        return current instanceof Element ? current : null;
-      })()
-    `);
-
-    const element = handle.asElement();
-    if (element) {
-      return element;
-    }
-
-    await handle.dispose();
-
-    if (attempt < maxAttempts) {
-      await page.waitForTimeout(intervalMs);
-    }
-  }
-
-  return null;
 }
 
 /**
