@@ -950,17 +950,25 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     await browser.close();
   };
 
-  if (schemes.length === 0) {
-    // No color scheme specified - capture once with browser default
-    await captureWithScheme();
-  } else {
-    // Capture for each color scheme (separate browser context for each)
-    for (const scheme of schemes) {
-      await captureWithScheme(scheme);
+  // Wrap capture in try/catch to ensure proper error handling and exit code
+  try {
+    if (schemes.length === 0) {
+      // No color scheme specified - capture once with browser default
+      await captureWithScheme();
+    } else {
+      // Capture for each color scheme (separate browser context for each)
+      for (const scheme of schemes) {
+        await captureWithScheme(scheme);
+      }
     }
-  }
 
-  captureSpinner.stop('Screenshots captured');
+    captureSpinner.stop('Screenshots captured');
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    captureSpinner.stop(`Failed: ${message}`);
+    logError(message);
+    return { total: totalToCapture, success: 0, failed: totalToCapture, results: [] };
+  }
 
   // Stale file detection (only for full sync without filter, skip in oneshot mode)
   let staleFiles: string[] = [];
