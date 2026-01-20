@@ -160,7 +160,7 @@ export default defineConfig({
           text: 'Integrations',
           items: [
             {
-              text: 'Doc Frameworks',
+              text: 'Docs',
               items: [
                 { text: 'VitePress', link: '/docs/integrations/vitepress' },
                 { text: 'Docusaurus', link: '/docs/integrations/docusaurus' },
