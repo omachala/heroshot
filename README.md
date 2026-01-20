@@ -98,7 +98,9 @@ One component/macro, all variants - light/dark mode switches automatically, resp
 
 ## Contributing
 
-Feedback welcome - open an [issue](https://github.com/omachala/heroshot/issues) for bugs, questions, or feature requests. Pull requests are more than welcome. This is a community project aiming to solve screenshot automation end-to-end.
+This is a community project aiming to solve screenshot automation end-to-end and any feedback is valuable. Open an [issue](https://github.com/omachala/heroshot/issues) for bugs, questions, or feature requests. Pull requests are more than welcome.
+
+If you like it, give the repo a ⭐
 
 ## License
 
