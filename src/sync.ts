@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import type { BrowserContextOptions, ElementHandle, Page } from 'playwright';
-import { launchBrowser } from './browser';
+import { launchBrowser } from './browser/launchBrowser';
 import { getConfigPath, loadConfig } from './configFile';
 import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';

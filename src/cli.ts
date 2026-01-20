@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { Command } from 'commander';
-import { setup } from './browser';
+import { setup } from './browser/browser';
 import { getConfigPath, loadConfig, saveConfig } from './configFile';
 import { VIEWPORT_PRESETS } from './schema';
 import { getSessionPath, loadLocalKey } from './session';
