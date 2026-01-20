@@ -2,14 +2,49 @@ import { defineConfig } from 'vitepress';
 import llmstxt from 'vitepress-plugin-llms';
 import { heroshot } from '../../integrations/shared/vitePlugin';
 
+const SITE_URL = 'https://heroshot.sh';
+const SITE_NAME = 'Heroshot';
+const DEFAULT_DESCRIPTION =
+  'Free, open-source screenshot automation. Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.';
+const OG_IMAGE = `${SITE_URL}/screenshots/hero-desktop-light.png`;
+
 export default defineConfig({
   vite: {
     plugins: [llmstxt(), heroshot()],
   },
-  title: 'Heroshot',
-  description:
-    'Free, open-source screenshot automation. Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.',
-  sitemap: { hostname: 'https://heroshot.sh' },
+  title: SITE_NAME,
+  description: DEFAULT_DESCRIPTION,
+  sitemap: { hostname: SITE_URL },
+
+  // Dynamic page-level SEO via transformPageData
+  transformPageData(pageData) {
+    // Build canonical URL
+    const canonicalUrl = `${SITE_URL}/${pageData.relativePath}`
+      .replace(/index\.md$/, '')
+      .replace(/\.md$/, '.html');
+
+    // Get page-specific title and description
+    const pageTitle = pageData.frontmatter.title || pageData.title;
+    const fullTitle = pageTitle ? `${pageTitle} | ${SITE_NAME}` : SITE_NAME;
+    const pageDescription =
+      pageData.frontmatter.description || pageData.description || DEFAULT_DESCRIPTION;
+
+    // Add dynamic head tags
+    pageData.frontmatter.head ??= [];
+    pageData.frontmatter.head.push(
+      // Canonical URL - critical for SEO
+      ['link', { rel: 'canonical', href: canonicalUrl }],
+      // Robots
+      ['meta', { name: 'robots', content: 'index, follow' }],
+      // Dynamic Open Graph
+      ['meta', { property: 'og:title', content: fullTitle }],
+      ['meta', { property: 'og:description', content: pageDescription }],
+      ['meta', { property: 'og:url', content: canonicalUrl }],
+      // Dynamic Twitter
+      ['meta', { name: 'twitter:title', content: fullTitle }],
+      ['meta', { name: 'twitter:description', content: pageDescription }]
+    );
+  },
 
   head: [
     // Favicons - multiple formats for browser and Google Search
@@ -18,6 +53,10 @@ export default defineConfig({
     ['link', { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon-192.png' }],
     ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
     ['link', { rel: 'apple-touch-icon', href: '/favicon-192.png' }],
+    // Theme color for mobile browsers
+    ['meta', { name: 'theme-color', content: '#ea580c' }],
+    // Language
+    ['meta', { property: 'og:locale', content: 'en_US' }],
     // Structured data for Google Search
     [
       'script',
@@ -25,12 +64,11 @@ export default defineConfig({
       JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
-        name: 'Heroshot',
-        url: 'https://heroshot.sh',
-        logo: 'https://heroshot.sh/favicon-192.png',
-        image: 'https://heroshot.sh/favicon-192.png',
-        description:
-          'Free, open-source screenshot automation. Define screenshots once in config, update them forever with one command.',
+        name: SITE_NAME,
+        url: SITE_URL,
+        logo: `${SITE_URL}/favicon-192.png`,
+        image: `${SITE_URL}/favicon-192.png`,
+        description: DEFAULT_DESCRIPTION,
         applicationCategory: 'DeveloperApplication',
         operatingSystem: 'Windows, macOS, Linux',
         offers: {
@@ -40,40 +78,15 @@ export default defineConfig({
         },
       }),
     ],
-    // Open Graph
+    // Static Open Graph (fallbacks - dynamic ones override these)
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'Heroshot' }],
-    [
-      'meta',
-      {
-        property: 'og:description',
-        content:
-          'Free, open-source screenshot automation. Define once, regenerate forever with one command.',
-      },
-    ],
-    ['meta', { property: 'og:url', content: 'https://heroshot.sh' }],
-    [
-      'meta',
-      { property: 'og:image', content: 'https://heroshot.sh/screenshots/hero-desktop-light.png' },
-    ],
+    ['meta', { property: 'og:site_name', content: SITE_NAME }],
+    ['meta', { property: 'og:image', content: OG_IMAGE }],
     ['meta', { property: 'og:image:width', content: '2560' }],
     ['meta', { property: 'og:image:height', content: '1048' }],
-    ['meta', { property: 'og:site_name', content: 'Heroshot' }],
-    // Twitter
+    // Static Twitter (fallbacks)
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:title', content: 'Heroshot' }],
-    [
-      'meta',
-      {
-        name: 'twitter:description',
-        content:
-          'Free, open-source screenshot automation. Define once, regenerate forever with one command.',
-      },
-    ],
-    [
-      'meta',
-      { name: 'twitter:image', content: 'https://heroshot.sh/screenshots/hero-desktop-light.png' },
-    ],
+    ['meta', { name: 'twitter:image', content: OG_IMAGE }],
     // Analytics
     ['script', { async: '', src: 'https://www.googletagmanager.com/gtag/js?id=G-3MGBYS1GNM' }],
     [

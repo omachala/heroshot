@@ -1,3 +1,7 @@
+---
+description: Use Heroshot with plain Markdown. Light/dark mode screenshots for GitHub READMEs and GitLab wikis.
+---
+
 # Markdown
 
 For plain Markdown files (GitHub READMEs, GitLab wikis, or any Markdown renderer), you can use HTML's `<picture>` element to show different images for light and dark modes.

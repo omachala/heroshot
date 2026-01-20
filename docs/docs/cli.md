@@ -1,3 +1,7 @@
+---
+description: Heroshot CLI reference. Commands, options, and flags for screenshot automation from the command line.
+---
+
 # CLI Reference
 
 Everything you can do from the command line. Most of the time you'll just run `npx heroshot` and let it figure out what to do - but when you need more control, here's what's available.

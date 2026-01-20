@@ -1,3 +1,7 @@
+---
+description: Use Heroshot with React. The Heroshot component for automatic light/dark mode and responsive screenshots.
+---
+
 # React
 
 React apps using Vite or webpack can use the `<Heroshot>` component to render screenshots with automatic light/dark mode and viewport switching.

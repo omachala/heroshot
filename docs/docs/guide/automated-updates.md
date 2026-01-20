@@ -1,3 +1,7 @@
+---
+description: Automate screenshot updates with GitHub Actions. Set up CI/CD to regenerate documentation screenshots on every deploy.
+---
+
 # Automated Updates
 
 You've defined your screenshots locally. They capture your app perfectly. But your app keeps changing - new features, design tweaks, bug fixes. Running `npx heroshot` manually every time gets old fast.

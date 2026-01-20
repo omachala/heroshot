@@ -1,3 +1,7 @@
+---
+description: Use Heroshot with Vue. The Heroshot component for automatic light/dark mode and responsive screenshots.
+---
+
 # Vue
 
 Vue apps using Vite can use the `<Heroshot>` component to render screenshots with automatic light/dark mode and viewport switching.

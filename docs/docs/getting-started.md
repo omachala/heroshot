@@ -1,3 +1,7 @@
+---
+description: Get started with Heroshot in 5 minutes. Install, pick elements visually, and generate your first automated screenshots.
+---
+
 # Getting Started
 
 Let's get you from zero to automated screenshots in about five minutes.

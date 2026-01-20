@@ -1,3 +1,7 @@
+---
+description: Heroshot configuration reference. All config options for screenshots, viewports, color schemes, padding, and output settings.
+---
+
 # Configuration Reference
 
 Heroshot stores its configuration in `.heroshot/config.json` at your project root.

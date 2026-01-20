@@ -1,3 +1,7 @@
+---
+description: Use Heroshot with VitePress. Auto-refresh screenshots in dev mode with the Vite plugin integration.
+---
+
 # VitePress
 
 > Want to see it working? Check out the [full example on GitHub](https://github.com/omachala/heroshot/tree/main/integrations/examples/vitepress) - a minimal setup you can clone and run.
