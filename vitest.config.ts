@@ -15,7 +15,11 @@ export default defineConfig({
         'src/**/*.test.ts',
         'src/tests/**',
         'src/types.ts',
-        'src/browser.ts', // integration code, tested via e2e tests
+        'src/browser/browser.ts', // integration code, tested via e2e tests
+        'src/browser/injectToolbar.ts', // browser integration, tested via e2e tests
+        'src/browser/launchBrowser.ts', // browser integration, tested via e2e tests
+        'src/browser/saveCurrentConfig.ts', // browser integration, tested via e2e tests
+        'src/browser/types.ts', // type definitions only
         'src/cli/cli.ts', // thin commander wrapper, tested via CLI integration tests
         'src/cli/handlers.ts', // async orchestration, tested via CLI integration tests
         'src/cli/types.ts', // type definitions only

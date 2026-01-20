@@ -1,7 +1,7 @@
 import path from 'node:path';
 import type { Screenshot, ShotCommandOptions } from '../types';
-import { generateScreenshotFilename } from '../utils/generateScreenshotFilename';
 import { generateUid } from '../utils/generateUid';
+import { generateScreenshotFilename } from './generateScreenshotFilename';
 
 /**
  * Build a screenshot entry from CLI options.

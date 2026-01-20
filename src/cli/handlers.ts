@@ -1,6 +1,6 @@
 import { existsSync, rmSync } from 'node:fs';
 import path from 'node:path';
-import { setup } from '../browser';
+import { setup } from '../browser/browser';
 import { getConfigPath, loadConfig, saveConfig } from '../configFile';
 import { getSessionPath, loadLocalKey } from '../session';
 import { sync } from '../sync';
