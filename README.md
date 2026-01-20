@@ -96,6 +96,10 @@ One component/macro, all variants - light/dark mode switches automatically, resp
 | **CI/CD Setup**     | [Automated updates](https://heroshot.sh/docs/guide/automated-updates) |
 | **CLI Reference**   | [All commands & flags](https://heroshot.sh/docs/cli)                  |
 
+## Contributing
+
+Feedback welcome - open an [issue](https://github.com/omachala/heroshot/issues) for bugs, questions, or feature requests. Pull requests are more than welcome. This is a community project aiming to solve screenshot automation end-to-end.
+
 ## License
 
 MIT
