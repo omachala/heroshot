@@ -112,6 +112,7 @@ For crisp screenshots on retina displays, bump the scale. For smaller files, use
 | `--retina`          | Shortcut for `--scale 2`                                          |
 | `-q, --quality <n>` | Output as JPEG with given quality (1-100). Smaller files than PNG |
 | `--omit-background` | Transparent background (PNG only). Useful for element cutouts     |
+| `--viewport-only`   | Capture only the viewport, not the full scrollable page           |
 
 #### Other options
 

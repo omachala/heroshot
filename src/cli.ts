@@ -195,6 +195,7 @@ async function handleUrlCapture(
     outputDirectory,
     sessionKey,
     skipStaleCheck: true, // Don't check for stale files in oneshot mode
+    viewportOnly: options?.viewportOnly,
   });
 
   if (options?.save && result.failed === 0) {
@@ -251,6 +252,7 @@ program
   .option('--retina', 'Use retina scale (2x)')
   .option('-q, --quality <percent>', 'JPEG quality (1-100), outputs JPEG', parseInt)
   .option('--omit-background', 'Transparent background (PNG only)')
+  .option('--viewport-only', 'Capture only viewport (not full page)')
   .option('--timeout <ms>', 'Timeout in milliseconds', parseInt)
   .option('--save', 'Save screenshot definition to config')
   .option('--clean', 'Delete stale files in output directory')

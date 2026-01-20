@@ -133,6 +133,8 @@ const shotCliOptionsSchema = z.object({
   quality: z.number().int().min(1).max(100).optional(),
   /** Omit background for transparent PNG */
   omitBackground: z.boolean().optional(),
+  /** Capture only viewport instead of full page */
+  viewportOnly: z.boolean().optional(),
   /** Timeout in milliseconds */
   timeout: z.number().int().positive().optional(),
 });

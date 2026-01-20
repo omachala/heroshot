@@ -252,6 +252,8 @@ type CaptureOptions = {
   format: 'png' | 'jpeg';
   /** JPEG quality (1-100) */
   quality: number;
+  /** Capture full page (default true) or just viewport */
+  fullPage?: boolean;
 };
 
 type TakeScreenshotOptions = {
@@ -261,30 +263,30 @@ type TakeScreenshotOptions = {
   quality: number;
   clip?: { x: number; y: number; width: number; height: number };
   omitBackground?: boolean;
+  /** Capture full page (default true) or just viewport */
+  fullPage?: boolean;
 };
 
 /**
  * Take a screenshot with the given options
- * When capturing a page without clip, uses fullPage: true for full scrollable content
+ * When capturing a page without clip, uses fullPage: true for full scrollable content (unless viewportOnly)
  */
 async function takeScreenshot(options: TakeScreenshotOptions): Promise<void> {
-  const { target, outputPath, format, quality, clip, omitBackground } = options;
+  const { target, outputPath, format, quality, clip, omitBackground, fullPage = true } = options;
   const isPage = 'goto' in target;
 
   if (format === 'jpeg') {
     if (isPage && clip) {
       await target.screenshot({ path: outputPath, type: 'jpeg', quality, clip });
     } else if (isPage) {
-      // No selector = full page screenshot (entire scrollable content)
-      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage: true });
+      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage });
     } else {
       await target.screenshot({ path: outputPath, type: 'jpeg', quality });
     }
   } else if (isPage && clip) {
     await target.screenshot({ path: outputPath, type: 'png', clip, omitBackground });
   } else if (isPage) {
-    // No selector = full page screenshot (entire scrollable content)
-    await target.screenshot({ path: outputPath, type: 'png', fullPage: true, omitBackground });
+    await target.screenshot({ path: outputPath, type: 'png', fullPage, omitBackground });
   } else {
     await target.screenshot({ path: outputPath, type: 'png', omitBackground });
   }
@@ -481,7 +483,7 @@ async function captureScreenshot(
 ): Promise<{ success: boolean; error?: string; filename: string }> {
   const { name, url, selector, padding, scroll, paddingFill, elementFill, textOverrides } =
     screenshot;
-  const { format, quality } = captureOptions;
+  const { format, quality, fullPage } = captureOptions;
 
   // Generate filename from name + variant
   const filename = generateScreenshotFilename({
@@ -571,8 +573,8 @@ async function captureScreenshot(
         return { ...captureResult, filename };
       }
     } else {
-      // Full page screenshot
-      await takeScreenshot({ target: page, outputPath, format, quality });
+      // Full page screenshot (or viewport only if specified)
+      await takeScreenshot({ target: page, outputPath, format, quality, fullPage });
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -657,6 +659,8 @@ type SyncOptions = {
   clean?: boolean;
   /** Skip stale file detection (for oneshot mode) */
   skipStaleCheck?: boolean;
+  /** Capture only viewport instead of full page (oneshot mode) */
+  viewportOnly?: boolean;
 };
 
 /**
@@ -850,6 +854,7 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const captureOptions: CaptureOptions = {
     format: config.outputFormat ?? 'png',
     quality: config.jpegQuality,
+    fullPage: !options.viewportOnly, // Default true, false when --viewport-only
   };
 
   // Common browser options
