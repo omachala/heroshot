@@ -5,7 +5,7 @@ import { launchBrowser } from './browser';
 import { getConfigPath, loadConfig } from './configFile';
 import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
-import { colors, error as logError, outro, spinner, verbose, warn } from './ui';
+import { colors, log, error as logError, outro, spinner, verbose, warn } from './ui';
 import { getColorSchemes } from './utils/getColorSchemes';
 import { parseViewport } from './utils/parseViewport';
 import { generateScreenshotFilename } from './utils/screenshotPath';
@@ -761,7 +761,13 @@ function showResults(
     parts.push(colors.dim(`${staleFiles.length} stale`));
   }
 
-  outro(parts.join(', ') + ` to ${colors.dim(outputDirectory + '/')}`);
+  outro(parts.join(', '));
+
+  // Print full paths for each saved file (clickable in terminal)
+  for (const result of successfulResults) {
+    const fullPath = path.join(outputDirectory, result.filename);
+    log(`  ${colors.dim(fullPath)}`);
+  }
 
   // Log stale file hint if any (and not deleted)
   if (staleFiles.length > 0 && deletedFiles.length === 0) {
