@@ -37,6 +37,7 @@ jobs:
               - 'tsconfig*.json'
               - 'vitest*.config.ts'
               - 'playwright.config.ts'
+              - '.github/workflows/**'
             docs:
               - 'docs/**'
 
