@@ -69,7 +69,7 @@ features:
 
 <div class="showcase">
   <h2>See It In Action</h2>
-  <p class="subtitle">This screenshot is captured by heroshot with responsive variants (desktop, tablet, mobile) and color scheme support (light/dark). Toggle the theme or resize your browser to see it switch automatically.</p>
+  <p class="subtitle">This screenshot is captured by heroshot with responsive variants (desktop, tablet, mobile) and color scheme support (light/dark).<br>Toggle the theme or resize your browser to see it switch automatically.</p>
 
   <div class="screenshot-showcase">
     <Heroshot name="Hero" alt="Heroshot landing page screenshot" class="hero-screenshot" />
