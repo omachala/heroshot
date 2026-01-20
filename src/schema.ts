@@ -44,6 +44,22 @@ export const scrollPositionSchema = z.object({
   y: z.number().int().min(0).default(0),
 });
 
+/**
+ * Background fill mode for padding area
+ * - 'inherit': show actual page content (default)
+ * - 'solid': fill with detected background color
+ * - 'transparent': fully transparent (PNG only) - NOT ENABLED YET
+ */
+export const paddingFillSchema = z.enum(['inherit', 'solid', 'transparent']);
+
+/**
+ * Background fill mode for element area
+ * - 'original': keep element's actual background (default)
+ * - 'solid': replace with detected background color
+ * - 'transparent': fully transparent (PNG only) - NOT ENABLED YET
+ */
+export const elementFillSchema = z.enum(['original', 'solid', 'transparent']);
+
 /** Viewport variant - preset name or custom "WIDTHxHEIGHT" format */
 export const viewportVariantSchema = z.string().refine(
   value => {
@@ -69,8 +85,10 @@ export const screenshotSchema = z.object({
   padding: paddingSchema.optional(),
   /** Scroll position to restore when capturing */
   scroll: scrollPositionSchema.optional(),
-  /** Fill padding area with detected background color */
-  maskPadding: z.boolean().optional(),
+  /** Background fill mode for padding area */
+  paddingFill: paddingFillSchema.optional(),
+  /** Background fill mode for element area */
+  elementFill: elementFillSchema.optional(),
   /** Viewport variants - generates screenshot for each (e.g., ["desktop", "mobile", "400x500"]) */
   viewports: z.array(viewportVariantSchema).optional(),
   /** Text overrides - selector (relative to main element) -> replacement text */
@@ -115,6 +133,8 @@ const shotCliOptionsSchema = z.object({
   quality: z.number().int().min(1).max(100).optional(),
   /** Omit background for transparent PNG */
   omitBackground: z.boolean().optional(),
+  /** Capture only viewport instead of full page */
+  viewportOnly: z.boolean().optional(),
   /** Timeout in milliseconds */
   timeout: z.number().int().positive().optional(),
 });

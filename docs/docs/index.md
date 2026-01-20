@@ -1,3 +1,7 @@
+---
+description: Heroshot is a free, open-source screenshot automation tool. Define screenshots once with a visual picker, regenerate them forever with one command.
+---
+
 # What is Heroshot?
 
 **Screenshot automation for people who ship fast.**

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { generateSmartName, generateUid } from '../lib/naming';
-  import type { BrowserSettings, Padding, ScreenshotItem, ScrollPosition, ToolbarJob } from '../types';
+  import type { BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, ToolbarJob } from '../types';
   import EditorBar from './EditorBar.svelte';
   import ElementPicker from './ElementPicker.svelte';
   import SettingsModal from './SettingsModal.svelte';
@@ -40,6 +40,18 @@
 
   // Reference to ElementPicker for calling methods
   let elementPicker: ElementPicker;
+
+  // Highlight initially selected screenshot on mount (run once)
+  let initialHighlightDone = false;
+  $effect(() => {
+    if (!initialHighlightDone && props.initialSelectedId && elementPicker) {
+      initialHighlightDone = true;
+      const screenshot = screenshots.find(s => s.id === props.initialSelectedId);
+      if (screenshot?.selector) {
+        elementPicker.highlightElement(screenshot.selector, screenshot.id);
+      }
+    }
+  });
 
   /**
    * Toggle picker mode
@@ -114,12 +126,29 @@
   }
 
   /**
-   * Handle maskPadding update for existing screenshot
+   * Handle paddingFill update for existing screenshot
    */
-  function handleMaskPaddingUpdate(id: string, mask: boolean | undefined): void {
+  function handlePaddingFillUpdate(id: string, fill: PaddingFill): void {
     screenshots = screenshots.map((screenshot) =>
       screenshot.id === id
-        ? { ...screenshot, maskPadding: mask || undefined }
+        ? { ...screenshot, paddingFill: fill === 'inherit' ? undefined : fill }
+        : screenshot
+    );
+
+    const updated = screenshots.find((screenshot) => screenshot.id === id);
+    if (updated && id !== draftId) {
+      // Only emit for non-draft items
+      emit({ type: 'screenshot-updated', data: updated });
+    }
+  }
+
+  /**
+   * Handle elementFill update for existing screenshot
+   */
+  function handleElementFillUpdate(id: string, fill: ElementFill): void {
+    screenshots = screenshots.map((screenshot) =>
+      screenshot.id === id
+        ? { ...screenshot, elementFill: fill === 'original' ? undefined : fill }
         : screenshot
     );
 
@@ -173,15 +202,22 @@
    */
   function handleDraftConfirm(id: string): void {
     if (id === draftId) {
-      // Get current padding, scroll, and maskPadding from picker and update the screenshot
+      // Get current padding, scroll, and fill modes from picker and update the screenshot
       const padding = elementPicker.getCurrentPadding();
       const scroll = elementPicker.getCurrentScroll();
-      const mask = elementPicker.getCurrentMaskPadding();
+      const currentPaddingFill = elementPicker.getCurrentPaddingFill();
+      const currentElementFill = elementPicker.getCurrentElementFill();
       const hasPadding = padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0;
 
       screenshots = screenshots.map((screenshot) =>
         screenshot.id === id
-          ? { ...screenshot, padding: hasPadding ? { ...padding } : undefined, scroll: { ...scroll }, maskPadding: mask || undefined }
+          ? {
+              ...screenshot,
+              padding: hasPadding ? { ...padding } : undefined,
+              scroll: { ...scroll },
+              paddingFill: currentPaddingFill === 'inherit' ? undefined : currentPaddingFill,
+              elementFill: currentElementFill === 'original' ? undefined : currentElementFill,
+            }
           : screenshot
       );
 
@@ -341,7 +377,8 @@
   onNewElement={handleNewElement}
   onPaddingUpdate={handlePaddingUpdate}
   onScrollUpdate={handleScrollUpdate}
-  onMaskPaddingUpdate={handleMaskPaddingUpdate}
+  onPaddingFillUpdate={handlePaddingFillUpdate}
+  onElementFillUpdate={handleElementFillUpdate}
   onTextOverrideUpdate={handleTextOverrideUpdate}
   onCancel={handleElementCancel}
   onDeselect={handleDeselect}

@@ -15,8 +15,8 @@ importers:
         specifier: ^3.7.0
         version: 3.9.2(@algolia/client-search@5.46.3)(@mdx-js/react@3.1.1(@types/react@19.2.8)(react@18.3.1))(@types/react@19.2.8)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)
       heroshot:
-        specifier: file:../../..
-        version: file:../../..(react@18.3.1)
+        specifier: ^0.5.0
+        version: 0.5.0(react@18.3.1)
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -2926,8 +2926,8 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  heroshot@file:../../..:
-    resolution: {directory: ../../.., type: directory}
+  heroshot@0.5.0:
+    resolution: {integrity: sha512-fXp7h75bAR43mM/fpRKJD+/bP851i5fzSz6iLYTwA9yybXtQB+IJdTZZ6forxHmGOGnmOacVnNqtP2UolZRY5A==}
     hasBin: true
     peerDependencies:
       react: '>=18.0.0'
@@ -9142,7 +9142,7 @@ snapshots:
 
   he@1.2.0: {}
 
-  heroshot@file:../../..(react@18.3.1):
+  heroshot@0.5.0(react@18.3.1):
     dependencies:
       '@clack/prompts': 0.11.0
       commander: 12.1.0

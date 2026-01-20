@@ -5,7 +5,7 @@ import { launchBrowser } from './browser';
 import { getConfigPath, loadConfig } from './configFile';
 import { getSessionKey, loadSession, sessionExists } from './session';
 import type { Config, Screenshot } from './types';
-import { colors, error as logError, outro, spinner, verbose, warn } from './ui';
+import { colors, log, error as logError, outro, spinner, verbose, warn } from './ui';
 import { getColorSchemes } from './utils/getColorSchemes';
 import { parseViewport } from './utils/parseViewport';
 import { generateScreenshotFilename } from './utils/screenshotPath';
@@ -129,6 +129,72 @@ async function removePaddingMask(page: Page): Promise<void> {
 }
 
 /**
+ * Store original background and apply new background color to element.
+ * Script runs in browser context via page.evaluate().
+ */
+async function applyElementBackground(
+  page: Page,
+  selector: string,
+  bgColor: string
+): Promise<void> {
+  await page.evaluate(`
+    (() => {
+      const selector = ${JSON.stringify(selector)};
+      const bgColor = ${JSON.stringify(bgColor)};
+
+      const parts = selector.split('>>>').map((p) => p.trim());
+      let current = document;
+
+      for (const part of parts) {
+        if (!part) continue;
+        const root = current instanceof Element ? (current.shadowRoot ?? current) : current;
+        const found = root.querySelector(part);
+        if (!found) return;
+        current = found;
+      }
+
+      if (!(current instanceof Element)) return;
+
+      // Store original background for restoration
+      current.dataset.heroshotOriginalBg = current.style.backgroundColor;
+      current.style.backgroundColor = bgColor;
+    })()
+  `);
+}
+
+/**
+ * Restore original background on element.
+ * Script runs in browser context via page.evaluate().
+ */
+async function restoreElementBackground(page: Page, selector: string): Promise<void> {
+  await page.evaluate(`
+    (() => {
+      const selector = ${JSON.stringify(selector)};
+
+      const parts = selector.split('>>>').map((p) => p.trim());
+      let current = document;
+
+      for (const part of parts) {
+        if (!part) continue;
+        const root = current instanceof Element ? (current.shadowRoot ?? current) : current;
+        const found = root.querySelector(part);
+        if (!found) return;
+        current = found;
+      }
+
+      if (!(current instanceof Element)) return;
+
+      // Restore original background
+      const original = current.dataset.heroshotOriginalBg;
+      if (original !== undefined) {
+        current.style.backgroundColor = original;
+        delete current.dataset.heroshotOriginalBg;
+      }
+    })()
+  `);
+}
+
+/**
  * Find element using shadow-piercing selector with retries
  * The >>> syntax pierces shadow DOM boundaries
  */
@@ -186,37 +252,43 @@ type CaptureOptions = {
   format: 'png' | 'jpeg';
   /** JPEG quality (1-100) */
   quality: number;
+  /** Capture full page (default true) or just viewport */
+  fullPage?: boolean;
+};
+
+type TakeScreenshotOptions = {
+  target: Page | ElementHandle;
+  outputPath: string;
+  format: 'png' | 'jpeg';
+  quality: number;
+  clip?: { x: number; y: number; width: number; height: number };
+  omitBackground?: boolean;
+  /** Capture full page (default true) or just viewport */
+  fullPage?: boolean;
 };
 
 /**
  * Take a screenshot with the given options
- * When capturing a page without clip, uses fullPage: true for full scrollable content
+ * When capturing a page without clip, uses fullPage: true for full scrollable content (unless viewportOnly)
  */
-async function takeScreenshot(
-  target: Page | ElementHandle,
-  outputPath: string,
-  format: 'png' | 'jpeg',
-  quality: number,
-  clip?: { x: number; y: number; width: number; height: number }
-): Promise<void> {
+async function takeScreenshot(options: TakeScreenshotOptions): Promise<void> {
+  const { target, outputPath, format, quality, clip, omitBackground, fullPage = true } = options;
   const isPage = 'goto' in target;
 
   if (format === 'jpeg') {
     if (isPage && clip) {
       await target.screenshot({ path: outputPath, type: 'jpeg', quality, clip });
     } else if (isPage) {
-      // No selector = full page screenshot (entire scrollable content)
-      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage: true });
+      await target.screenshot({ path: outputPath, type: 'jpeg', quality, fullPage });
     } else {
       await target.screenshot({ path: outputPath, type: 'jpeg', quality });
     }
   } else if (isPage && clip) {
-    await target.screenshot({ path: outputPath, type: 'png', clip });
+    await target.screenshot({ path: outputPath, type: 'png', clip, omitBackground });
   } else if (isPage) {
-    // No selector = full page screenshot (entire scrollable content)
-    await target.screenshot({ path: outputPath, type: 'png', fullPage: true });
+    await target.screenshot({ path: outputPath, type: 'png', fullPage, omitBackground });
   } else {
-    await target.screenshot({ path: outputPath, type: 'png' });
+    await target.screenshot({ path: outputPath, type: 'png', omitBackground });
   }
 }
 
@@ -267,18 +339,78 @@ type ElementCaptureOptions = {
   format: 'png' | 'jpeg';
   quality: number;
   padding?: { top: number; right: number; bottom: number; left: number };
-  maskPadding?: boolean;
+  /** Background fill mode for padding area */
+  paddingFill?: 'inherit' | 'solid' | 'transparent';
+  /** Background fill mode for element area */
+  elementFill?: 'original' | 'solid' | 'transparent';
 };
 
 /**
- * Capture element screenshot with optional padding and mask
+ * Get background color for an element via page.evaluate
+ */
+async function getElementBackgroundColor(page: Page, selector: string): Promise<string> {
+  const bgColorResult = await page.evaluate(`
+    (() => {
+      const selector = ${JSON.stringify(selector)};
+      const parts = selector.split('>>>').map((p) => p.trim());
+      let current = document;
+
+      for (const part of parts) {
+        if (!part) continue;
+        const root = current instanceof Element ? (current.shadowRoot ?? current) : current;
+        const found = root.querySelector(part);
+        if (!found) return '#ffffff';
+        current = found;
+      }
+
+      if (!(current instanceof Element)) return '#ffffff';
+
+      const detectBg = ${GET_BACKGROUND_COLOR_SCRIPT};
+      return detectBg(current);
+    })()
+  `);
+
+  return typeof bgColorResult === 'string' ? bgColorResult : '#ffffff';
+}
+
+/**
+ * Capture element screenshot with optional padding and background fill modes
  */
 async function captureElementScreenshot(
   options: ElementCaptureOptions
 ): Promise<{ success: boolean; error?: string }> {
-  const { page, element, selector, outputPath, format, quality, padding, maskPadding } = options;
+  const {
+    page,
+    element,
+    selector,
+    outputPath,
+    format,
+    quality,
+    padding,
+    paddingFill,
+    elementFill,
+  } = options;
   const hasPadding =
     padding && (padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0);
+
+  // Determine if we need transparent background (for PNG only)
+  const needsTransparent =
+    format === 'png' && (paddingFill === 'transparent' || elementFill === 'transparent');
+
+  // Determine if we need background color for solid fills
+  const needsBgColor = paddingFill === 'solid' || elementFill === 'solid';
+  let bgColor = '#ffffff';
+  if (needsBgColor) {
+    bgColor = await getElementBackgroundColor(page, selector);
+    verbose(`Detected background color: ${bgColor}`);
+  }
+
+  // Apply element background if needed
+  if (elementFill === 'solid') {
+    await applyElementBackground(page, selector, bgColor);
+  } else if (elementFill === 'transparent') {
+    await applyElementBackground(page, selector, 'transparent');
+  }
 
   if (hasPadding) {
     // Get element bounding box and expand by padding
@@ -287,31 +419,8 @@ async function captureElementScreenshot(
       return { success: false, error: 'Could not get element bounding box' };
     }
 
-    // If maskPadding is enabled, inject temporary divs to fill padding with background color
-    if (maskPadding) {
-      const bgColorResult = await page.evaluate(`
-        (() => {
-          const selector = ${JSON.stringify(selector)};
-          const parts = selector.split('>>>').map((p) => p.trim());
-          let current = document;
-
-          for (const part of parts) {
-            if (!part) continue;
-            const root = current instanceof Element ? (current.shadowRoot ?? current) : current;
-            const found = root.querySelector(part);
-            if (!found) return '#ffffff';
-            current = found;
-          }
-
-          if (!(current instanceof Element)) return '#ffffff';
-
-          const detectBg = ${GET_BACKGROUND_COLOR_SCRIPT};
-          return detectBg(current);
-        })()
-      `);
-
-      const bgColor = typeof bgColorResult === 'string' ? bgColorResult : '#ffffff';
-      verbose(`Background color: ${bgColor}`);
+    // Apply padding fill mask if needed
+    if (paddingFill === 'solid') {
       await injectPaddingMask(page, element, padding, bgColor);
     }
 
@@ -323,15 +432,33 @@ async function captureElementScreenshot(
       height: box.height + padding.top + padding.bottom,
     };
 
-    await takeScreenshot(page, outputPath, format, quality, clip);
+    await takeScreenshot({
+      target: page,
+      outputPath,
+      format,
+      quality,
+      clip,
+      omitBackground: needsTransparent,
+    });
 
-    // Clean up mask after screenshot
-    if (maskPadding) {
+    // Clean up padding mask after screenshot
+    if (paddingFill === 'solid') {
       await removePaddingMask(page);
     }
   } else {
     // No padding - use element screenshot directly
-    await takeScreenshot(element, outputPath, format, quality);
+    await takeScreenshot({
+      target: element,
+      outputPath,
+      format,
+      quality,
+      omitBackground: needsTransparent,
+    });
+  }
+
+  // Restore element background after screenshot
+  if (elementFill === 'solid' || elementFill === 'transparent') {
+    await restoreElementBackground(page, selector);
   }
 
   return { success: true };
@@ -354,8 +481,9 @@ async function captureScreenshot(
   captureOptions: CaptureOptions,
   variant: CaptureVariant = {}
 ): Promise<{ success: boolean; error?: string; filename: string }> {
-  const { name, url, selector, padding, scroll, maskPadding, textOverrides } = screenshot;
-  const { format, quality } = captureOptions;
+  const { name, url, selector, padding, scroll, paddingFill, elementFill, textOverrides } =
+    screenshot;
+  const { format, quality, fullPage } = captureOptions;
 
   // Generate filename from name + variant
   const filename = generateScreenshotFilename({
@@ -368,12 +496,33 @@ async function captureScreenshot(
   const suffix = [variant.viewportName, variant.colorScheme].filter(Boolean).join('-');
   verbose(`Capturing: ${name}${suffix ? ` (${suffix})` : ''}`);
 
+  // Ensure color scheme is set BEFORE navigation so CSS media queries apply correctly
+  if (variant.colorScheme) {
+    await page.emulateMedia({ colorScheme: variant.colorScheme });
+  }
+
   // Navigate to URL and wait for DOM to be ready
   try {
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { success: false, error: `Failed to navigate: ${message}`, filename };
+  }
+
+  // Apply color scheme after navigation
+  // Many sites (VitePress, etc.) use JS to detect prefers-color-scheme and add .dark class
+  // Since storageState may contain cached dark mode preferences, we need to force the correct state
+  if (variant.colorScheme) {
+    await page.evaluate(`
+      (() => {
+        const isDark = ${variant.colorScheme === 'dark'};
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })()
+    `);
   }
 
   // Wait for page to stabilize (images, fonts, dynamic content)
@@ -417,14 +566,15 @@ async function captureScreenshot(
         format,
         quality,
         padding,
-        maskPadding,
+        paddingFill,
+        elementFill,
       });
       if (!captureResult.success) {
         return { ...captureResult, filename };
       }
     } else {
-      // Full page screenshot
-      await takeScreenshot(page, outputPath, format, quality);
+      // Full page screenshot (or viewport only if specified)
+      await takeScreenshot({ target: page, outputPath, format, quality, fullPage });
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -507,6 +657,10 @@ type SyncOptions = {
   sessionKey?: string;
   /** Delete stale files in output directory (only works when running full sync without filter) */
   clean?: boolean;
+  /** Skip stale file detection (for oneshot mode) */
+  skipStaleCheck?: boolean;
+  /** Capture only viewport instead of full page (oneshot mode) */
+  viewportOnly?: boolean;
 };
 
 /**
@@ -611,7 +765,13 @@ function showResults(
     parts.push(colors.dim(`${staleFiles.length} stale`));
   }
 
-  outro(parts.join(', ') + ` to ${colors.dim(outputDirectory + '/')}`);
+  outro(parts.join(', '));
+
+  // Print full paths for each saved file (clickable in terminal)
+  for (const result of successfulResults) {
+    const fullPath = path.join(outputDirectory, result.filename);
+    log(`  ${colors.dim(fullPath)}`);
+  }
 
   // Log stale file hint if any (and not deleted)
   if (staleFiles.length > 0 && deletedFiles.length === 0) {
@@ -694,6 +854,7 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const captureOptions: CaptureOptions = {
     format: config.outputFormat ?? 'png',
     quality: config.jpegQuality,
+    fullPage: !options.viewportOnly, // Default true, false when --viewport-only
   };
 
   // Common browser options
@@ -801,11 +962,11 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   captureSpinner.stop('Screenshots captured');
 
-  // Stale file detection (only for full sync without filter)
+  // Stale file detection (only for full sync without filter, skip in oneshot mode)
   let staleFiles: string[] = [];
   let deletedFiles: string[] = [];
 
-  if (!filterPattern) {
+  if (!filterPattern && !options.skipStaleCheck) {
     // Get all existing files in output directory
     const existingFiles = getExistingFiles(outputDirectory);
 
