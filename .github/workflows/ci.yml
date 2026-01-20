@@ -212,9 +212,9 @@ jobs:
           files: ./coverage/lcov.info,./coverage/editor/lcov.info
           fail_ci_if_error: false
 
-  # E2E tests - run after fast checks pass
+  # E2E tests - run in parallel with everything else
   e2e:
-    needs: [lint, typecheck, unit-tests]
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -269,9 +269,9 @@ jobs:
           path: editor/test-results/
           retention-days: 7
 
-  # CLI integration tests - run after fast checks pass (parallel with e2e)
+  # CLI integration tests - run in parallel with everything else
   cli:
-    needs: [lint, typecheck, unit-tests]
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
