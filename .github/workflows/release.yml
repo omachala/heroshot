@@ -68,6 +68,8 @@ jobs:
 
       - name: Update screenshots
         run: node dist/cli.js
+        env:
+          HEROSHOT_SESSION_KEY: ${{ secrets.HEROSHOT_SESSION_KEY }}
 
       - name: Commit updated screenshots
         run: |
