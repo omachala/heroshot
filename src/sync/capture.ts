@@ -9,6 +9,7 @@ import type { Page } from 'playwright';
 import type { Screenshot } from '../types';
 import { verbose } from '../ui';
 import { generateScreenshotFilename } from '../utils/screenshotPath';
+import { scrollTo } from './browserFunctions';
 import { captureElementWithOptions } from './elementCapture';
 import { applyColorSchemeClass } from './pageScripts';
 import { buildVariantSuffix } from './results';
@@ -51,7 +52,7 @@ async function navigateAndPrepare(
 
   // Restore scroll position if saved
   if (scroll) {
-    await page.evaluate(`window.scrollTo(${scroll.x}, ${scroll.y})`);
+    await page.evaluate(scrollTo, { x: scroll.x, y: scroll.y });
     await page.waitForTimeout(100);
   }
 
