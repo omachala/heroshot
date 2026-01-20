@@ -12,7 +12,34 @@ export default defineConfig({
   sitemap: { hostname: 'https://heroshot.sh' },
 
   head: [
+    // Favicons - multiple formats for browser and Google Search
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32.png' }],
+    ['link', { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/favicon-192.png' }],
+    ['link', { rel: 'icon', href: '/favicon.ico', sizes: '48x48' }],
+    ['link', { rel: 'apple-touch-icon', href: '/favicon-192.png' }],
+    // Structured data for Google Search
+    [
+      'script',
+      { type: 'application/ld+json' },
+      JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'Heroshot',
+        url: 'https://heroshot.sh',
+        logo: 'https://heroshot.sh/favicon-192.png',
+        image: 'https://heroshot.sh/favicon-192.png',
+        description:
+          'Free, open-source screenshot automation. Define screenshots once in config, update them forever with one command.',
+        applicationCategory: 'DeveloperApplication',
+        operatingSystem: 'Windows, macOS, Linux',
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'USD',
+        },
+      }),
+    ],
     // Open Graph
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Heroshot' }],
