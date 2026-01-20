@@ -146,10 +146,15 @@ Opens the visual picker - a browser where you point and click to define screensh
 heroshot config [options]
 ```
 
+| Option    | Description                            |
+| --------- | -------------------------------------- |
+| `--reset` | Clear existing session and start fresh |
+| `--only`  | Only run config, skip sync afterwards  |
+
+#### Color scheme preview
+
 | Option    | Description                                    |
 | --------- | ---------------------------------------------- |
-| `--reset` | Clear existing session and start fresh         |
-| `--only`  | Only run config, skip sync afterwards          |
 | `--light` | Force light mode (prefers-color-scheme: light) |
 | `--dark`  | Force dark mode (prefers-color-scheme: dark)   |
 
@@ -159,7 +164,6 @@ By default, heroshot captures **both** light and dark variants of each screensho
 The capture behavior is controlled by `browser.colorScheme` in your config:
 
 - **undefined** (default): Captures both `-light` and `-dark` variants
-- **auto**: Uses browser's color scheme preference
 - **light** / **dark**: Captures single variant only
   :::
 

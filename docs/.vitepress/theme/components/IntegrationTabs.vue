@@ -14,19 +14,18 @@ const codeBlocks = {
   vitepress: {
     step1: {
       lang: 'bash',
-      raw: 'npm install heroshot',
-      html: '<span class="hl-cmd">npm</span> install heroshot',
+      raw: 'npm install heroshot\nheroshot',
+      html: '<span class="hl-cmd">npm</span> install heroshot\nheroshot',
     },
     step2: {
       lang: 'ts',
-      raw: `// .vitepress/config.ts
-import { heroshot } from 'heroshot/plugins/vite';
+      file: '.vitepress/config.ts',
+      raw: `import { heroshot } from 'heroshot/plugins/vite';
 
 export default defineConfig({
   vite: { plugins: [heroshot()] }
 });`,
-      html: `<span class="hl-comment">// .vitepress/config.ts</span>
-<span class="hl-keyword">import</span> { heroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/plugins/vite'</span>;
+      html: `<span class="hl-keyword">import</span> { heroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/plugins/vite'</span>;
 
 <span class="hl-keyword">export default</span> <span class="hl-fn">defineConfig</span>({
   vite: { plugins: [<span class="hl-fn">heroshot</span>()] }
@@ -52,17 +51,16 @@ import { Heroshot } from 'heroshot/vue';
   docusaurus: {
     step1: {
       lang: 'bash',
-      raw: 'npm install heroshot',
-      html: '<span class="hl-cmd">npm</span> install heroshot',
+      raw: 'npm install heroshot\nheroshot',
+      html: '<span class="hl-cmd">npm</span> install heroshot\nheroshot',
     },
     step2: {
       lang: 'ts',
-      raw: `// docusaurus.config.ts
-plugins: [
+      file: 'docusaurus.config.ts',
+      raw: `plugins: [
   ['heroshot/plugins/docusaurus', {}]
 ]`,
-      html: `<span class="hl-comment">// docusaurus.config.ts</span>
-plugins: [
+      html: `plugins: [
   [<span class="hl-string">'heroshot/plugins/docusaurus'</span>, {}]
 ]`,
     },
@@ -79,17 +77,16 @@ plugins: [
   mkdocs: {
     step1: {
       lang: 'bash',
-      raw: 'pip install heroshot',
-      html: '<span class="hl-cmd">pip</span> install heroshot',
+      raw: 'npm install heroshot\nheroshot',
+      html: '<span class="hl-cmd">npm</span> install heroshot\nheroshot',
     },
     step2: {
       lang: 'yaml',
-      raw: `# mkdocs.yml
-plugins:
+      file: 'mkdocs.yml',
+      raw: `plugins:
   - macros:
       modules: [heroshot]`,
-      html: `<span class="hl-comment"># mkdocs.yml</span>
-<span class="hl-attr">plugins</span>:
+      html: `<span class="hl-attr">plugins</span>:
   - <span class="hl-attr">macros</span>:
       <span class="hl-attr">modules</span>: [heroshot]`,
     },
@@ -126,7 +123,7 @@ function copyCode(code: string, event: MouseEvent) {
       <!-- VitePress -->
       <div v-show="activeTab === 'vitepress'" class="tab-panel">
         <div class="code-section">
-          <p class="code-label">1. Install the package</p>
+          <p class="code-label" data-step="1">Install</p>
           <div class="code-block">
             <div class="code-header">
               <span class="lang">{{ codeBlocks.vitepress.step1.lang }}</span>
@@ -140,10 +137,10 @@ function copyCode(code: string, event: MouseEvent) {
           </div>
         </div>
         <div class="code-section">
-          <p class="code-label">2. Add the Vite plugin</p>
+          <p class="code-label" data-step="2">Configure</p>
           <div class="code-block">
             <div class="code-header">
-              <span class="lang">{{ codeBlocks.vitepress.step2.lang }}</span>
+              <span class="file">{{ codeBlocks.vitepress.step2.file }}</span>
               <button
                 class="copy"
                 title="Copy Code"
@@ -154,7 +151,7 @@ function copyCode(code: string, event: MouseEvent) {
           </div>
         </div>
         <div class="code-section">
-          <p class="code-label">3. Use the component</p>
+          <p class="code-label" data-step="3">Use</p>
           <div class="code-block">
             <div class="code-header">
               <span class="lang">{{ codeBlocks.vitepress.step3.lang }}</span>
@@ -173,7 +170,7 @@ function copyCode(code: string, event: MouseEvent) {
       <!-- Docusaurus -->
       <div v-show="activeTab === 'docusaurus'" class="tab-panel">
         <div class="code-section">
-          <p class="code-label">1. Install the package</p>
+          <p class="code-label" data-step="1">Install</p>
           <div class="code-block">
             <div class="code-header">
               <span class="lang">{{ codeBlocks.docusaurus.step1.lang }}</span>
@@ -187,10 +184,10 @@ function copyCode(code: string, event: MouseEvent) {
           </div>
         </div>
         <div class="code-section">
-          <p class="code-label">2. Add the plugin</p>
+          <p class="code-label" data-step="2">Configure</p>
           <div class="code-block">
             <div class="code-header">
-              <span class="lang">{{ codeBlocks.docusaurus.step2.lang }}</span>
+              <span class="file">{{ codeBlocks.docusaurus.step2.file }}</span>
               <button
                 class="copy"
                 title="Copy Code"
@@ -201,7 +198,7 @@ function copyCode(code: string, event: MouseEvent) {
           </div>
         </div>
         <div class="code-section">
-          <p class="code-label">3. Use the component</p>
+          <p class="code-label" data-step="3">Use</p>
           <div class="code-block">
             <div class="code-header">
               <span class="lang">{{ codeBlocks.docusaurus.step3.lang }}</span>
@@ -220,7 +217,7 @@ function copyCode(code: string, event: MouseEvent) {
       <!-- MkDocs -->
       <div v-show="activeTab === 'mkdocs'" class="tab-panel">
         <div class="code-section">
-          <p class="code-label">1. Install the package</p>
+          <p class="code-label" data-step="1">Install</p>
           <div class="code-block">
             <div class="code-header">
               <span class="lang">{{ codeBlocks.mkdocs.step1.lang }}</span>
@@ -234,10 +231,10 @@ function copyCode(code: string, event: MouseEvent) {
           </div>
         </div>
         <div class="code-section">
-          <p class="code-label">2. Add the macro module</p>
+          <p class="code-label" data-step="2">Configure</p>
           <div class="code-block">
             <div class="code-header">
-              <span class="lang">{{ codeBlocks.mkdocs.step2.lang }}</span>
+              <span class="file">{{ codeBlocks.mkdocs.step2.file }}</span>
               <button
                 class="copy"
                 title="Copy Code"
@@ -248,7 +245,7 @@ function copyCode(code: string, event: MouseEvent) {
           </div>
         </div>
         <div class="code-section">
-          <p class="code-label">3. Use the macro</p>
+          <p class="code-label" data-step="3">Use</p>
           <div class="code-block">
             <div class="code-header">
               <span class="lang">{{ codeBlocks.mkdocs.step3.lang }}</span>
@@ -307,6 +304,7 @@ function copyCode(code: string, event: MouseEvent) {
 }
 
 .tabs-content {
+  position: relative;
   background: var(--vp-c-bg);
   border-radius: 12px;
   padding: 24px;
@@ -314,9 +312,15 @@ function copyCode(code: string, event: MouseEvent) {
 }
 
 .tab-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .tab-panel {
+    grid-template-columns: 1fr;
+  }
 }
 
 .code-section {
@@ -325,11 +329,54 @@ function copyCode(code: string, event: MouseEvent) {
   gap: 8px;
 }
 
+.code-section .code-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.code-section .code-block pre {
+  flex: 1;
+}
+
 .code-label {
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--vp-c-text-1);
   margin: 0;
+}
+
+.code-label::before {
+  content: '';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--vp-c-brand-soft);
+  border-radius: 8px;
+  flex-shrink: 0;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px;
+}
+
+/* Install icon - download arrow */
+.code-label[data-step='1']::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ea580c' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'/%3E%3C/svg%3E");
+}
+
+/* Configure icon - gear */
+.code-label[data-step='2']::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ea580c' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E");
+}
+
+/* Use icon - code brackets */
+.code-label[data-step='3']::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ea580c' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4'/%3E%3C/svg%3E");
 }
 
 .code-block {
@@ -356,6 +403,12 @@ function copyCode(code: string, event: MouseEvent) {
   font-weight: 500;
   color: var(--vp-c-text-3);
   text-transform: uppercase;
+}
+
+.code-header .file {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vp-c-text-3);
 }
 
 .code-header .copy {
@@ -441,10 +494,9 @@ function copyCode(code: string, event: MouseEvent) {
 }
 
 .learn-more {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 8px;
+  position: absolute;
+  top: 24px;
+  right: 24px;
   font-size: 14px;
   font-weight: 500;
   color: var(--vp-c-brand-1);
@@ -457,6 +509,15 @@ function copyCode(code: string, event: MouseEvent) {
 
 .learn-more::after {
   content: ' \2192';
+}
+
+@media (max-width: 900px) {
+  .learn-more {
+    position: static;
+    display: block;
+    margin-top: 16px;
+    text-align: right;
+  }
 }
 
 @media (max-width: 640px) {

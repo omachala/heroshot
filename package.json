@@ -53,6 +53,9 @@
       "types": "./dist/integrations/shared/docusaurusPlugin.d.ts",
       "import": "./dist/integrations/shared/docusaurusPlugin.js",
       "require": "./dist/integrations/shared/docusaurusPlugin.cjs"
+    },
+    "./virtual": {
+      "types": "./dist/integrations/shared/virtual.d.ts"
     }
   },
   "files": [

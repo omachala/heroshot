@@ -93,12 +93,11 @@ The component handles everything:
 
 ### Props
 
-| Prop       | Type       | Description                                     |
-| ---------- | ---------- | ----------------------------------------------- |
-| `name`     | `string`   | Screenshot name (as defined in heroshot config) |
-| `alt`      | `string`   | Alt text for accessibility                      |
-| `class`    | `string`   | CSS class to apply to the image                 |
-| `manifest` | `Manifest` | Optional - override manifest (skips plugin)     |
+| Prop    | Type     | Description                                     |
+| ------- | -------- | ----------------------------------------------- |
+| `name`  | `string` | Screenshot name (as defined in heroshot config) |
+| `alt`   | `string` | Alt text for accessibility                      |
+| `class` | `string` | CSS class to apply to the image                 |
 
 ## Where to Put Screenshots
 

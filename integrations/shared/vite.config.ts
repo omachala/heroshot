@@ -5,8 +5,9 @@ import dts from 'vite-plugin-dts';
 export default defineConfig({
   plugins: [
     dts({
-      include: ['vitePlugin.ts', 'docusaurusPlugin.ts'],
+      include: ['vitePlugin.ts', 'docusaurusPlugin.ts', 'virtual.d.ts'],
       outDir: '../../dist/integrations/shared',
+      copyDtsFiles: true,
     }),
   ],
   build: {
