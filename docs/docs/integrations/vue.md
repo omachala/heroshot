@@ -163,10 +163,6 @@ const features = [
 
 ## Nuxt
 
-::: warning Untested
-This setup follows Nuxt conventions but hasn't been tested in a real Nuxt project. Please [report any issues](https://github.com/omachala/heroshot/issues).
-:::
-
 For Nuxt apps, the setup is similar. Add the Vite plugin to your `nuxt.config.ts`:
 
 ```ts
