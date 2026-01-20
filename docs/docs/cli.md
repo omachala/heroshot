@@ -41,13 +41,17 @@ heroshot -c custom.json     # Use custom config file
 
 ### `heroshot <url>` (one-shot mode)
 
-Quick capture without touching your config. Just pass a URL and get a screenshot:
+**The fastest way to capture a screenshot.** Just pass a URL:
 
 ```bash
 heroshot https://example.com
+heroshot https://example.com -o screenshot.png
+heroshot https://example.com --selector ".hero" -o hero.png
 ```
 
-This is great for one-off captures, or for building your config from the command line instead of the visual picker. Add `--save` to any one-shot command and it gets added to your config for future syncs.
+One-shot mode captures immediately without touching your config. By default it captures **light mode only** - use `--light --dark` together to capture both variants.
+
+Add `--save` to any one-shot command and it gets added to your config for future syncs.
 
 **Two ways to build your screenshot collection:**
 
@@ -57,11 +61,11 @@ This is great for one-off captures, or for building your config from the command
 Both write to the same `.heroshot/config.json`. Mix and match - visual picker for exploring, CLI for scripting or when you know exactly what you want.
 
 ```bash
-heroshot https://example.com                          # Full page screenshot
+heroshot https://example.com                          # Full page, light mode
 heroshot https://example.com --selector "h1"          # Element screenshot
 heroshot https://example.com --selector ".hero" -o hero.png
 heroshot https://example.com --dark --mobile          # Dark mode, mobile viewport
-heroshot https://example.com --light --dark           # Light + dark variants
+heroshot https://example.com --light --dark           # Both light + dark variants
 ```
 
 #### What to capture
@@ -96,7 +100,7 @@ If your site respects `prefers-color-scheme`, you can capture light, dark, or bo
 | `--light` | Force light color scheme |
 | `--dark`  | Force dark color scheme  |
 
-Use `--light --dark` together to capture both variants, outputting `filename-light.png` and `filename-dark.png`.
+**One-shot mode** defaults to light-only. Use `--light --dark` together to capture both variants, outputting `filename-light.png` and `filename-dark.png`.
 
 #### Image quality
 

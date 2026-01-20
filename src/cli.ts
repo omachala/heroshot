@@ -80,11 +80,16 @@ function buildScreenshotEntry(url: string, options: ShotCommandOptions | undefin
   return screenshot;
 }
 
-/** Get color scheme from CLI options */
-function getColorScheme(options: ShotCommandOptions | undefined): 'light' | 'dark' | undefined {
+/** Get color scheme from CLI options for oneshot mode */
+function getColorScheme(
+  options: ShotCommandOptions | undefined,
+  bothVariants: boolean
+): 'light' | 'dark' | undefined {
+  if (options?.dark && options?.light) return undefined; // Both flags = both variants
   if (options?.dark) return 'dark';
   if (options?.light) return 'light';
-  return undefined;
+  // Default: light-only for oneshot, both variants for config sync
+  return bothVariants ? undefined : 'light';
 }
 
 /** Get device scale factor from CLI options */
@@ -135,7 +140,7 @@ function buildShotConfig(
     jpegQuality: options?.quality ?? existingConfig?.jpegQuality ?? 80,
     browser: {
       viewport: getViewport(options, existingConfig),
-      colorScheme: getColorScheme(options),
+      colorScheme: getColorScheme(options, false), // false = oneshot mode, default to light-only
       deviceScaleFactor: getDeviceScaleFactor(options, existingConfig),
     },
     screenshots: [screenshot],
@@ -229,8 +234,8 @@ async function handleDefaultCommand(
 
 // Default command: handle URL capture OR run setup/sync
 program
-  .command('shot [url]', { isDefault: true, hidden: true })
-  .description('Take a screenshot (URL capture mode, or sync if no URL)')
+  .command('shot [url]', { isDefault: true })
+  .description('Capture URL directly, or sync all screenshots from config')
   .option('--selector <selector...>', 'CSS selector(s) to capture')
   .option('-o, --output <file>', 'Output filename')
   .option('-p, --padding <pixels>', 'Padding around element', parseInt)
