@@ -36,7 +36,9 @@ describe('getExistingFiles', () => {
     writeFileSync(path.join(TEST_DIR, 'config.json'), '');
 
     const files = getExistingFiles(TEST_DIR);
-    expect(files.sort()).toEqual(['screenshot1.png', 'screenshot2.jpg'].sort());
+    expect([...files].sort((a, b) => a.localeCompare(b))).toEqual(
+      ['screenshot1.png', 'screenshot2.jpg'].sort((a, b) => a.localeCompare(b))
+    );
   });
 
   it('handles mixed file types', () => {
@@ -45,7 +47,9 @@ describe('getExistingFiles', () => {
     writeFileSync(path.join(TEST_DIR, 'c.jpeg'), ''); // Not included - only .jpg
 
     const files = getExistingFiles(TEST_DIR);
-    expect(files.sort()).toEqual(['a.png', 'b.jpg'].sort());
+    expect([...files].sort((a, b) => a.localeCompare(b))).toEqual(
+      ['a.png', 'b.jpg'].sort((a, b) => a.localeCompare(b))
+    );
   });
 });
 
@@ -70,7 +74,9 @@ describe('deleteStaleFiles', () => {
 
     const deleted = deleteStaleFiles(TEST_DIR, ['stale1.png', 'stale2.png']);
 
-    expect(deleted.sort()).toEqual(['stale1.png', 'stale2.png'].sort());
+    expect([...deleted].sort((a, b) => a.localeCompare(b))).toEqual(
+      ['stale1.png', 'stale2.png'].sort((a, b) => a.localeCompare(b))
+    );
     expect(existsSync(path.join(TEST_DIR, 'stale1.png'))).toBe(false);
     expect(existsSync(path.join(TEST_DIR, 'stale2.png'))).toBe(false);
     expect(existsSync(path.join(TEST_DIR, 'keep.png'))).toBe(true);
@@ -93,7 +99,9 @@ describe('findStaleFiles', () => {
     const written = new Set(['new.png']);
 
     const stale = findStaleFiles(existing, written);
-    expect(stale.sort()).toEqual(['old1.png', 'old2.png'].sort());
+    expect([...stale].sort((a, b) => a.localeCompare(b))).toEqual(
+      ['old1.png', 'old2.png'].sort((a, b) => a.localeCompare(b))
+    );
   });
 
   it('returns empty array when all files are current', () => {
@@ -109,7 +117,9 @@ describe('findStaleFiles', () => {
     const written = new Set<string>();
 
     const stale = findStaleFiles(existing, written);
-    expect(stale.sort()).toEqual(['a.png', 'b.png'].sort());
+    expect([...stale].sort((a, b) => a.localeCompare(b))).toEqual(
+      ['a.png', 'b.png'].sort((a, b) => a.localeCompare(b))
+    );
   });
 
   it('handles empty existing files', () => {

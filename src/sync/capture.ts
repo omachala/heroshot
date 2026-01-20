@@ -100,7 +100,8 @@ export async function captureScreenshot(
   });
 
   const suffix = buildVariantSuffix(variant.viewportName, variant.colorScheme);
-  verbose(`Capturing: ${name}${suffix ? ` (${suffix})` : ''}`);
+  const suffixDisplay = suffix ? ` (${suffix})` : '';
+  verbose(`Capturing: ${name}${suffixDisplay}`);
 
   // Navigate and prepare page
   const navResult = await navigateAndPrepare(page, url, variant.colorScheme, scroll);
@@ -169,9 +170,10 @@ export async function captureAndLog(
 
   const suffix = buildVariantSuffix(variant.viewportName, variant.colorScheme);
   const displayName = suffix ? `${screenshot.name} (${suffix})` : screenshot.name;
+  const idSuffix = suffix ? `-${suffix}` : '';
 
   return {
-    id: `${screenshot.id}${suffix ? `-${suffix}` : ''}`,
+    id: `${screenshot.id}${idSuffix}`,
     name: displayName,
     filename: result.filename,
     success: result.success,

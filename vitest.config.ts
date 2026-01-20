@@ -23,10 +23,15 @@ export default defineConfig({
         'src/cli/cli.ts', // thin commander wrapper, tested via CLI integration tests
         'src/cli/handlers.ts', // async orchestration, tested via CLI integration tests
         'src/cli/types.ts', // type definitions only
+        'src/sync/browserFunctions.ts', // browser context functions, tested via e2e tests
         'src/sync/capture.ts', // capture integration, tested via e2e tests
         'src/sync/configHelpers.ts', // config helpers, tested via e2e tests
+        'src/sync/elementCapture.ts', // element capture, tested via e2e tests
+        'src/sync/elementFinder.ts', // element finding, tested via e2e tests
+        'src/sync/paddingMask.ts', // padding mask, tested via e2e tests
         'src/sync/pageScripts.ts', // browser context scripts, tested via e2e tests
         'src/sync/schemeCapture.ts', // scheme capture, tested via e2e tests
+        'src/sync/screenshot.ts', // screenshot capture, tested via e2e tests
         'src/sync/sessionLoader.ts', // session loading, tested via e2e tests
         'src/sync/staleFiles.ts', // stale file handling, tested via e2e tests
         'src/sync/sync.ts', // integration code, tested via e2e tests

@@ -122,10 +122,14 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
         if (currentUrl === event.url) {
           // Already on the right page - send highlight job via event
           pendingJob = { type: 'highlight', selector: event.selector, screenshotId: event.id };
-          void currentPage.evaluate(dispatchHighlightJob, {
-            selector: event.selector,
-            screenshotId: event.id,
-          });
+          // Fire and forget - we don't need to wait for this
+          currentPage
+            .evaluate(dispatchHighlightJob, {
+              selector: event.selector,
+              screenshotId: event.id,
+            })
+            // eslint-disable-next-line @typescript-eslint/no-empty-function -- fire and forget, errors handled by toolbar
+            .catch(() => {});
         } else {
           // Navigate to the page - toolbar will get job on inject
           pendingJob = {
@@ -134,7 +138,8 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
             selector: event.selector,
             screenshotId: event.id,
           };
-          void currentPage.goto(event.url, { waitUntil: 'domcontentloaded' });
+          // eslint-disable-next-line @typescript-eslint/no-empty-function -- fire and forget navigation
+          currentPage.goto(event.url, { waitUntil: 'domcontentloaded' }).catch(() => {});
         }
         break;
       }
@@ -194,7 +199,8 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
   const handlePageClose = (page: Page) => {
     page.on('close', () => {
       if (context.pages().length === 0) {
-        void browser.close();
+        // eslint-disable-next-line @typescript-eslint/no-empty-function -- fire and forget browser close
+        browser.close().catch(() => {});
       }
     });
   };

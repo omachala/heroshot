@@ -34,9 +34,9 @@ export function querySelectorDeep(selector: string): Element | null {
 function rgbToHex(bgColor: string): string {
   const rgbMatch = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(bgColor);
   if (rgbMatch?.[1] && rgbMatch[2] && rgbMatch[3]) {
-    const red = parseInt(rgbMatch[1], 10);
-    const green = parseInt(rgbMatch[2], 10);
-    const blue = parseInt(rgbMatch[3], 10);
+    const red = Number.parseInt(rgbMatch[1], 10);
+    const green = Number.parseInt(rgbMatch[2], 10);
+    const blue = Number.parseInt(rgbMatch[3], 10);
     return (
       '#' +
       red.toString(16).padStart(2, '0') +

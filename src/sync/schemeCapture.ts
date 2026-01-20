@@ -100,9 +100,10 @@ export async function captureWithScheme(
           colorScheme: hasMultipleSchemes ? colorScheme : undefined,
         };
         const suffix = [variant.viewportName, variant.colorScheme].filter(Boolean).join(', ');
+        const suffixDisplay = suffix ? ` (${suffix})` : '';
 
         captureSpinner.message(
-          `Capturing ${progress.captured}/${progress.total}: ${screenshot.name}${suffix ? ` (${suffix})` : ''}`
+          `Capturing ${progress.captured}/${progress.total}: ${screenshot.name}${suffixDisplay}`
         );
 
         const result = await captureAndLog(
