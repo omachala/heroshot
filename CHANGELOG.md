@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.6.1
+
+### Patch Changes
+
+- 1e8dfe3: Add `heroshot/virtual` TypeScript types for virtual module imports
+
 ## 0.6.0
 
 ### Minor Changes
