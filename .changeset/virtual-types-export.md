@@ -2,4 +2,4 @@
 'heroshot': patch
 ---
 
-Expose virtual module TypeScript declarations via `heroshot/virtual` export
+Add `heroshot/virtual` TypeScript types for virtual module imports, docs improvements

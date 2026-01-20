@@ -157,20 +157,25 @@ export default defineConfig({
           items: [{ text: 'Automated Updates', link: '/docs/guide/automated-updates' }],
         },
         {
-          text: 'Doc Frameworks',
+          text: 'Integrations',
           items: [
-            { text: 'VitePress', link: '/docs/integrations/vitepress' },
-            { text: 'Docusaurus', link: '/docs/integrations/docusaurus' },
-            { text: 'MkDocs', link: '/docs/integrations/mkdocs' },
-            { text: 'GitBook', link: '/docs/integrations/gitbook' },
-          ],
-        },
-        {
-          text: 'UI Components',
-          items: [
-            { text: 'React', link: '/docs/integrations/react' },
-            { text: 'Vue', link: '/docs/integrations/vue' },
-            { text: 'Markdown', link: '/docs/integrations/markdown' },
+            {
+              text: 'Doc Frameworks',
+              items: [
+                { text: 'VitePress', link: '/docs/integrations/vitepress' },
+                { text: 'Docusaurus', link: '/docs/integrations/docusaurus' },
+                { text: 'MkDocs', link: '/docs/integrations/mkdocs' },
+                { text: 'GitBook', link: '/docs/integrations/gitbook' },
+              ],
+            },
+            {
+              text: 'UI Frameworks',
+              items: [
+                { text: 'React', link: '/docs/integrations/react' },
+                { text: 'Vue', link: '/docs/integrations/vue' },
+                { text: 'Markdown', link: '/docs/integrations/markdown' },
+              ],
+            },
           ],
         },
       ],
