@@ -164,7 +164,6 @@ By default, heroshot captures **both** light and dark variants of each screensho
 The capture behavior is controlled by `browser.colorScheme` in your config:
 
 - **undefined** (default): Captures both `-light` and `-dark` variants
-- **auto**: Uses browser's color scheme preference
 - **light** / **dark**: Captures single variant only
   :::
 
