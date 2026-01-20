@@ -46,9 +46,7 @@ program
   .option('--scale <factor>', 'Device scale factor (1, 2, 3)', parseInt)
   .option('--retina', 'Use retina scale (2x)')
   .option('-q, --quality <percent>', 'JPEG quality (1-100), outputs JPEG', parseInt)
-  .option('--omit-background', 'Transparent background (PNG only)')
   .option('--viewport-only', 'Capture only viewport (not full page)')
-  .option('--timeout <ms>', 'Timeout in milliseconds', parseInt)
   .option('--save', 'Save screenshot definition to config')
   .option('--clean', 'Delete stale files in output directory')
   .action(async (url?: string, options?: ShotCommandOptions) => {
