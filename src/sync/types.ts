@@ -82,6 +82,8 @@ export type SyncOptions = {
   skipStaleCheck?: boolean;
   /** Capture only viewport instead of full page (oneshot mode) */
   viewportOnly?: boolean;
+  /** Number of parallel capture workers (default: 1) */
+  workers?: number;
 };
 
 /** Padding dimensions */

@@ -141,6 +141,8 @@ export const shotCommandOptionsSchema = shotCliOptionsSchema.extend({
   save: z.boolean().optional(),
   /** Delete stale files in output directory */
   clean: z.boolean().optional(),
+  /** Number of parallel capture workers */
+  workers: z.number().int().min(1).optional(),
 });
 
 /** Global config */

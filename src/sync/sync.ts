@@ -13,6 +13,7 @@ import {
   filterScreenshots,
   resolveOutputDirectory,
 } from './configHelpers';
+import { buildCaptureJobs, captureParallel } from './parallelCapture';
 import { showResults } from './results';
 import { captureWithScheme } from './schemeCapture';
 import { loadEncryptedSession } from './sessionLoader';
@@ -66,14 +67,29 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   // Start capture
   const captureSpinner = spinner();
-  captureSpinner.start('Launching browser...');
+  const workers = options.workers ?? 1;
+  const launchMessage = workers > 1 ? `Launching ${workers} workers...` : 'Launching browser...';
+  captureSpinner.start(launchMessage);
 
   const results: ScreenshotResult[] = [];
   const progress = { captured: 0, total: totalToCapture };
 
   try {
-    if (schemes.length === 0) {
-      // No color scheme specified - capture once with browser default
+    if (workers > 1) {
+      // Parallel capture with multiple workers
+      const jobs = buildCaptureJobs(screenshots, schemes);
+      const parallelResults = await captureParallel({
+        jobs,
+        outputDirectory,
+        captureOptions,
+        browserOptions,
+        workers,
+        captureSpinner,
+        progress,
+      });
+      results.push(...parallelResults);
+    } else if (schemes.length === 0) {
+      // Sequential: No color scheme specified - capture once with browser default
       const schemeResults = await captureWithScheme({
         screenshots,
         outputDirectory,
@@ -86,7 +102,7 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
       });
       results.push(...schemeResults);
     } else {
-      // Capture for each color scheme
+      // Sequential: Capture for each color scheme
       for (const scheme of schemes) {
         const schemeResults = await captureWithScheme({
           screenshots,
