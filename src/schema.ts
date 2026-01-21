@@ -68,8 +68,8 @@ export const viewportVariantSchema = z.string().refine(
     // Check if it's custom format "WIDTHxHEIGHT"
     const match = /^(\d+)x(\d+)$/.exec(value);
     if (!match) return false;
-    const width = parseInt(match[1] ?? '0', 10);
-    const height = parseInt(match[2] ?? '0', 10);
+    const width = Number.parseInt(match[1] ?? '0', 10);
+    const height = Number.parseInt(match[2] ?? '0', 10);
     return width > 0 && height > 0;
   },
   { message: 'Must be "desktop", "tablet", "mobile", or "WIDTHxHEIGHT" (e.g., "400x500")' }

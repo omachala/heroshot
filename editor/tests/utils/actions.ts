@@ -6,7 +6,6 @@
  */
 
 import type { Page } from 'playwright/test';
-import { injectToolbar, TEST_PAGE_URL } from './inject-toolbar';
 import { SIDEBAR_SELECTORS, TOOLBAR_SELECTORS } from './selectors';
 
 /**
