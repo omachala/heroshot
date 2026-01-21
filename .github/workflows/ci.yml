@@ -5,14 +5,49 @@ on:
   push:
     branches: [main]
 
+# Cancel in-progress runs on same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Shared cache key components
+  CACHE_PREFIX: v1
+
 jobs:
-  # Fast checks - must pass before expensive tests run
-  check:
+  # Determine what changed to skip unnecessary jobs
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      docs: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - 'src/**'
+              - 'editor/**'
+              - 'integrations/**'
+              - 'toolbar/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'tsconfig*.json'
+              - 'vitest*.config.ts'
+              - 'playwright.config.ts'
+              - '.github/workflows/**'
+            docs:
+              - 'docs/**'
+
+  # Install dependencies once, cache for all jobs
+  install:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: pnpm/action-setup@v4
 
@@ -21,7 +56,44 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-modules
+        with:
+          path: |
+            node_modules
+            editor/node_modules
+            integrations/*/node_modules
+            docs/node_modules
+          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile
+
+  # Fast lint & format checks - run in parallel
+  lint:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            editor/node_modules
+            integrations/*/node_modules
+            docs/node_modules
+          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Format check
         run: pnpm format:check
@@ -35,6 +107,30 @@ jobs:
       - name: Lint integrations
         run: pnpm lint:integrations
 
+  # Type checking - run in parallel with lint
+  typecheck:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            editor/node_modules
+            integrations/*/node_modules
+            docs/node_modules
+          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -47,8 +143,62 @@ jobs:
       - name: Svelte warnings check
         run: pnpm check:svelte
 
+  # Code quality checks - run in parallel
+  quality:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            editor/node_modules
+            integrations/*/node_modules
+            docs/node_modules
+          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Knip (unused code)
         run: pnpm knip
+
+      - name: Changeset status
+        if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
+        run: pnpm changeset status --since=origin/main
+
+  # Unit tests - run in parallel
+  unit-tests:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            editor/node_modules
+            integrations/*/node_modules
+            docs/node_modules
+          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Unit tests with coverage
         run: pnpm vitest run --coverage
@@ -62,13 +212,9 @@ jobs:
           files: ./coverage/lcov.info,./coverage/editor/lcov.info
           fail_ci_if_error: false
 
-      - name: Changeset status
-        if: github.event_name == 'pull_request' && github.head_ref != 'changeset-release/main'
-        run: pnpm changeset status --since=origin/main
-
-  # E2E tests - run after check passes
-  e2e:
-    needs: check
+  # Editor E2E tests - run in parallel with everything else
+  editor-e2e:
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,12 +226,36 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            editor/node_modules
+            integrations/*/node_modules
+            docs/node_modules
+          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Cache editor build
+        uses: actions/cache@v4
+        id: editor-build-cache
+        with:
+          path: editor/dist
+          key: ${{ env.CACHE_PREFIX }}-editor-build-${{ runner.os }}-${{ hashFiles('editor/src/**', 'editor/package.json', 'toolbar/**') }}
 
       - name: Build editor
+        if: steps.editor-build-cache.outputs.cache-hit != 'true'
         run: pnpm build:editor
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ env.CACHE_PREFIX }}-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
 
       - name: Run e2e tests
@@ -99,9 +269,9 @@ jobs:
           path: editor/test-results/
           retention-days: 7
 
-  # CLI integration tests - run after check passes (parallel with e2e)
-  cli:
-    needs: check
+  # CLI integration tests - run in parallel with everything else
+  cli-tests:
+    needs: install
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -113,12 +283,36 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            editor/node_modules
+            integrations/*/node_modules
+            docs/node_modules
+          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Cache CLI build
+        uses: actions/cache@v4
+        id: cli-build-cache
+        with:
+          path: dist
+          key: ${{ env.CACHE_PREFIX }}-cli-build-${{ runner.os }}-${{ hashFiles('src/**', 'package.json') }}
 
       - name: Build CLI
+        if: steps.cli-build-cache.outputs.cache-hit != 'true'
         run: pnpm build
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ env.CACHE_PREFIX }}-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
 
       - name: Run CLI integration tests
