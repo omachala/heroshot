@@ -132,6 +132,14 @@
   max-width: 1152px;
   margin: 48px auto 0;
   padding: 32px 0 48px;
+  position: relative;
+  z-index: 0;
+}
+
+/* Ensure feature cards stay above carousel glow */
+.VPFeatures {
+  position: relative;
+  z-index: 10;
 }
 
 @media (max-width: 768px) {

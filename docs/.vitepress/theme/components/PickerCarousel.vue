@@ -132,7 +132,7 @@ function prev() {
 }
 
 .dark .carousel-arrow {
-  background: var(--navy-dark) !important;
+  background: var(--vp-c-bg-soft) !important;
 }
 
 .carousel-arrow:hover {
@@ -145,11 +145,13 @@ function prev() {
   max-width: 800px;
   border-radius: 12px;
   overflow: hidden;
+  position: relative;
+  z-index: 1;
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.1),
-    0 0 100px rgba(234, 88, 12, 0.25),
-    0 0 200px rgba(251, 146, 60, 0.2),
-    0 0 350px rgba(251, 146, 60, 0.12);
+    0 0 150px rgba(234, 88, 12, 0.25),
+    0 0 300px rgba(251, 146, 60, 0.18),
+    0 0 450px rgba(251, 146, 60, 0.1);
 }
 
 .carousel-image img {
@@ -167,10 +169,12 @@ function prev() {
   width: 80%;
   max-width: 640px;
   text-align: center;
+  position: relative;
+  z-index: 10;
 }
 
 .dark .carousel-info {
-  background: var(--navy-dark);
+  background: var(--vp-c-bg-soft);
 }
 
 .carousel-label {
