@@ -199,6 +199,7 @@ export default tseslint.config(
       'security/detect-object-injection': 'off', // Too many false positives
 
       // ===== Code Quality =====
+      'max-lines': ['error', { max: 200, skipBlankLines: true, skipComments: true }],
       'max-params': ['error', { max: 5 }],
       complexity: ['error', { max: 20 }],
 
@@ -272,6 +273,8 @@ export default tseslint.config(
     rules: {
       // Disable prefer-destructuring - false positives with renamed destructuring
       'prefer-destructuring': 'off',
+      // Editor components can be larger
+      'max-lines': 'off',
     },
   },
   // Svelte files configuration
@@ -330,6 +333,8 @@ export default tseslint.config(
       ],
       // Disable prefer-destructuring - false positives with svelte-eslint-parser
       'prefer-destructuring': 'off',
+      // Editor components can be larger
+      'max-lines': 'off',
     },
   },
   {

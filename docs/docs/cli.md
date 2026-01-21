@@ -111,14 +111,7 @@ For crisp screenshots on retina displays, bump the scale. For smaller files, use
 | `--scale <n>`       | Device scale factor (1, 2, or 3). Use 2 for retina-quality images |
 | `--retina`          | Shortcut for `--scale 2`                                          |
 | `-q, --quality <n>` | Output as JPEG with given quality (1-100). Smaller files than PNG |
-| `--omit-background` | Transparent background (PNG only). Useful for element cutouts     |
 | `--viewport-only`   | Capture only the viewport, not the full scrollable page           |
-
-#### Other options
-
-| Option           | Description                                              |
-| ---------------- | -------------------------------------------------------- |
-| `--timeout <ms>` | How long to wait for the page to load (default: 30000ms) |
 
 ::: tip Using Config Defaults
 If you have a `.heroshot/config.json`, one-shot mode automatically uses your saved defaults for output directory, scale factor, and image format. CLI flags override these when specified.

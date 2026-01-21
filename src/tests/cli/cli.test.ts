@@ -3,7 +3,7 @@
  * Tests the actual CLI binary with various flag combinations
  */
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import sharp from 'sharp';
@@ -172,10 +172,250 @@ describe('CLI URL capture', () => {
       expect(result.success).toBe(true);
 
       // Should create a file with heroshot in the name
-      const files = require('node:fs')
-        .readdirSync(TEST_OUTPUT_DIR)
-        .filter((f: string) => f.includes('heroshot'));
+      const files = readdirSync(TEST_OUTPUT_DIR).filter((f: string) => f.includes('heroshot'));
       expect(files.length).toBeGreaterThan(0);
     }, 60_000);
+  });
+
+  describe('viewport presets', () => {
+    it('captures with tablet viewport (768x1024)', async () => {
+      const output = 'tablet.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --tablet --light`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      const dimensions = await getImageDimensions(outputPath);
+      // Tablet viewport is 768
+      expect(dimensions.width).toBeGreaterThanOrEqual(768);
+      expect(dimensions.width).toBeLessThan(820);
+    }, 60_000);
+
+    it('captures with desktop viewport (1280x800)', async () => {
+      const output = 'desktop.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --desktop --light`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      const dimensions = await getImageDimensions(outputPath);
+      expect(dimensions.width).toBe(1280);
+    }, 60_000);
+  });
+
+  describe('color scheme', () => {
+    it('captures dark mode only with --dark flag', async () => {
+      const output = 'dark-only.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --dark`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+      // Should NOT create a -light variant
+      expect(existsSync(path.join(TEST_OUTPUT_DIR, 'dark-only-light.png'))).toBe(false);
+    }, 60_000);
+
+    it('captures both light and dark variants when both flags specified', async () => {
+      const result = runCli(`${TEST_URL} -o both-schemes.png --light --dark`);
+
+      expect(result.success).toBe(true);
+      // Should create both variants with suffixes
+      expect(existsSync(path.join(TEST_OUTPUT_DIR, 'both-schemes-light.png'))).toBe(true);
+      expect(existsSync(path.join(TEST_OUTPUT_DIR, 'both-schemes-dark.png'))).toBe(true);
+    }, 60_000);
+  });
+
+  describe('scale factor', () => {
+    it('captures with --scale 1 (standard DPI)', async () => {
+      const output = 'scale-1.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --mobile --scale 1 --light`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      const dimensions = await getImageDimensions(outputPath);
+      // Mobile (375) at 1x
+      expect(dimensions.width).toBeGreaterThanOrEqual(375);
+      expect(dimensions.width).toBeLessThan(420);
+    }, 60_000);
+
+    it('captures with --scale 3 (high DPI)', async () => {
+      const output = 'scale-3.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --mobile --scale 3 --light`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      const dimensions = await getImageDimensions(outputPath);
+      // Mobile (375) at 3x = 1125
+      expect(dimensions.width).toBeGreaterThanOrEqual(1125);
+      expect(dimensions.width).toBeLessThan(1260);
+    }, 60_000);
+  });
+
+  describe('capture modes', () => {
+    it('captures viewport only with --viewport-only', async () => {
+      const output = 'viewport-only.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --viewport-only --light`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      const dimensions = await getImageDimensions(outputPath);
+      // Default viewport is 1280x800, so height should be exactly 800
+      expect(dimensions.width).toBe(1280);
+      expect(dimensions.height).toBe(800);
+    }, 60_000);
+  });
+
+  describe('global options', () => {
+    it('shows version with --version', () => {
+      const result = runCli('--version');
+
+      expect(result.success).toBe(true);
+      // Version should be a semver-like string
+      expect(result.output.trim()).toMatch(/^\d+\.\d+\.\d+/);
+    });
+
+    it('shows verbose output with -v flag', async () => {
+      const output = 'verbose-test.png';
+
+      const result = runCli(`${TEST_URL} -o ${output} --light -v`);
+
+      expect(result.success).toBe(true);
+      // Verbose output should contain additional details
+      expect(result.output).toContain('heroshot');
+    }, 60_000);
+  });
+
+  describe('error handling', () => {
+    it('fails gracefully with invalid selector', async () => {
+      const result = runCli(
+        `${TEST_URL} -o invalid-selector.png --selector "#nonexistent-element-xyz" --light`
+      );
+
+      // Should fail (element not found)
+      expect(result.success).toBe(false);
+    }, 60_000);
+  });
+
+  describe('flag combinations', () => {
+    it('combines tablet + retina + dark mode', async () => {
+      const output = 'combo-tablet-retina-dark.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --tablet --retina --dark`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      const dimensions = await getImageDimensions(outputPath);
+      // Tablet (768) at 2x = 1536
+      expect(dimensions.width).toBeGreaterThanOrEqual(1536);
+      expect(dimensions.width).toBeLessThan(1640);
+    }, 60_000);
+
+    it('combines selector + padding + mobile', async () => {
+      const output = 'combo-selector-padding-mobile.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --selector "#hero" -p 10 --mobile --light`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      // Element should be captured with padding on mobile viewport
+      const dimensions = await getImageDimensions(outputPath);
+      expect(dimensions.width).toBeLessThanOrEqual(395); // 375 + 20 padding
+    }, 60_000);
+
+    it('combines viewport-only + custom dimensions', async () => {
+      const output = 'combo-viewport-custom.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = runCli(`${TEST_URL} -o ${output} --viewport-only -w 800 --height 600 --light`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      const dimensions = await getImageDimensions(outputPath);
+      expect(dimensions.width).toBe(800);
+      expect(dimensions.height).toBe(600);
+    }, 60_000);
+  });
+
+  describe('config integration', () => {
+    it('saves screenshot to config with --save flag', async () => {
+      const configDir = path.join(TEST_OUTPUT_DIR, '.heroshot');
+      const configPath = path.join(configDir, 'config.json');
+
+      // Ensure clean state
+      if (existsSync(configPath)) {
+        rmSync(configPath);
+      }
+
+      const result = runCli(`${TEST_URL} -o save-test.png --selector "#hero" --light --save`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(configPath)).toBe(true);
+
+      // Verify config contains the screenshot
+      const config = JSON.parse(require('node:fs').readFileSync(configPath, 'utf8'));
+      expect(config.screenshots).toHaveLength(1);
+      expect(config.screenshots[0].url).toBe(TEST_URL);
+      expect(config.screenshots[0].selector).toBe('#hero');
+    }, 60_000);
+
+    it('uses custom config path with -c flag', async () => {
+      // Create a .heroshot subdirectory to mimic standard structure
+      const heroshotDir = path.join(TEST_OUTPUT_DIR, '.heroshot');
+      if (!existsSync(heroshotDir)) {
+        mkdirSync(heroshotDir, { recursive: true });
+      }
+      const customConfigPath = path.join(heroshotDir, 'config.json');
+
+      // Create a minimal config file with colorScheme set to light (sync mode uses config's colorScheme)
+      const config = {
+        outputDirectory: 'custom-output',
+        browser: {
+          colorScheme: 'light',
+        },
+        screenshots: [
+          {
+            id: 'test-1',
+            name: 'custom-config-test',
+            url: TEST_URL,
+          },
+        ],
+      };
+      writeFileSync(customConfigPath, JSON.stringify(config, null, 2));
+
+      // Run sync with custom config
+      const result = runCli(`-c ${customConfigPath}`);
+
+      // Should succeed and create the screenshot in outputDirectory relative to project root
+      expect(result.success).toBe(true);
+      expect(
+        existsSync(path.join(TEST_OUTPUT_DIR, 'custom-output', 'custom-config-test.png'))
+      ).toBe(true);
+    }, 60_000);
+
+    it('errors when custom config file not found', () => {
+      const result = runCli('-c nonexistent-config.json');
+
+      expect(result.success).toBe(false);
+      expect(result.output).toContain('not found');
+    });
   });
 });

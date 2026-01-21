@@ -131,12 +131,8 @@ const shotCliOptionsSchema = z.object({
   retina: z.boolean().optional(),
   /** JPEG quality (1-100) - outputs JPEG instead of PNG */
   quality: z.number().int().min(1).max(100).optional(),
-  /** Omit background for transparent PNG */
-  omitBackground: z.boolean().optional(),
   /** Capture only viewport instead of full page */
   viewportOnly: z.boolean().optional(),
-  /** Timeout in milliseconds */
-  timeout: z.number().int().positive().optional(),
 });
 
 /** CLI command options for URL capture (includes --save and --clean flags) */
