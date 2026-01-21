@@ -18,24 +18,22 @@ The manual fix is tedious: open browser, navigate, log in, screenshot, crop, sav
 
 **Heroshot fixes this.** Define your screenshots once - point and click, no CSS selectors - and regenerate them with one command whenever you need.
 
+```bash
+npx heroshot
+```
+
+First run opens a browser with a visual picker. Click what you want, name it, done. Screenshots land in `heroshots/`, config saves to `.heroshot/config.json`. Next run regenerates everything headlessly.
+
 <table align="center">
   <tr>
-    <th></th>
-    <th>Light</th>
-    <th>Dark</th>
-  </tr>
-  <tr>
-    <th>Desktop</th>
     <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-desktop-light.png?raw=true" alt="Desktop Light"></td>
     <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-desktop-dark.png?raw=true" alt="Desktop Dark"></td>
   </tr>
   <tr>
-    <th>Tablet</th>
     <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-tablet-light.png?raw=true" alt="Tablet Light"></td>
     <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-tablet-dark.png?raw=true" alt="Tablet Dark"></td>
   </tr>
   <tr>
-    <th>Mobile</th>
     <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-mobile-light.png?raw=true" alt="Mobile Light"></td>
     <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-mobile-dark.png?raw=true" alt="Mobile Dark"></td>
   </tr>
@@ -43,77 +41,66 @@ The manual fix is tedious: open browser, navigate, log in, screenshot, crop, sav
 
 <p align="center"><em>6 screenshots from one config entry - always in sync with the live site.</em></p>
 
-## Get Started
+## Use in Your Docs
 
-```bash
-npx heroshot
+**VitePress** · [Full guide](https://heroshot.sh/docs/integrations/vitepress)
+
+```ts
+// .vitepress/config.ts
+import { heroshot } from 'heroshot/plugins/vite';
+export default defineConfig({ vite: { plugins: [heroshot()] } });
 ```
 
-That's it. First time, a browser opens with a visual picker. Navigate to your app, click on elements you want to capture, name them, close when done.
+```vue
+<script setup>
+import { Heroshot } from 'heroshot/vue';
+</script>
 
-Your screenshots land in `heroshots/` and a config is saved to `.heroshot/config.json`.
-
-Next time you run `npx heroshot`, it regenerates everything headlessly. No browser, no clicking - just fresh screenshots.
-
-## What Makes It Useful
-
-**Point and click, not CSS selectors.** The visual picker figures out how to find elements. You just click what you want.
-
-**Light and dark mode in one go.** If your site has themes, heroshot captures both variants automatically. One config, two screenshots.
-
-**Desktop, tablet, mobile from one definition.** Add `"viewports": ["desktop", "tablet", "mobile"]` and get all three sizes. Combined with both color schemes, that's 6 screenshots from one entry.
-
-**Log in once, capture forever.** First time, log into your app manually. Heroshot encrypts and saves your session. Headless runs are already authenticated - no login scripts needed.
-
-**CI-ready.** Export your session key, add it to GitHub secrets, run `heroshot` in a workflow. Screenshots update automatically.
-
-## Automated Updates
-
-Keep screenshots always current by running heroshot in CI. Quick setup:
-
-```bash
-# Get your session key (for authenticated sites)
-npx heroshot session-key
-
-# Add to GitHub secrets
-gh secret set HEROSHOT_SESSION_KEY
+<Heroshot name="dashboard" alt="Dashboard" />
 ```
 
-Then create `.github/workflows/heroshot.yml`:
+**Docusaurus** · [Full guide](https://heroshot.sh/docs/integrations/docusaurus)
+
+```js
+// docusaurus.config.js
+plugins: [['heroshot/plugins/docusaurus', {}]];
+```
+
+```tsx
+import { Heroshot } from 'heroshot/docusaurus';
+<Heroshot name="dashboard" alt="Dashboard" />;
+```
+
+**MkDocs** · [Full guide](https://heroshot.sh/docs/integrations/mkdocs)
 
 ```yaml
-name: Update Screenshots
-
-on:
-  workflow_dispatch:
-
-jobs:
-  screenshots:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npx heroshot
-        env:
-          HEROSHOT_SESSION_KEY: ${{ secrets.HEROSHOT_SESSION_KEY }}
-      - run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add heroshots/
-          git diff --staged --quiet || git commit -m "chore: update screenshots" && git push
+# mkdocs.yml
+plugins:
+  - macros:
+      modules: [heroshot]
 ```
 
-Go to Actions → Update Screenshots → Run workflow. Done.
+```jinja
+{{ heroshot("dashboard", "Dashboard overview") }}
+```
 
-For more options (scheduled runs, PR creation, debugging), see the [full CI guide](https://heroshot.sh/docs/guide/automated-updates).
+One component/macro, all variants - light/dark mode switches automatically, responsive sizes via srcset.
 
 ## Learn More
 
-**Docs:** [heroshot.sh](https://heroshot.sh)
+|                     |                                                                       |
+| ------------------- | --------------------------------------------------------------------- |
+| **Documentation**   | [heroshot.sh](https://heroshot.sh)                                    |
+| **Getting Started** | [Quick start guide](https://heroshot.sh/docs/getting-started)         |
+| **Configuration**   | [Config options](https://heroshot.sh/docs/config)                     |
+| **CI/CD Setup**     | [Automated updates](https://heroshot.sh/docs/guide/automated-updates) |
+| **CLI Reference**   | [All commands & flags](https://heroshot.sh/docs/cli)                  |
 
-**Status:** Early alpha. [See releases](https://github.com/omachala/heroshot/releases) for current version.
+## Contributing
+
+This is a community project aiming to solve screenshot automation end-to-end and any feedback is valuable. Open an [issue](https://github.com/omachala/heroshot/issues) for bugs, questions, or feature requests. Pull requests are more than welcome.
+
+If you like it, give the repo a ⭐
 
 ## License
 

@@ -11,7 +11,8 @@ describe('getColorSchemes', () => {
   });
 
   it('returns both for undefined (default behavior)', () => {
-    expect(getColorSchemes(undefined)).toEqual(['light', 'dark']);
+    const colorScheme: 'light' | 'dark' | undefined = undefined;
+    expect(getColorSchemes(colorScheme)).toEqual(['light', 'dark']);
   });
 
   it('returns both for no argument', () => {

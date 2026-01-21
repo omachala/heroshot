@@ -120,7 +120,7 @@ for (const target of targets) {
   // Note: Some Playwright optional dependencies (electron, chromium-bidi) are marked external
   // as they're not needed for basic Chrome/Chromium automation
   await Bun.build({
-    entrypoints: ['./src/cli.ts'],
+    entrypoints: ['./src/cli/cli.ts'],
     sourcemap: 'none',
     minify: true,
     plugins: [playwrightPatchPlugin],

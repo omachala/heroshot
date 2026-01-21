@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     branches: [main]
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +29,7 @@ jobs:
         run: pnpm build && pnpm build:editor
 
       - name: Create Release PR or Publish
+        id: changesets
         uses: changesets/action@v1
         with:
           title: 'chore: release'
@@ -38,3 +40,139 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PAT }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # Run in parallel after release succeeds
+  update-screenshots:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build && pnpm build:editor
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: v1-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium
+
+      - name: Update screenshots
+        run: node dist/cli.js
+        env:
+          HEROSHOT_SESSION_KEY: ${{ secrets.HEROSHOT_SESSION_KEY }}
+
+      - name: Commit updated screenshots
+        run: |
+          if [ -n "$(git status --porcelain docs/public/screenshots/)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/public/screenshots/
+            git commit -m "chore: update screenshots"
+            git push
+          else
+            echo "No screenshot changes detected"
+          fi
+
+  # Run in parallel with update-screenshots
+  pypi-release:
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: integrations/python
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Get npm package version
+        id: version
+        run: |
+          VERSION=$(node -p "require('../../package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update Python package version
+        run: |
+          sed -i "s/^version = .*/version = \"${{ steps.version.outputs.version }}\"/" pyproject.toml
+
+      - name: Install build tools
+        run: pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: twine upload dist/*
+
+  # Deploy docs after screenshots are updated
+  deploy-docs:
+    needs: update-screenshots
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
+
+      - run: pnpm install
+
+      - name: Build docs
+        run: pnpm build
+
+      - name: Deploy to server
+        env:
+          SSH_KEY: ${{ secrets.DOCS_DEPLOY_SSH_KEY }}
+          SSH_HOST: ${{ secrets.DOCS_DEPLOY_SSH_HOST }}
+          SSH_PORT: ${{ secrets.DOCS_DEPLOY_SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "[${SSH_HOST}]:${SSH_PORT} ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICx97oyTuvLzKtygKR1u6P863fDiPOYNDBxdh7pZj602" >> ~/.ssh/known_hosts
+
+          rsync -avz --delete \
+            -e "ssh -p ${SSH_PORT} -i ~/.ssh/deploy_key" \
+            .vitepress/dist/ \
+            root@${SSH_HOST}:~/dockers/swag/swag/config/www/heroshot/

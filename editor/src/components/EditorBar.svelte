@@ -1,7 +1,6 @@
 <script lang="ts">
   import ChevronDownIcon from '../icons/ChevronDownIcon.svelte';
   import ChevronUpIcon from '../icons/ChevronUpIcon.svelte';
-  import CloseIcon from '../icons/CloseIcon.svelte';
   import GripIcon from '../icons/GripIcon.svelte';
   import PickerIcon from '../icons/PickerIcon.svelte';
   import SettingsIcon from '../icons/SettingsIcon.svelte';
@@ -221,12 +220,12 @@
 
         <button
           type="button"
-          class="w-8 h-8 rounded-md flex items-center justify-center transition-colors bg-slate-600 hover:bg-slate-500"
+          class="h-8 px-2.5 rounded-md flex items-center justify-center transition-colors bg-slate-600 hover:bg-slate-500 text-sm font-medium"
           onclick={onDone}
           onpointerdown={(event) => event.stopPropagation()}
-          title="Close"
+          title="Done"
         >
-          <CloseIcon size={18} />
+          Done
         </button>
       </div>
 

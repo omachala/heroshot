@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "heroshot"
+version = "0.1.0"
+description = "Screenshot automation integrations for Python documentation tools"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "Ondrej Machala", email = "ondrej@macha.la"}
+]
+keywords = [
+    "screenshot",
+    "automation",
+    "documentation",
+    "mkdocs",
+    "mkdocs-material",
+    "dark-mode",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Environment :: Plugins",
+    "Framework :: MkDocs",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Documentation",
+    "Topic :: Multimedia :: Graphics :: Capture :: Screen Capture",
+]
+
+[project.urls]
+Homepage = "https://heroshot.sh"
+Repository = "https://github.com/omachala/heroshot"
+Documentation = "https://heroshot.sh/docs/integrations/mkdocs"
+Issues = "https://github.com/omachala/heroshot/issues"
+
+[project.optional-dependencies]
+mkdocs = ["mkdocs-macros-plugin>=1.0.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["heroshot*"]

@@ -11,7 +11,7 @@
 export const TOOLBAR_SELECTORS = {
   picker: '#heroshot-root >> button[title="Pick element"]',
   settings: '#heroshot-root >> button[title="Settings"]',
-  done: '#heroshot-root >> button[title="Close"]',
+  done: '#heroshot-root >> button[title="Done"]',
   expand: '#heroshot-root >> button[title="Expand list"]',
   collapse: '#heroshot-root >> button[title="Collapse list"]',
 } as const;

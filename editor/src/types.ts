@@ -17,6 +17,22 @@ export type ScrollPosition = {
 };
 
 /**
+ * Background fill mode for padding area
+ * - 'inherit': show actual page content (default)
+ * - 'solid': fill with detected background color
+ * - 'transparent': fully transparent (PNG only)
+ */
+export type PaddingFill = 'inherit' | 'solid' | 'transparent';
+
+/**
+ * Background fill mode for element area
+ * - 'original': keep element's actual background (default)
+ * - 'solid': replace with detected background color
+ * - 'transparent': fully transparent (PNG only)
+ */
+export type ElementFill = 'original' | 'solid' | 'transparent';
+
+/**
  * Screenshot item stored in the toolbar
  */
 export type ScreenshotItem = {
@@ -28,8 +44,10 @@ export type ScreenshotItem = {
   padding?: Padding;
   /** Scroll position to restore when capturing */
   scroll?: ScrollPosition;
-  /** Fill padding area with detected background color */
-  maskPadding?: boolean;
+  /** Background fill mode for padding area */
+  paddingFill?: PaddingFill;
+  /** Background fill mode for element area */
+  elementFill?: ElementFill;
   /** Viewport variants - generates screenshot for each (e.g., ["desktop", "mobile", "400x500"]) */
   viewports?: string[];
   /** Text overrides - selector (relative to main element) -> replacement text */

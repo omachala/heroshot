@@ -1,3 +1,7 @@
+---
+description: Heroshot CLI reference. Commands, options, and flags for screenshot automation from the command line.
+---
+
 # CLI Reference
 
 Everything you can do from the command line. Most of the time you'll just run `npx heroshot` and let it figure out what to do - but when you need more control, here's what's available.
@@ -37,13 +41,17 @@ heroshot -c custom.json     # Use custom config file
 
 ### `heroshot <url>` (one-shot mode)
 
-Quick capture without touching your config. Just pass a URL and get a screenshot:
+**The fastest way to capture a screenshot.** Just pass a URL:
 
 ```bash
 heroshot https://example.com
+heroshot https://example.com -o screenshot.png
+heroshot https://example.com --selector ".hero" -o hero.png
 ```
 
-This is great for one-off captures, or for building your config from the command line instead of the visual picker. Add `--save` to any one-shot command and it gets added to your config for future syncs.
+One-shot mode captures immediately without touching your config. By default it captures **light mode only** - use `--light --dark` together to capture both variants.
+
+Add `--save` to any one-shot command and it gets added to your config for future syncs.
 
 **Two ways to build your screenshot collection:**
 
@@ -53,11 +61,11 @@ This is great for one-off captures, or for building your config from the command
 Both write to the same `.heroshot/config.json`. Mix and match - visual picker for exploring, CLI for scripting or when you know exactly what you want.
 
 ```bash
-heroshot https://example.com                          # Full page screenshot
+heroshot https://example.com                          # Full page, light mode
 heroshot https://example.com --selector "h1"          # Element screenshot
 heroshot https://example.com --selector ".hero" -o hero.png
 heroshot https://example.com --dark --mobile          # Dark mode, mobile viewport
-heroshot https://example.com --light --dark           # Light + dark variants
+heroshot https://example.com --light --dark           # Both light + dark variants
 ```
 
 #### What to capture
@@ -92,7 +100,7 @@ If your site respects `prefers-color-scheme`, you can capture light, dark, or bo
 | `--light` | Force light color scheme |
 | `--dark`  | Force dark color scheme  |
 
-Use `--light --dark` together to capture both variants, outputting `filename-light.png` and `filename-dark.png`.
+**One-shot mode** defaults to light-only. Use `--light --dark` together to capture both variants, outputting `filename-light.png` and `filename-dark.png`.
 
 #### Image quality
 
@@ -103,13 +111,7 @@ For crisp screenshots on retina displays, bump the scale. For smaller files, use
 | `--scale <n>`       | Device scale factor (1, 2, or 3). Use 2 for retina-quality images |
 | `--retina`          | Shortcut for `--scale 2`                                          |
 | `-q, --quality <n>` | Output as JPEG with given quality (1-100). Smaller files than PNG |
-| `--omit-background` | Transparent background (PNG only). Useful for element cutouts     |
-
-#### Other options
-
-| Option           | Description                                              |
-| ---------------- | -------------------------------------------------------- |
-| `--timeout <ms>` | How long to wait for the page to load (default: 30000ms) |
+| `--viewport-only`   | Capture only the viewport, not the full scrollable page           |
 
 ::: tip Using Config Defaults
 If you have a `.heroshot/config.json`, one-shot mode automatically uses your saved defaults for output directory, scale factor, and image format. CLI flags override these when specified.
@@ -137,10 +139,15 @@ Opens the visual picker - a browser where you point and click to define screensh
 heroshot config [options]
 ```
 
+| Option    | Description                            |
+| --------- | -------------------------------------- |
+| `--reset` | Clear existing session and start fresh |
+| `--only`  | Only run config, skip sync afterwards  |
+
+#### Color scheme preview
+
 | Option    | Description                                    |
 | --------- | ---------------------------------------------- |
-| `--reset` | Clear existing session and start fresh         |
-| `--only`  | Only run config, skip sync afterwards          |
 | `--light` | Force light mode (prefers-color-scheme: light) |
 | `--dark`  | Force dark mode (prefers-color-scheme: dark)   |
 
@@ -150,7 +157,6 @@ By default, heroshot captures **both** light and dark variants of each screensho
 The capture behavior is controlled by `browser.colorScheme` in your config:
 
 - **undefined** (default): Captures both `-light` and `-dark` variants
-- **auto**: Uses browser's color scheme preference
 - **light** / **dark**: Captures single variant only
   :::
 
@@ -163,11 +169,13 @@ heroshot                    # Capture all screenshots
 heroshot dashboard          # Capture screenshots matching "dashboard"
 heroshot hero               # Matches: hero-light.png, homepage-hero.png, etc.
 heroshot --clean            # Capture all and delete stale files
+heroshot --workers 4        # Capture with 4 parallel workers
 ```
 
-| Option    | Description                                                           |
-| --------- | --------------------------------------------------------------------- |
-| `--clean` | Delete stale files from output directory (only works without pattern) |
+| Option              | Description                                                           |
+| ------------------- | --------------------------------------------------------------------- |
+| `--clean`           | Delete stale files from output directory (only works without pattern) |
+| `--workers <count>` | Number of parallel capture workers (default: 1)                       |
 
 The pattern matches against:
 
@@ -185,6 +193,22 @@ heroshot --clean
 ```
 
 This compares existing files against what would be generated and deletes any extras. Only works when syncing all screenshots (no pattern filter).
+:::
+
+::: tip Parallel Capture
+Speed up large screenshot collections with parallel workers:
+
+```bash
+heroshot --workers 4
+```
+
+Or set it in your config to use by default:
+
+```json
+{ "workers": 4 }
+```
+
+Each worker captures a portion of your screenshots concurrently. More workers = faster captures, but requires more system resources. Start with 2-4 and adjust based on your machine.
 :::
 
 ### `heroshot session-key`
@@ -234,6 +258,9 @@ heroshot https://myapp.com --selector ".dashboard" --save
 
 # Get session key for CI
 heroshot session-key
+
+# Parallel capture with 4 workers
+heroshot --workers 4
 
 # Verbose output (works with any command)
 heroshot -v

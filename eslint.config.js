@@ -195,10 +195,11 @@ export default tseslint.config(
       'security/detect-non-literal-regexp': 'warn',
       'security/detect-child-process': 'error',
       'security/detect-new-buffer': 'error',
-      'security/detect-non-literal-fs-filename': 'warn',
+      'security/detect-non-literal-fs-filename': 'off', // CLI tool - dynamic paths are intentional
       'security/detect-object-injection': 'off', // Too many false positives
 
       // ===== Code Quality =====
+      'max-lines': ['error', { max: 200, skipBlankLines: true, skipComments: true }],
       'max-params': ['error', { max: 5 }],
       complexity: ['error', { max: 20 }],
 
@@ -272,6 +273,8 @@ export default tseslint.config(
     rules: {
       // Disable prefer-destructuring - false positives with renamed destructuring
       'prefer-destructuring': 'off',
+      // Editor components can be larger
+      'max-lines': 'off',
     },
   },
   // Svelte files configuration
@@ -330,6 +333,42 @@ export default tseslint.config(
       ],
       // Disable prefer-destructuring - false positives with svelte-eslint-parser
       'prefer-destructuring': 'off',
+      // Editor components can be larger
+      'max-lines': 'off',
+    },
+  },
+  {
+    // Vue integration
+    files: ['integrations/vue/**/*.ts', 'integrations/vue/**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        project: './integrations/vue/tsconfig.app.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // Vue files use PascalCase
+      'unicorn/filename-case': ['error', { cases: { pascalCase: true, camelCase: true } }],
+      // Disable rules that conflict with Vue
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+    },
+  },
+  {
+    // React integration
+    files: ['integrations/react/**/*.ts', 'integrations/react/**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        project: './integrations/react/tsconfig.app.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      // React files use PascalCase for components
+      'unicorn/filename-case': ['error', { cases: { pascalCase: true, camelCase: true } }],
     },
   },
   {
@@ -340,8 +379,11 @@ export default tseslint.config(
       '*.config.js',
       '*.config.ts',
       'editor/*.config.ts',
+      'integrations/*/*.config.ts',
       '**/*.test.ts',
+      '**/*.test.tsx',
       '**/tests/**',
+      '**/setupTests.ts',
     ],
   }
 );

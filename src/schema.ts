@@ -44,6 +44,22 @@ export const scrollPositionSchema = z.object({
   y: z.number().int().min(0).default(0),
 });
 
+/**
+ * Background fill mode for padding area
+ * - 'inherit': show actual page content (default)
+ * - 'solid': fill with detected background color
+ * - 'transparent': fully transparent (PNG only) - NOT ENABLED YET
+ */
+export const paddingFillSchema = z.enum(['inherit', 'solid', 'transparent']);
+
+/**
+ * Background fill mode for element area
+ * - 'original': keep element's actual background (default)
+ * - 'solid': replace with detected background color
+ * - 'transparent': fully transparent (PNG only) - NOT ENABLED YET
+ */
+export const elementFillSchema = z.enum(['original', 'solid', 'transparent']);
+
 /** Viewport variant - preset name or custom "WIDTHxHEIGHT" format */
 export const viewportVariantSchema = z.string().refine(
   value => {
@@ -52,8 +68,8 @@ export const viewportVariantSchema = z.string().refine(
     // Check if it's custom format "WIDTHxHEIGHT"
     const match = /^(\d+)x(\d+)$/.exec(value);
     if (!match) return false;
-    const width = parseInt(match[1] ?? '0', 10);
-    const height = parseInt(match[2] ?? '0', 10);
+    const width = Number.parseInt(match[1] ?? '0', 10);
+    const height = Number.parseInt(match[2] ?? '0', 10);
     return width > 0 && height > 0;
   },
   { message: 'Must be "desktop", "tablet", "mobile", or "WIDTHxHEIGHT" (e.g., "400x500")' }
@@ -69,8 +85,10 @@ export const screenshotSchema = z.object({
   padding: paddingSchema.optional(),
   /** Scroll position to restore when capturing */
   scroll: scrollPositionSchema.optional(),
-  /** Fill padding area with detected background color */
-  maskPadding: z.boolean().optional(),
+  /** Background fill mode for padding area */
+  paddingFill: paddingFillSchema.optional(),
+  /** Background fill mode for element area */
+  elementFill: elementFillSchema.optional(),
   /** Viewport variants - generates screenshot for each (e.g., ["desktop", "mobile", "400x500"]) */
   viewports: z.array(viewportVariantSchema).optional(),
   /** Text overrides - selector (relative to main element) -> replacement text */
@@ -113,10 +131,8 @@ const shotCliOptionsSchema = z.object({
   retina: z.boolean().optional(),
   /** JPEG quality (1-100) - outputs JPEG instead of PNG */
   quality: z.number().int().min(1).max(100).optional(),
-  /** Omit background for transparent PNG */
-  omitBackground: z.boolean().optional(),
-  /** Timeout in milliseconds */
-  timeout: z.number().int().positive().optional(),
+  /** Capture only viewport instead of full page */
+  viewportOnly: z.boolean().optional(),
 });
 
 /** CLI command options for URL capture (includes --save and --clean flags) */
@@ -125,6 +141,8 @@ export const shotCommandOptionsSchema = shotCliOptionsSchema.extend({
   save: z.boolean().optional(),
   /** Delete stale files in output directory */
   clean: z.boolean().optional(),
+  /** Number of parallel capture workers */
+  workers: z.number().int().min(1).optional(),
 });
 
 /** Global config */
@@ -140,6 +158,9 @@ export const configSchema = z.object({
 
   /** Browser settings (viewport, colorScheme) */
   browser: browserSchema.optional(),
+
+  /** Number of parallel capture workers (default: 1) */
+  workers: z.number().int().min(1).optional(),
 
   /** Screenshot definitions */
   screenshots: z.array(screenshotSchema).default([]),

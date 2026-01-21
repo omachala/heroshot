@@ -45,7 +45,8 @@ export function isVerbose(): boolean {
  * Show intro banner with version
  */
 export function intro(version: string): void {
-  clackIntro(`heroshot ${colors.dim(`v${version}`)}`);
+  const versionText = colors.dim(`v${version}`);
+  clackIntro(`heroshot ${versionText}`);
 }
 
 /**

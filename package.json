@@ -1,12 +1,62 @@
 {
   "name": "heroshot",
-  "version": "0.3.0",
+  "version": "0.6.1",
   "description": "Define your screenshots once, update them forever with one command",
   "type": "module",
   "author": "Ondrej Machala",
   "license": "MIT",
   "bin": {
     "heroshot": "dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./vue": {
+      "types": "./dist/integrations/vue/index.d.ts",
+      "import": "./dist/integrations/vue/index.js"
+    },
+    "./react": {
+      "types": "./dist/integrations/react/index.d.ts",
+      "import": "./dist/integrations/react/index.js"
+    },
+    "./vitepress": {
+      "types": "./dist/integrations/vue/index.d.ts",
+      "import": "./dist/integrations/vue/index.js"
+    },
+    "./vuepress": {
+      "types": "./dist/integrations/vue/index.d.ts",
+      "import": "./dist/integrations/vue/index.js"
+    },
+    "./nuxt": {
+      "types": "./dist/integrations/vue/index.d.ts",
+      "import": "./dist/integrations/vue/index.js"
+    },
+    "./docusaurus": {
+      "types": "./dist/integrations/react/index.d.ts",
+      "import": "./dist/integrations/react/index.js"
+    },
+    "./nextra": {
+      "types": "./dist/integrations/react/index.d.ts",
+      "import": "./dist/integrations/react/index.js"
+    },
+    "./mdx": {
+      "types": "./dist/integrations/react/index.d.ts",
+      "import": "./dist/integrations/react/index.js"
+    },
+    "./plugins/vite": {
+      "types": "./dist/integrations/shared/vitePlugin.d.ts",
+      "import": "./dist/integrations/shared/vitePlugin.js"
+    },
+    "./plugins/docusaurus": {
+      "types": "./dist/integrations/shared/docusaurusPlugin.d.ts",
+      "import": "./dist/integrations/shared/docusaurusPlugin.js",
+      "require": "./dist/integrations/shared/docusaurusPlugin.cjs"
+    },
+    "./virtual": {
+      "types": "./dist/integrations/shared/virtual.d.ts"
+    }
   },
   "files": [
     "dist",
@@ -20,6 +70,12 @@
     "build:binary": "bun run scripts/build-binary.ts",
     "build:binary:single": "bun run scripts/build-binary.ts --single",
     "build:editor": "vite build --config editor/vite.config.ts",
+    "build:integrations": "pnpm --filter './integrations/*' build",
+    "build:integrations:vue": "pnpm --filter './integrations/vue' build",
+    "build:integrations:react": "pnpm --filter './integrations/react' build",
+    "test:integrations": "pnpm --filter './integrations/*' test:run",
+    "lint:integrations": "pnpm --filter './integrations/react' lint",
+    "typecheck:integrations": "pnpm --filter './integrations/vue' --filter './integrations/react' typecheck",
     "test": "vitest",
     "test:run": "vitest run",
     "test:cli": "vitest run --config vitest.cli.config.ts",
@@ -37,7 +93,7 @@
     "knip": "knip",
     "check": "pnpm typecheck && pnpm format:check && pnpm lint && pnpm knip && pnpm test:run",
     "check:editor": "pnpm typecheck:editor && pnpm lint:editor && pnpm test:editor",
-    "docs:dev": "pnpm --dir docs run dev",
+    "docs:dev": "rm -rf docs/.vitepress/cache && pnpm --dir docs run dev",
     "docs:build": "pnpm --dir docs run build",
     "fix": "pnpm format && pnpm lint:fix",
     "changeset": "changeset",
@@ -45,7 +101,7 @@
   },
   "simple-git-hooks": {
     "pre-commit": "./scripts/pre-commit.sh",
-    "commit-msg": "./scripts/commit-msg.sh"
+    "commit-msg": "./scripts/commit-msg.sh $1"
   },
   "keywords": [
     "screenshot",
@@ -94,15 +150,32 @@
   "dependencies": {
     "@clack/prompts": "^0.11.0",
     "commander": "^12.1.0",
+    "p-limit": "^7.2.0",
     "playwright": "^1.49.0",
     "sharp": "^0.33.0",
     "zod": "^4.3.5"
   },
   "optionalDependencies": {
-    "heroshot-darwin-arm64": "0.1.0",
-    "heroshot-darwin-x64": "0.1.0",
-    "heroshot-linux-arm64": "0.1.0",
-    "heroshot-linux-x64": "0.1.0",
-    "heroshot-windows-x64": "0.1.0"
+    "heroshot-darwin-arm64": "0.6.1",
+    "heroshot-darwin-x64": "0.6.1",
+    "heroshot-linux-arm64": "0.6.1",
+    "heroshot-linux-x64": "0.6.1",
+    "heroshot-windows-x64": "0.6.1"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "vitepress": ">=1.0.0",
+    "vue": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    },
+    "vitepress": {
+      "optional": true
+    }
   }
 }

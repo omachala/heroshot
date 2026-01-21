@@ -22,8 +22,8 @@ export function parseViewport(variant: string): ParsedViewport {
   if (match) {
     const [, widthValue, heightValue] = match;
     if (widthValue && heightValue) {
-      const width = parseInt(widthValue, 10);
-      const height = parseInt(heightValue, 10);
+      const width = Number.parseInt(widthValue, 10);
+      const height = Number.parseInt(heightValue, 10);
       return { name: variant, width, height };
     }
   }

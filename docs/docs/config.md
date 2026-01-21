@@ -1,3 +1,7 @@
+---
+description: Heroshot configuration reference. All config options for screenshots, viewports, color schemes, padding, and output settings.
+---
+
 # Configuration Reference
 
 Heroshot stores its configuration in `.heroshot/config.json` at your project root.
@@ -21,6 +25,7 @@ your-project/
   "outputDirectory": "heroshots",
   "outputFormat": "png",
   "jpegQuality": 80,
+  "workers": 4,
   "browser": {
     "viewport": {
       "width": 1280,
@@ -45,7 +50,7 @@ your-project/
         "x": 0,
         "y": 100
       },
-      "maskPadding": true,
+      "paddingFill": "solid",
       "viewports": ["desktop", "mobile"],
       "textOverrides": {
         ".user-name": "John Doe",
@@ -69,6 +74,7 @@ your-project/
 | `outputFormat`    | `"png"` \| `"jpeg"` | `"png"`       | Image format                                         |
 | `jpegQuality`     | number (1-100)      | `80`          | JPEG compression quality                             |
 | `browser`         | object              | -             | Browser settings (see below)                         |
+| `workers`         | number              | `1`           | Number of parallel capture workers                   |
 | `screenshots`     | array               | `[]`          | Screenshot definitions                               |
 
 ## Browser Settings
@@ -98,7 +104,8 @@ your-project/
 | `selector`      | string   | no       | CSS selector for element capture                  |
 | `padding`       | object   | no       | Expand capture area beyond element                |
 | `scroll`        | object   | no       | Scroll position before capture                    |
-| `maskPadding`   | boolean  | no       | Fill padding with detected background color       |
+| `paddingFill`   | string   | no       | Padding background: `"inherit"`, `"solid"`        |
+| `elementFill`   | string   | no       | Element background: `"original"`, `"solid"`       |
 | `viewports`     | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`) |
 | `textOverrides` | object   | no       | Replace text content in elements before capture   |
 
@@ -155,17 +162,32 @@ Restore scroll position before capturing (useful for elements below the fold):
 }
 ```
 
-### Mask Padding
+### Background Fill
 
-When `maskPadding: true`, heroshot detects the element's background color and fills the padding area with it, creating seamless screenshots:
+Control how padding and element backgrounds are rendered:
+
+**Padding fill modes** (`paddingFill`):
+
+- `"inherit"` (default) - Shows actual page content in padding area
+- `"solid"` - Fills padding with detected background color
+
+**Element fill modes** (`elementFill`):
+
+- `"original"` (default) - Keeps element's actual background
+- `"solid"` - Replaces element background with detected color
 
 ```json
 {
   "selector": ".card",
   "padding": { "top": 20, "right": 20, "bottom": 20, "left": 20 },
-  "maskPadding": true
+  "paddingFill": "solid",
+  "elementFill": "original"
 }
 ```
+
+::: tip Visual Editor
+In the visual editor, click the padding area or element to cycle through fill modes.
+:::
 
 ### Viewports
 

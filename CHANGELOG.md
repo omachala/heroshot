@@ -1,5 +1,65 @@
 # heroshot
 
+## 0.6.1
+
+### Patch Changes
+
+- 1e8dfe3: Add `heroshot/virtual` TypeScript types for virtual module imports
+
+## 0.6.0
+
+### Minor Changes
+
+- b137b14: New editor features and integration improvements
+
+  **Editor:**
+  - Add paddingFill and elementFill modes (replaces maskPadding)
+  - Visual picker improvements
+
+  **Integrations:**
+  - Vite plugin now auto-registers manifest when virtual module is imported
+  - Docusaurus plugin injects client module that auto-registers manifest
+  - Fix: integrations/shared now included in npm package build
+
+  **Docs:**
+  - Add React, Vue, Markdown integration guides
+  - SEO improvements: canonical URLs, structured data, favicons
+  - Dynamic page-level meta tags
+
+## 0.5.1
+
+### Patch Changes
+
+- 1d14233: Simplify framework integration setup with auto-manifest registration
+  - Vite plugin now auto-registers manifest when virtual module is imported
+  - Docusaurus plugin injects client module that auto-registers manifest
+  - Updated docs and examples with simplified setup patterns
+  - Examples now use published npm package instead of workspace link
+  - Added cache clearing to docs:dev script
+
+## 0.5.0
+
+### Minor Changes
+
+- 675edeb: Add framework integrations for Vue, React, VitePress, Docusaurus, and MkDocs
+  - Vue component with dark mode detection and responsive image support
+  - React component with the same features
+  - Vite plugin for automatic manifest injection
+  - Docusaurus plugin with webpack alias support
+  - Python/MkDocs macro integration for Material theme
+  - Minimal example projects for each framework
+
+## 0.4.0
+
+### Minor Changes
+
+- ff81ace: Add text overrides and rename toolbar to editor
+  - Add textOverrides support for inline text editing in screenshots
+  - Rename toolbar/ to editor/ for clarity
+  - Merge sidebar and toolbar into unified EditorBar component
+  - Remove sync command, add --clean flag to default command
+  - Real-time config saving on screenshot changes
+
 ## 0.3.0
 
 ### Minor Changes

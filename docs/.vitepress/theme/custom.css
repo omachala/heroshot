@@ -40,6 +40,10 @@
   --vp-c-text-2: #94a3b8; /* muted light navy */
   --vp-c-text-3: #64748b; /* darker muted */
 
+  /* Navy palette - lighter for dark mode readability */
+  --navy-base: #7c9fc4; /* lighter navy for dark mode */
+  --navy-light: #a3bdd9;
+
   /* Navy soft for dark mode - subtle blue tint */
   --navy-soft: rgba(61, 106, 153, 0.15);
 }

@@ -1,3 +1,7 @@
+---
+description: Use Heroshot with GitBook. Automated screenshots for GitBook documentation via Git Sync.
+---
+
 # GitBook
 
 [GitBook](https://www.gitbook.com/) is a bit different from the other frameworks here - it's a SaaS platform, not a static site generator. But if you're using Git Sync (where GitBook syncs with your GitHub repo), heroshot works great.

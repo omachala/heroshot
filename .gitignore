@@ -2,11 +2,15 @@ node_modules
 dist
 coverage
 *.log
+__pycache__/
+*.egg-info/
 .*
 !.github
 !.changeset
 !docs/.vitepress
 !docs/.gitignore
+!docs/.heroshot
+!integrations/examples/*/.heroshot
 ha-dashboard.png
 heroshots/
 toolbar/test-results/
