@@ -159,6 +159,9 @@ export const configSchema = z.object({
   /** Browser settings (viewport, colorScheme) */
   browser: browserSchema.optional(),
 
+  /** Number of parallel capture workers (default: 1) */
+  workers: z.number().int().min(1).optional(),
+
   /** Screenshot definitions */
   screenshots: z.array(screenshotSchema).default([]),
 });

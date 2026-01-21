@@ -25,6 +25,7 @@ your-project/
   "outputDirectory": "heroshots",
   "outputFormat": "png",
   "jpegQuality": 80,
+  "workers": 4,
   "browser": {
     "viewport": {
       "width": 1280,
@@ -73,6 +74,7 @@ your-project/
 | `outputFormat`    | `"png"` \| `"jpeg"` | `"png"`       | Image format                                         |
 | `jpegQuality`     | number (1-100)      | `80`          | JPEG compression quality                             |
 | `browser`         | object              | -             | Browser settings (see below)                         |
+| `workers`         | number              | `1`           | Number of parallel capture workers                   |
 | `screenshots`     | array               | `[]`          | Screenshot definitions                               |
 
 ## Browser Settings
