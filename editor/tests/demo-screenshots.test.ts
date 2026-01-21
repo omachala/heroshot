@@ -13,8 +13,9 @@ import { createMockScreenshot, injectToolbar } from './utils';
 
 const HEROSHOT_URL = 'https://heroshot.sh';
 
-// Selector for a feature card on the landing page
-const FEATURE_SELECTOR = '.VPFeature';
+// Selector for the second feature card ("Point and Click") on the landing page
+// Each VPFeature is wrapped in a .item div inside .items container
+const FEATURE_SELECTOR = '.items > .item:nth-of-type(2) .VPFeature';
 
 test('demo: pick element on heroshot.sh landing page with padding', async ({ page }) => {
   test.setTimeout(60000);
@@ -51,6 +52,8 @@ test('demo: pick element on heroshot.sh landing page with padding', async ({ pag
 
   // Step 2: Get element rect and drag corner to add padding (~80px for more visible effect)
   const featureElement = page.locator(FEATURE_SELECTOR).first();
+  await featureElement.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
   const elementRect = await featureElement.boundingBox();
   if (!elementRect) throw new Error('Could not get element bounding box');
 
