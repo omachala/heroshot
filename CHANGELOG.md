@@ -1,5 +1,22 @@
 # heroshot
 
+## 0.7.0
+
+### Minor Changes
+
+- 0b6ef74: Add --workers flag for parallel screenshot capture
+  - Add `--workers <count>` CLI flag to run multiple capture workers concurrently
+  - Speed up large screenshot collections at the cost of more system resources
+  - Default is 1 (sequential capture, same as before)
+
+- 1426b83: Refactor codebase into modular structure and improve CLI test coverage
+  - Extract browser.ts into modular `src/browser/` folder
+  - Extract CLI into modular `src/cli/` folder
+  - Extract sync into modular `src/sync/` folder
+  - Replace string-based page.evaluate with typed functions
+  - Expand CLI test coverage (9 → 24 tests)
+  - Remove dead CLI flags (`--omit-background`, `--timeout`) that were never wired through
+
 ## 0.6.1
 
 ### Patch Changes
