@@ -7,6 +7,44 @@ import { noBrowserError } from './noBrowserError';
 import type { LaunchOptions } from './types';
 
 /**
+ * Get list of browser channels to try, with system browsers first
+ */
+function getBrowserChannels(): (BrowserChannel | undefined)[] {
+  const systemBrowsers = detectSystemBrowsers();
+  const channels: (BrowserChannel | undefined)[] = systemBrowsers.map(({ channel }) => channel);
+
+  if (systemBrowsers.length > 0) {
+    verbose(`Detected browsers: ${systemBrowsers.map(({ name }) => name).join(', ')}`);
+  }
+
+  // Add Playwright's bundled Chromium as fallback
+  channels.push(undefined);
+  return channels;
+}
+
+/**
+ * Try to launch browser with given channel
+ */
+async function tryLaunchBrowser(
+  channel: BrowserChannel | undefined,
+  headless: boolean
+): Promise<Browser | null> {
+  try {
+    const browser = await chromium.launch({
+      headless,
+      ...(channel && { channel }),
+    });
+    verbose(channel ? `Using ${channel}` : 'Using Playwright Chromium');
+    return browser;
+  } catch (error) {
+    verbose(
+      `Failed to launch ${channel ?? 'playwright-chromium'}: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return null;
+  }
+}
+
+/**
  * Launch browser and create context with optional storage state.
  * Detects system browsers (Chrome, Edge, Chromium) or falls back to Playwright's Chromium.
  */
@@ -14,43 +52,13 @@ export async function launchBrowser(
   options: LaunchOptions = {}
 ): Promise<{ browser: Browser; context: BrowserContext }> {
   const viewport = options.viewport ?? DEFAULT_VIEWPORT;
-
-  // Detect available system browsers
-  const systemBrowsers = detectSystemBrowsers();
-  const channelsToTry: (BrowserChannel | undefined)[] = [];
-
-  if (systemBrowsers.length > 0) {
-    // Use detected system browsers in order of preference
-    for (const { channel } of systemBrowsers) {
-      channelsToTry.push(channel);
-    }
-    verbose(`Detected browsers: ${systemBrowsers.map(({ name }) => name).join(', ')}`);
-  }
-
-  // Also try Playwright's bundled Chromium as fallback (undefined channel)
-  channelsToTry.push(undefined);
+  const channels = getBrowserChannels();
 
   // Try each browser channel in order
   let browser: Browser | null = null;
-  for (const channel of channelsToTry) {
-    try {
-      browser = await chromium.launch({
-        headless: options.headless ?? false,
-        ...(channel && { channel }),
-      });
-      if (channel) {
-        verbose(`Using ${channel}`);
-      } else {
-        verbose('Using Playwright Chromium');
-      }
-      break;
-    } catch (error) {
-      // This channel failed, try next one
-      verbose(
-        `Failed to launch ${channel ?? 'playwright-chromium'}: ${error instanceof Error ? error.message : String(error)}`
-      );
-      continue;
-    }
+  for (const channel of channels) {
+    browser = await tryLaunchBrowser(channel, options.headless ?? false);
+    if (browser) break;
   }
 
   if (!browser) {

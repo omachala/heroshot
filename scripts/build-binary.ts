@@ -9,7 +9,7 @@
  *   bun run scripts/build-binary.ts --single  # Build current platform only
  */
 
-import path from 'path';
+import path from 'node:path';
 import { $ } from 'bun';
 import type { BunPlugin } from 'bun';
 import pkg from '../package.json';
@@ -37,15 +37,15 @@ const playwrightPatchPlugin: BunPlugin = {
     // Patch nodePlatform.js - coreDir resolution
     build.onLoad({ filter: /playwright-core.*nodePlatform\.js$/ }, async args => {
       let contents = await Bun.file(args.path).text();
-      contents = contents.replace(PATTERNS.pkgResolve, '"/playwright-core-pkg"');
-      contents = contents.replace(PATTERNS.coreDir, 'const coreDir = "/@playwright-core";');
+      contents = contents.replaceAll(PATTERNS.pkgResolve, '"/playwright-core-pkg"');
+      contents = contents.replaceAll(PATTERNS.coreDir, 'const coreDir = "/@playwright-core";');
       return { contents, loader: 'js' };
     });
 
     // Patch files that read package.json version (userAgent.js, dependencies.js)
     build.onLoad({ filter: /playwright-core.*(userAgent|dependencies)\.js$/ }, async args => {
       let contents = await Bun.file(args.path).text();
-      contents = contents.replace(PATTERNS.pkgVersion, `"${PLAYWRIGHT_VERSION}"`);
+      contents = contents.replaceAll(PATTERNS.pkgVersion, `"${PLAYWRIGHT_VERSION}"`);
       return { contents, loader: 'js' };
     });
   },

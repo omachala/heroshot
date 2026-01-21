@@ -5,9 +5,6 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: write
-
 jobs:
   build:
     strategy:
@@ -68,6 +65,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/download-artifact@v4
