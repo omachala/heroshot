@@ -202,6 +202,12 @@ Speed up large screenshot collections with parallel workers:
 heroshot --workers 4
 ```
 
+Or set it in your config to use by default:
+
+```json
+{ "workers": 4 }
+```
+
 Each worker captures a portion of your screenshots concurrently. More workers = faster captures, but requires more system resources. Start with 2-4 and adjust based on your machine.
 :::
 
