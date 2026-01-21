@@ -127,6 +127,20 @@
   background: var(--vp-c-brand-2);
 }
 
+/* Visual Element Picker section */
+.picker-section {
+  max-width: 1152px;
+  margin: 48px auto 0;
+  padding: 32px 0 48px;
+}
+
+@media (max-width: 768px) {
+  .picker-section {
+    margin: 32px 16px 0;
+    padding: 24px 16px 32px;
+  }
+}
+
 /* Integrations section */
 .integrations-section {
   max-width: 1152px;

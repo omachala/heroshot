@@ -67,9 +67,13 @@ features:
     linkText: Padding & masking
 ---
 
+<div class="picker-section">
+  <PickerCarousel />
+</div>
+
 <div class="showcase">
-  <h2>See It In Action</h2>
-  <p class="subtitle">This screenshot is captured by heroshot with responsive variants (desktop, tablet, mobile) and color scheme support (light/dark).<br>Toggle the theme or resize your browser to see it switch automatically.</p>
+  <h2>One Config, Many Variants</h2>
+  <p class="subtitle">This screenshot of the hero section above is captured by Heroshot - desktop, tablet, mobile, light and dark.<br>Resize your browser or toggle the theme - the matching variant loads automatically.</p>
 
   <div class="screenshot-showcase">
     <Heroshot name="Hero" alt="Heroshot landing page screenshot" class="hero-screenshot" />
