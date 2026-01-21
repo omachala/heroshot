@@ -169,11 +169,13 @@ heroshot                    # Capture all screenshots
 heroshot dashboard          # Capture screenshots matching "dashboard"
 heroshot hero               # Matches: hero-light.png, homepage-hero.png, etc.
 heroshot --clean            # Capture all and delete stale files
+heroshot --workers 4        # Capture with 4 parallel workers
 ```
 
-| Option    | Description                                                           |
-| --------- | --------------------------------------------------------------------- |
-| `--clean` | Delete stale files from output directory (only works without pattern) |
+| Option              | Description                                                           |
+| ------------------- | --------------------------------------------------------------------- |
+| `--clean`           | Delete stale files from output directory (only works without pattern) |
+| `--workers <count>` | Number of parallel capture workers (default: 1)                       |
 
 The pattern matches against:
 
@@ -191,6 +193,22 @@ heroshot --clean
 ```
 
 This compares existing files against what would be generated and deletes any extras. Only works when syncing all screenshots (no pattern filter).
+:::
+
+::: tip Parallel Capture
+Speed up large screenshot collections with parallel workers:
+
+```bash
+heroshot --workers 4
+```
+
+Or set it in your config to use by default:
+
+```json
+{ "workers": 4 }
+```
+
+Each worker captures a portion of your screenshots concurrently. More workers = faster captures, but requires more system resources. Start with 2-4 and adjust based on your machine.
 :::
 
 ### `heroshot session-key`
@@ -240,6 +258,9 @@ heroshot https://myapp.com --selector ".dashboard" --save
 
 # Get session key for CI
 heroshot session-key
+
+# Parallel capture with 4 workers
+heroshot --workers 4
 
 # Verbose output (works with any command)
 heroshot -v

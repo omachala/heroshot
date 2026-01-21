@@ -148,14 +148,15 @@
   "dependencies": {
     "@clack/prompts": "^0.11.0",
     "commander": "^12.1.0",
+    "p-limit": "^7.2.0",
     "playwright": "^1.49.0",
     "sharp": "^0.33.0",
     "zod": "^4.3.5"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
-    "vue": ">=3.0.0",
-    "vitepress": ">=1.0.0"
+    "vitepress": ">=1.0.0",
+    "vue": ">=3.0.0"
   },
   "peerDependenciesMeta": {
     "react": {

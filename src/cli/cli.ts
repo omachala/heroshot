@@ -49,6 +49,7 @@ program
   .option('--viewport-only', 'Capture only viewport (not full page)')
   .option('--save', 'Save screenshot definition to config')
   .option('--clean', 'Delete stale files in output directory')
+  .option('--workers <count>', 'Number of parallel capture workers', Number.parseInt)
   .action(async (url?: string, options?: ShotCommandOptions) => {
     const globalOptions = program.opts<GlobalOptions>();
     const success = await shotAction(url, options, globalOptions);

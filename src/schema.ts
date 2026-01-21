@@ -141,6 +141,8 @@ export const shotCommandOptionsSchema = shotCliOptionsSchema.extend({
   save: z.boolean().optional(),
   /** Delete stale files in output directory */
   clean: z.boolean().optional(),
+  /** Number of parallel capture workers */
+  workers: z.number().int().min(1).optional(),
 });
 
 /** Global config */
@@ -156,6 +158,9 @@ export const configSchema = z.object({
 
   /** Browser settings (viewport, colorScheme) */
   browser: browserSchema.optional(),
+
+  /** Number of parallel capture workers (default: 1) */
+  workers: z.number().int().min(1).optional(),
 
   /** Screenshot definitions */
   screenshots: z.array(screenshotSchema).default([]),

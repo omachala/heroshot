@@ -4,7 +4,7 @@
  */
 
 import { getConfigPath, loadConfig } from '../configFile';
-import type { Config } from '../types';
+import type { Config, Screenshot } from '../types';
 import { error as logError, outro, spinner, verbose, warn } from '../ui';
 import { getColorSchemes } from '../utils/getColorSchemes';
 import {
@@ -13,11 +13,76 @@ import {
   filterScreenshots,
   resolveOutputDirectory,
 } from './configHelpers';
+import { buildCaptureJobs, captureParallel } from './parallelCapture';
 import { showResults } from './results';
 import { captureWithScheme } from './schemeCapture';
 import { loadEncryptedSession } from './sessionLoader';
 import { handleStaleFiles } from './staleFiles';
-import type { ScreenshotResult, SyncOptions, SyncResult } from './types';
+import type { CaptureOptions, ScreenshotResult, SyncOptions, SyncResult } from './types';
+
+type CaptureContext = {
+  screenshots: Screenshot[];
+  outputDirectory: string;
+  captureOptions: CaptureOptions;
+  browserOptions: {
+    viewport: { width: number; height: number };
+    deviceScaleFactor?: number;
+    storageState: Awaited<ReturnType<typeof loadEncryptedSession>>;
+  };
+  schemes: ('light' | 'dark')[];
+  workers: number;
+  captureSpinner: ReturnType<typeof spinner>;
+  progress: { captured: number; total: number };
+};
+
+/**
+ * Execute screenshot capture (parallel or sequential based on workers).
+ */
+async function executeCapture(context: CaptureContext): Promise<ScreenshotResult[]> {
+  const {
+    screenshots,
+    outputDirectory,
+    captureOptions,
+    browserOptions,
+    schemes,
+    workers,
+    captureSpinner,
+    progress,
+  } = context;
+
+  if (workers > 1) {
+    const jobs = buildCaptureJobs(screenshots, schemes);
+    return captureParallel({
+      jobs,
+      outputDirectory,
+      captureOptions,
+      browserOptions,
+      workers,
+      captureSpinner,
+      progress,
+    });
+  }
+
+  // Sequential capture
+  const results: ScreenshotResult[] = [];
+  const schemesToCapture = schemes.length === 0 ? [undefined] : schemes;
+
+  for (const colorScheme of schemesToCapture) {
+    const schemeResults = await captureWithScheme({
+      screenshots,
+      outputDirectory,
+      captureOptions,
+      browserOptions,
+      colorScheme,
+      schemes,
+      captureSpinner,
+      progress,
+    });
+    results.push(...schemeResults);
+  }
+
+  return results;
+}
 
 /**
  * Sync all screenshots defined in config.
@@ -66,42 +131,22 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   // Start capture
   const captureSpinner = spinner();
-  captureSpinner.start('Launching browser...');
+  const workers = options.workers ?? config.workers ?? 1;
+  const launchMessage = workers > 1 ? `Launching ${workers} workers...` : 'Launching browser...';
+  captureSpinner.start(launchMessage);
 
-  const results: ScreenshotResult[] = [];
-  const progress = { captured: 0, total: totalToCapture };
-
+  let results: ScreenshotResult[];
   try {
-    if (schemes.length === 0) {
-      // No color scheme specified - capture once with browser default
-      const schemeResults = await captureWithScheme({
-        screenshots,
-        outputDirectory,
-        captureOptions,
-        browserOptions,
-        colorScheme: undefined,
-        schemes,
-        captureSpinner,
-        progress,
-      });
-      results.push(...schemeResults);
-    } else {
-      // Capture for each color scheme
-      for (const scheme of schemes) {
-        const schemeResults = await captureWithScheme({
-          screenshots,
-          outputDirectory,
-          captureOptions,
-          browserOptions,
-          colorScheme: scheme,
-          schemes,
-          captureSpinner,
-          progress,
-        });
-        results.push(...schemeResults);
-      }
-    }
-
+    results = await executeCapture({
+      screenshots,
+      outputDirectory,
+      captureOptions,
+      browserOptions,
+      schemes,
+      workers,
+      captureSpinner,
+      progress: { captured: 0, total: totalToCapture },
+    });
     captureSpinner.stop('Screenshots captured');
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

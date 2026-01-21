@@ -25,6 +25,7 @@ export default defineConfig({
         'src/cli/types.ts', // type definitions only
         'src/sync/browserFunctions.ts', // browser context functions, tested via e2e tests
         'src/sync/capture.ts', // capture integration, tested via e2e tests
+        'src/sync/parallelCapture.ts', // parallel capture integration, tested via e2e tests
         'src/sync/configHelpers.ts', // config helpers, tested via CLI tests
         'src/sync/elementCapture.ts', // element capture, tested via e2e tests
         'src/sync/elementFinder.ts', // element finding, tested via e2e tests

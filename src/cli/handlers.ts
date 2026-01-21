@@ -82,10 +82,11 @@ export async function handleDefaultCommand(
   configPath: string,
   sessionKey: string | undefined,
   hasExplicitConfig: boolean,
-  clean?: boolean
+  clean?: boolean,
+  workers?: number
 ): Promise<boolean> {
   if (existsSync(configPath)) {
-    const result = await sync({ configPath, sessionKey, clean });
+    const result = await sync({ configPath, sessionKey, clean, workers });
     return result.failed === 0;
   }
 
@@ -96,7 +97,7 @@ export async function handleDefaultCommand(
 
   const { hasScreenshots } = await setup();
   if (hasScreenshots) {
-    const result = await sync({ clean });
+    const result = await sync({ clean, workers });
     return result.failed === 0;
   }
   return true;
@@ -124,6 +125,7 @@ export async function shotAction(
       sessionKey: globalOptions.sessionKey,
       filter: url,
       clean: options?.clean,
+      workers: options?.workers,
     });
     return result.failed === 0;
   }
@@ -132,7 +134,8 @@ export async function shotAction(
     configPath,
     globalOptions.sessionKey,
     !!globalOptions.config,
-    options?.clean
+    options?.clean,
+    options?.workers
   );
 }
 
