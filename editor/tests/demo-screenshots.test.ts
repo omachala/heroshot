@@ -2,7 +2,7 @@
  * Demo Screenshots
  *
  * NOT a real test - captures screenshots of heroshot in action for documentation.
- * Uses BBC homepage as a realistic example of picking elements.
+ * Uses heroshot.sh landing page as example of picking elements (meta!).
  *
  * Run with: pnpm test:editor:e2e
  * Update snapshots with: pnpm test:editor:e2e --update-snapshots
@@ -11,36 +11,26 @@
 import { expect, test } from 'playwright/test';
 import { createMockScreenshot, injectToolbar } from './utils';
 
-const BBC_URL = 'https://www.bbc.co.uk';
+const HEROSHOT_URL = 'https://heroshot.sh';
 
-// Selector for the second promo card (smaller article card in the second LI)
-const PROMO_SELECTOR = 'li:nth-child(2) [data-testid="promo"]';
+// Selector for a feature card on the landing page
+const FEATURE_SELECTOR = '.VPFeature';
 
-test('demo: pick element on BBC homepage with padding', async ({ page }) => {
-  test.setTimeout(60000); // BBC takes a while to load
-  // Navigate to BBC and wait for full load
-  await page.goto(BBC_URL, { waitUntil: 'networkidle' });
-
-  // Dismiss cookie banner - wait for it and click
-  try {
-    const rejectCookiesButton = page.getByRole('button', { name: 'Reject additional cookies' });
-    await rejectCookiesButton.waitFor({ state: 'visible', timeout: 5000 });
-    await rejectCookiesButton.click();
-    await page.waitForTimeout(1000); // Wait for banner to fully disappear
-  } catch {
-    // Cookie banner may not appear if already dismissed
-  }
+test('demo: pick element on heroshot.sh landing page with padding', async ({ page }) => {
+  test.setTimeout(60000);
+  // Navigate to heroshot.sh and wait for load
+  await page.goto(HEROSHOT_URL, { waitUntil: 'networkidle' });
 
   // Scroll to top to ensure consistent positioning
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(300);
 
-  // Create a mock screenshot that targets the promo element
+  // Create a mock screenshot that targets the feature element
   const demoScreenshot = createMockScreenshot({
     id: 'demo-shot',
-    name: 'BBC Promo Card',
-    url: BBC_URL,
-    selector: PROMO_SELECTOR,
+    name: 'Heroshot Feature Card',
+    url: HEROSHOT_URL,
+    selector: FEATURE_SELECTOR,
   });
 
   // Inject toolbar with pending highlight job - this will automatically select and highlight the element
@@ -48,7 +38,7 @@ test('demo: pick element on BBC homepage with padding', async ({ page }) => {
     screenshots: [demoScreenshot],
     pendingJob: {
       type: 'highlight',
-      selector: PROMO_SELECTOR,
+      selector: FEATURE_SELECTOR,
     },
     selectedId: 'demo-shot',
     sidebarVisible: true,
@@ -60,8 +50,8 @@ test('demo: pick element on BBC homepage with padding', async ({ page }) => {
   await expect(page).toHaveScreenshot('demo-element-selected.png', { fullPage: false });
 
   // Step 2: Get element rect and drag corner to add padding (~80px for more visible effect)
-  const promoElement = page.locator(PROMO_SELECTOR).first();
-  const elementRect = await promoElement.boundingBox();
+  const featureElement = page.locator(FEATURE_SELECTOR).first();
+  const elementRect = await featureElement.boundingBox();
   if (!elementRect) throw new Error('Could not get element bounding box');
 
   // Bottom-right corner handle position
