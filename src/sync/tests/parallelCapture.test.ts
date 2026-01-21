@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Screenshot } from '../../types';
-import { buildCaptureJobs } from '../parallelCapture';
+import { buildCaptureJobs, distributeBatches, groupJobsByUrl } from '../parallelCapture';
+import type { CaptureJob } from '../parallelCapture';
 
 describe('buildCaptureJobs', () => {
   const baseScreenshot: Screenshot = {
@@ -241,5 +242,124 @@ describe('buildCaptureJobs', () => {
         hasMultipleViewports: true,
       });
     });
+  });
+});
+
+describe('groupJobsByUrl', () => {
+  const createJob = (url: string, id: string): CaptureJob => ({
+    screenshot: { id, name: `Screenshot ${id}`, url },
+    colorScheme: undefined,
+    hasMultipleSchemes: false,
+    hasMultipleViewports: false,
+  });
+
+  it('groups jobs with same URL together', () => {
+    const jobs: CaptureJob[] = [
+      createJob('https://example.com/page1', '1'),
+      createJob('https://example.com/page2', '2'),
+      createJob('https://example.com/page1', '3'),
+      createJob('https://example.com/page2', '4'),
+    ];
+
+    const groups = groupJobsByUrl(jobs);
+
+    expect(groups.size).toBe(2);
+    expect(groups.get('https://example.com/page1')).toHaveLength(2);
+    expect(groups.get('https://example.com/page2')).toHaveLength(2);
+  });
+
+  it('handles unique URLs', () => {
+    const jobs: CaptureJob[] = [
+      createJob('https://example.com/page1', '1'),
+      createJob('https://example.com/page2', '2'),
+      createJob('https://example.com/page3', '3'),
+    ];
+
+    const groups = groupJobsByUrl(jobs);
+
+    expect(groups.size).toBe(3);
+  });
+
+  it('handles all same URL', () => {
+    const jobs: CaptureJob[] = [
+      createJob('https://example.com', '1'),
+      createJob('https://example.com', '2'),
+      createJob('https://example.com', '3'),
+    ];
+
+    const groups = groupJobsByUrl(jobs);
+
+    expect(groups.size).toBe(1);
+    expect(groups.get('https://example.com')).toHaveLength(3);
+  });
+});
+
+describe('distributeBatches', () => {
+  const createJob = (url: string, id: string): CaptureJob => ({
+    screenshot: { id, name: `Screenshot ${id}`, url },
+    colorScheme: undefined,
+    hasMultipleSchemes: false,
+    hasMultipleViewports: false,
+  });
+
+  it('keeps same-URL jobs in same batch', () => {
+    const urlGroups = new Map<string, CaptureJob[]>([
+      [
+        'https://example.com/page1',
+        [createJob('https://example.com/page1', '1'), createJob('https://example.com/page1', '2')],
+      ],
+      ['https://example.com/page2', [createJob('https://example.com/page2', '3')]],
+    ]);
+
+    const batches = distributeBatches(urlGroups, 2);
+
+    // Each batch should have all jobs from same URL
+    for (const batch of batches) {
+      const urls = new Set(batch.map(job => job.screenshot.url));
+      // All jobs in batch should be from URLs that are fully contained
+      for (const url of urls) {
+        const urlJobs = batch.filter(j => j.screenshot.url === url);
+        const totalForUrl = urlGroups.get(url)?.length ?? 0;
+        expect(urlJobs.length).toBe(totalForUrl);
+      }
+    }
+  });
+
+  it('balances batch sizes with greedy algorithm', () => {
+    const urlGroups = new Map<string, CaptureJob[]>([
+      ['url1', [createJob('url1', '1'), createJob('url1', '2'), createJob('url1', '3')]],
+      ['url2', [createJob('url2', '4'), createJob('url2', '5')]],
+      ['url3', [createJob('url3', '6')]],
+    ]);
+
+    const batches = distributeBatches(urlGroups, 2);
+
+    // Should distribute: batch1 gets url1 (3), batch2 gets url2+url3 (2+1=3)
+    expect(batches).toHaveLength(2);
+    const sizes = batches.map(b => b.length).sort((a, b) => a - b);
+    expect(sizes).toEqual([3, 3]);
+  });
+
+  it('handles more workers than URL groups', () => {
+    const urlGroups = new Map<string, CaptureJob[]>([
+      ['url1', [createJob('url1', '1')]],
+      ['url2', [createJob('url2', '2')]],
+    ]);
+
+    const batches = distributeBatches(urlGroups, 4);
+
+    // Should only create 2 batches (one per URL group)
+    expect(batches).toHaveLength(2);
+  });
+
+  it('handles single URL group', () => {
+    const urlGroups = new Map<string, CaptureJob[]>([
+      ['url1', [createJob('url1', '1'), createJob('url1', '2'), createJob('url1', '3')]],
+    ]);
+
+    const batches = distributeBatches(urlGroups, 4);
+
+    expect(batches).toHaveLength(1);
+    expect(batches[0]).toHaveLength(3);
   });
 });

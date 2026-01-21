@@ -139,6 +139,53 @@ async function executeBatch(
 }
 
 /**
+ * Group jobs by URL to minimize page navigations.
+ * Jobs for the same URL are kept together.
+ */
+export function groupJobsByUrl(jobs: CaptureJob[]): Map<string, CaptureJob[]> {
+  const groups = new Map<string, CaptureJob[]>();
+  for (const job of jobs) {
+    // eslint-disable-next-line prefer-destructuring -- already destructured
+    const { url } = job.screenshot;
+    const group = groups.get(url) ?? [];
+    group.push(job);
+    groups.set(url, group);
+  }
+  return groups;
+}
+
+/**
+ * Distribute URL groups across workers, keeping same-URL jobs together.
+ * Uses a greedy algorithm to balance batch sizes.
+ */
+export function distributeBatches(
+  urlGroups: Map<string, CaptureJob[]>,
+  workerCount: number
+): CaptureJob[][] {
+  // Limit workers to number of URL groups (no point spinning up more)
+  const effectiveWorkers = Math.min(workerCount, urlGroups.size);
+  const batches: CaptureJob[][] = Array.from({ length: effectiveWorkers }, () => []);
+  const batchSizes: number[] = Array.from({ length: effectiveWorkers }, () => 0);
+
+  // Sort URL groups by size (largest first) for better distribution
+  const sortedGroups = [...urlGroups.values()];
+  sortedGroups.sort((a, b) => b.length - a.length);
+
+  // Assign each URL group to the smallest batch (greedy load balancing)
+  for (const group of sortedGroups) {
+    const smallestIndex = batchSizes.indexOf(Math.min(...batchSizes));
+    // eslint-disable-next-line prefer-destructuring -- array index access
+    const batch = batches[smallestIndex];
+    if (batch) {
+      batch.push(...group);
+      batchSizes[smallestIndex] = batch.length;
+    }
+  }
+
+  return batches;
+}
+
+/**
  * Capture screenshots in parallel using multiple workers.
  */
 export async function captureParallel(
@@ -154,14 +201,11 @@ export async function captureParallel(
     progress,
   } = options;
 
-  // Split jobs into batches for each worker
-  // Distribute evenly across workers
-  const batchSize = Math.ceil(jobs.length / workers);
-  const batches: CaptureJob[][] = [];
+  // Group jobs by URL to minimize page navigations within each worker
+  const urlGroups = groupJobsByUrl(jobs);
 
-  for (let index = 0; index < jobs.length; index += batchSize) {
-    batches.push(jobs.slice(index, index + batchSize));
-  }
+  // Distribute URL groups across workers (same-URL jobs stay together)
+  const batches = distributeBatches(urlGroups, workers);
 
   const allResults: ScreenshotResult[] = [];
   const limit = pLimit(workers);
