@@ -8,6 +8,27 @@ For plain Markdown files (GitHub READMEs, GitLab wikis, or any Markdown renderer
 
 This works on GitHub, GitLab, and anywhere that respects `prefers-color-scheme` media queries.
 
+## Generate Snippets Automatically
+
+Use the `heroshot snippet` command to generate the `<picture>` markup automatically:
+
+```bash
+heroshot snippet              # All screenshots
+heroshot snippet dashboard    # Filter by name/id
+```
+
+Output:
+
+```html
+<!-- heroshot: Dashboard (abc123) -->
+<picture>
+  <source srcset="./heroshots/dashboard-dark.png" media="(prefers-color-scheme: dark)" />
+  <img src="./heroshots/dashboard-light.png" alt="Dashboard" />
+</picture>
+```
+
+Copy-paste into your README. See [CLI Reference](/docs/cli#heroshot-snippet-pattern) for all options.
+
 ## Light/Dark Mode Images
 
 Use the `<picture>` element with `prefers-color-scheme` media queries:
