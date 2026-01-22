@@ -156,13 +156,6 @@
     "sharp": "^0.33.0",
     "zod": "^4.3.5"
   },
-  "optionalDependencies": {
-    "heroshot-darwin-arm64": "0.6.1",
-    "heroshot-darwin-x64": "0.6.1",
-    "heroshot-linux-arm64": "0.6.1",
-    "heroshot-linux-x64": "0.6.1",
-    "heroshot-windows-x64": "0.6.1"
-  },
   "peerDependencies": {
     "react": ">=18.0.0",
     "vitepress": ">=1.0.0",
