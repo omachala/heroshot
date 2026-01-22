@@ -1,5 +1,28 @@
 # heroshot
 
+## 0.7.0
+
+### Minor Changes
+
+- 48be2ba: Add standalone binary distribution via Bun compile
+  - Build standalone binaries for 5 platforms: linux-x64, linux-arm64, darwin-x64, darwin-arm64, windows-x64
+  - Auto-detect system browsers (Chrome, Edge, Chromium) with fallback to Playwright's bundled Chromium
+  - Binaries are built automatically on GitHub releases via the build-binaries workflow
+  - No Node.js required to run the standalone binary
+
+- 0b6ef74: Add --workers flag for parallel screenshot capture
+  - Add `--workers <count>` CLI flag to run multiple capture workers concurrently
+  - Speed up large screenshot collections at the cost of more system resources
+  - Default is 1 (sequential capture, same as before)
+
+- 1426b83: Refactor codebase into modular structure and improve CLI test coverage
+  - Extract browser.ts into modular `src/browser/` folder
+  - Extract CLI into modular `src/cli/` folder
+  - Extract sync into modular `src/sync/` folder
+  - Replace string-based page.evaluate with typed functions
+  - Expand CLI test coverage (9 → 24 tests)
+  - Remove dead CLI flags (`--omit-background`, `--timeout`) that were never wired through
+
 ## 0.6.1
 
 ### Patch Changes
