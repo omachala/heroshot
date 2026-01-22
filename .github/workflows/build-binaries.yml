@@ -76,6 +76,24 @@ jobs:
       - name: Display structure
         run: ls -R artifacts
 
+      - name: Rename binaries with platform suffix
+        run: |
+          cd artifacts
+          for dir in heroshot-*/heroshot-*/bin; do
+            platform=$(echo "$dir" | cut -d'/' -f1 | sed 's/heroshot-//')
+            for file in "$dir"/*; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                if [[ "$filename" == "heroshot.exe" ]]; then
+                  mv "$file" "$dir/heroshot-${platform}.exe"
+                elif [[ "$filename" == "heroshot" ]]; then
+                  mv "$file" "$dir/heroshot-${platform}"
+                fi
+              fi
+            done
+          done
+          ls -R
+
       - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
