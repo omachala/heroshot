@@ -211,6 +211,43 @@ Or set it in your config to use by default:
 Each worker captures a portion of your screenshots concurrently. More workers = faster captures, but requires more system resources. Start with 2-4 and adjust based on your machine.
 :::
 
+### `heroshot snippet [pattern]`
+
+Generate `<picture>` HTML snippets for use in GitHub READMEs, wikis, or any plain Markdown file. This saves you from manually writing the light/dark mode markup.
+
+```bash
+heroshot snippet                      # Generate snippets for all screenshots
+heroshot snippet dashboard            # Only screenshots matching "dashboard"
+heroshot snippet --path-prefix ./img/ # Custom image path prefix
+```
+
+| Option                   | Description                                 |
+| ------------------------ | ------------------------------------------- |
+| `--path-prefix <prefix>` | Image path prefix (default: `./heroshots/`) |
+
+The pattern matches against screenshot **id** and **name** (case-insensitive). More matches = more snippets output.
+
+**Example output:**
+
+```html
+<!-- heroshot: Dashboard (abc123) -->
+<picture>
+  <source srcset="./heroshots/dashboard-dark.png" media="(prefers-color-scheme: dark)" />
+  <img src="./heroshots/dashboard-light.png" alt="Dashboard" />
+</picture>
+```
+
+Copy-paste this into your README.md and GitHub will automatically show the right variant based on the user's color scheme preference.
+
+::: tip Single Color Scheme
+If your config has `browser.colorScheme` set to `light` or `dark` (not both), the snippet outputs simple Markdown instead:
+
+```md
+![Dashboard](./heroshots/dashboard-light.png)
+```
+
+:::
+
 ### `heroshot session-key`
 
 When you log into a site during `heroshot config`, that session is saved encrypted. The encryption key is machine-specific by default, which is fine for local use.
@@ -261,6 +298,10 @@ heroshot session-key
 
 # Parallel capture with 4 workers
 heroshot --workers 4
+
+# Generate README snippets for GitHub
+heroshot snippet
+heroshot snippet dashboard --path-prefix ./images/
 
 # Verbose output (works with any command)
 heroshot -v
