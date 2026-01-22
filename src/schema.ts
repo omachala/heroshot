@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { actionsSchema } from './actionSchema';
 import { generateUid } from './utils/generateUid';
 
 /** Viewport preset names */
@@ -93,6 +94,8 @@ export const screenshotSchema = z.object({
   viewports: z.array(viewportVariantSchema).optional(),
   /** Text overrides - selector (relative to main element) -> replacement text */
   textOverrides: z.record(z.string(), z.string()).optional(),
+  /** Pre-screenshot actions to execute before capture (click, type, hover, etc.) */
+  actions: actionsSchema.optional(),
 });
 
 /** Browser settings */

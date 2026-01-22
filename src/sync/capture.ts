@@ -9,6 +9,7 @@ import type { Page } from 'playwright';
 import type { Screenshot } from '../types';
 import { verbose } from '../ui';
 import { generateScreenshotFilename } from '../utils/screenshotPath';
+import { executeActions } from './actions';
 import { scrollTo } from './browserFunctions';
 import { captureElementWithOptions } from './elementCapture';
 import { applyColorSchemeClass } from './pageScripts';
@@ -107,6 +108,18 @@ export async function captureScreenshot(
   const navResult = await navigateAndPrepare(page, url, variant.colorScheme, scroll);
   if (!navResult.success) {
     return { ...navResult, filename };
+  }
+
+  // Execute pre-screenshot actions
+  if (screenshot.actions && screenshot.actions.length > 0) {
+    try {
+      await executeActions(page, screenshot.actions);
+      // Allow page to settle after actions
+      await page.waitForTimeout(500);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return { success: false, error: `Action failed: ${message}`, filename };
+    }
   }
 
   const outputPath = path.join(outputDirectory, filename);
