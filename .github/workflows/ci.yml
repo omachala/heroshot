@@ -269,6 +269,44 @@ jobs:
           path: editor/test-results/
           retention-days: 7
 
+  # Auto-generate API reference docs from Zod schemas
+  generate-docs:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate API reference docs
+        run: pnpm docs:generate
+
+      - name: Commit if changed
+        run: |
+          if [ -n "$(git status --porcelain docs/docs/*-reference.md)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add docs/docs/*-reference.md
+            git commit -m "docs: regenerate API reference from schemas"
+            git push
+          else
+            echo "No doc changes detected"
+          fi
+
   # CLI integration tests - run in parallel with everything else
   cli-tests:
     needs: install

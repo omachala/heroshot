@@ -94,8 +94,9 @@
     "knip": "knip",
     "check": "pnpm typecheck && pnpm format:check && pnpm lint && pnpm knip && pnpm test:run",
     "check:editor": "pnpm typecheck:editor && pnpm lint:editor && pnpm test:editor",
+    "docs:generate": "tsx scripts/generate-action-docs.ts",
     "docs:dev": "rm -rf docs/.vitepress/cache && pnpm --dir docs run dev",
-    "docs:build": "pnpm --dir docs run build",
+    "docs:build": "pnpm docs:generate && pnpm --dir docs run build",
     "fix": "pnpm format && pnpm lint:fix",
     "changeset": "changeset",
     "prepare": "simple-git-hooks"
