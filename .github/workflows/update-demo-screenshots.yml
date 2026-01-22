@@ -1,0 +1,50 @@
+name: Update Demo Screenshots
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build editor
+        run: pnpm build:editor
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: v1-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium
+
+      - name: Run demo screenshot tests
+        run: pnpm test:editor:demo
+
+      - name: Commit updated screenshots
+        run: |
+          if [ -n "$(git status --porcelain editor/tests/demo/snapshots/)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add editor/tests/demo/snapshots/
+            git commit -m "chore: update demo screenshots"
+            git push
+          else
+            echo "No demo screenshot changes detected"
+          fi

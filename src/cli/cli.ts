@@ -6,13 +6,30 @@ import { intro, setVerbose } from '../ui';
 import { configAction, sessionKeyAction, shotAction } from './handlers';
 import type { ConfigActionOptions, GlobalOptions } from './types';
 
-// Read version from package.json (built file is dist/cli.js, so just one level up)
-const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
-const packageJson: unknown = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-const version =
-  packageJson && typeof packageJson === 'object' && 'version' in packageJson
-    ? String(packageJson.version)
-    : '0.0.0';
+// Version is injected at build time for standalone binaries, or read from package.json for development
+declare const HEROSHOT_VERSION: string | undefined;
+
+function getVersion(): string {
+  // Use build-time injected version if available (standalone binary)
+  // eslint-disable-next-line unicorn/no-typeof-undefined -- Must use typeof to avoid ReferenceError when variable doesn't exist at runtime
+  if (typeof HEROSHOT_VERSION !== 'undefined') {
+    return HEROSHOT_VERSION;
+  }
+
+  // Fall back to reading package.json (development / npm package)
+  try {
+    const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
+    const packageJson: unknown = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+    if (packageJson && typeof packageJson === 'object' && 'version' in packageJson) {
+      return String(packageJson.version);
+    }
+  } catch {
+    // Ignore errors
+  }
+  return '0.0.0';
+}
+
+const version = getVersion();
 
 const program = new Command();
 
