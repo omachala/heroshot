@@ -419,6 +419,78 @@ describe('CLI URL capture', () => {
     });
   });
 
+  describe('actions', () => {
+    const actionsConfigDir = path.join(TEST_OUTPUT_DIR, '.heroshot-actions');
+    const actionsConfigPath = path.join(actionsConfigDir, 'config.json');
+    const actionsOutputDir = path.join(TEST_OUTPUT_DIR, 'actions-output');
+
+    beforeAll(() => {
+      if (!existsSync(actionsConfigDir)) {
+        mkdirSync(actionsConfigDir, { recursive: true });
+      }
+    });
+
+    it('executes actions before capturing screenshot', async () => {
+      const config = {
+        outputDirectory: actionsOutputDir,
+        browser: { colorScheme: 'light' },
+        screenshots: [
+          {
+            id: 'actions-test',
+            name: 'actions-result',
+            url: TEST_URL,
+            selector: '#test-form',
+            actions: [
+              { type: 'click', selector: '#primary-btn' },
+              { type: 'type', selector: '#username', text: 'heroshot-user' },
+              { type: 'type', selector: '#email', text: 'test@heroshot.sh' },
+              { type: 'select_option', selector: '#country', values: ['cz'] },
+              { type: 'press_key', key: 'Tab' },
+              {
+                type: 'evaluate',
+                selector: '#message',
+                function: "(el) => { el.value = 'Actions work!' }",
+              },
+            ],
+          },
+        ],
+      };
+      writeFileSync(actionsConfigPath, JSON.stringify(config, null, 2));
+
+      const result = runCli(`-c ${actionsConfigPath}`);
+
+      expect(result.success).toBe(true);
+      const outputPath = path.join(actionsOutputDir, 'actions-result.png');
+      expect(existsSync(outputPath)).toBe(true);
+
+      // Verify we got a reasonable element screenshot
+      const dimensions = await getImageDimensions(outputPath);
+      expect(dimensions.width).toBeGreaterThan(100);
+      expect(dimensions.height).toBeGreaterThan(50);
+    }, 60_000);
+
+    it('reports failure when action targets missing element', () => {
+      const config = {
+        outputDirectory: actionsOutputDir,
+        browser: { colorScheme: 'light' },
+        screenshots: [
+          {
+            id: 'actions-fail',
+            name: 'actions-fail',
+            url: TEST_URL,
+            actions: [{ type: 'click', selector: '#nonexistent-element' }],
+          },
+        ],
+      };
+      writeFileSync(actionsConfigPath, JSON.stringify(config, null, 2));
+
+      const result = runCli(`-c ${actionsConfigPath}`);
+
+      // CLI exits with non-zero when any screenshot fails
+      expect(result.success).toBe(false);
+    }, 120_000);
+  });
+
   describe('snippet command', () => {
     const snippetConfigDir = path.join(TEST_OUTPUT_DIR, '.heroshot-snippet');
     const snippetConfigPath = path.join(snippetConfigDir, 'config.json');
