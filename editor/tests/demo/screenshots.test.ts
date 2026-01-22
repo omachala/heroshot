@@ -1,15 +1,18 @@
 /**
  * Demo Screenshots
  *
- * NOT a real test - captures screenshots of heroshot in action for documentation.
+ * Captures screenshots of heroshot editor in action for documentation.
  * Uses heroshot.sh landing page as example of picking elements (meta!).
  *
- * Run with: pnpm test:editor:e2e
- * Update snapshots with: pnpm test:editor:e2e --update-snapshots
+ * This test is NOT part of the regular test suite - it runs separately via
+ * the "Update Demo Screenshots" workflow which commits updated snapshots.
+ *
+ * Run locally: pnpm test:editor:demo
+ * Update snapshots: pnpm test:editor:demo --update-snapshots
  */
 
 import { expect, test } from 'playwright/test';
-import { createMockScreenshot, injectToolbar } from './utils';
+import { createMockScreenshot, injectToolbar } from '../utils';
 
 const HEROSHOT_URL = 'https://heroshot.sh';
 

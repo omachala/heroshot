@@ -82,6 +82,7 @@
     "test:editor": "vitest run --config editor/vite.config.ts",
     "test:editor:coverage": "vitest run --config editor/vite.config.ts --coverage",
     "test:editor:e2e": "playwright test --config editor/playwright.config.ts",
+    "test:editor:demo": "playwright test --config editor/playwright.demo.config.ts",
     "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo",
     "typecheck:editor": "tsc --noEmit -p editor/tsconfig.json --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo-editor",
     "lint": "eslint --cache --cache-location node_modules/.cache/eslint src/",

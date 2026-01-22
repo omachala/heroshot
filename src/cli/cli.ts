@@ -11,7 +11,8 @@ declare const HEROSHOT_VERSION: string | undefined;
 
 function getVersion(): string {
   // Use build-time injected version if available (standalone binary)
-  if (HEROSHOT_VERSION !== undefined) {
+  // eslint-disable-next-line unicorn/no-typeof-undefined -- Must use typeof to avoid ReferenceError when variable doesn't exist at runtime
+  if (typeof HEROSHOT_VERSION !== 'undefined') {
     return HEROSHOT_VERSION;
   }
 
