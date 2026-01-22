@@ -418,4 +418,81 @@ describe('CLI URL capture', () => {
       expect(result.output).toContain('not found');
     });
   });
+
+  describe('snippet command', () => {
+    const snippetConfigDir = path.join(TEST_OUTPUT_DIR, '.heroshot-snippet');
+    const snippetConfigPath = path.join(snippetConfigDir, 'config.json');
+
+    beforeAll(() => {
+      // Create config with test screenshots
+      if (!existsSync(snippetConfigDir)) {
+        mkdirSync(snippetConfigDir, { recursive: true });
+      }
+      const config = {
+        outputDirectory: 'heroshots',
+        screenshots: [
+          { id: 'abc123', name: 'Dashboard', url: 'https://example.com/dashboard' },
+          { id: 'def456', name: 'Hero Section', url: 'https://example.com' },
+          { id: 'ghi789', name: 'Settings Panel', url: 'https://example.com/settings' },
+        ],
+      };
+      writeFileSync(snippetConfigPath, JSON.stringify(config, null, 2));
+    });
+
+    it('shows help for snippet command', () => {
+      const result = runCli('snippet --help');
+      expect(result.success).toBe(true);
+      expect(result.output).toContain('Generate markdown/HTML snippets');
+    });
+
+    it('generates snippets for all screenshots when no pattern', () => {
+      const result = runCli(`snippet -c ${snippetConfigPath}`);
+      expect(result.success).toBe(true);
+      expect(result.output).toContain('Dashboard');
+      expect(result.output).toContain('Hero Section');
+      expect(result.output).toContain('Settings Panel');
+    });
+
+    it('filters screenshots by name pattern', () => {
+      const result = runCli(`snippet dashboard -c ${snippetConfigPath}`);
+      expect(result.success).toBe(true);
+      expect(result.output).toContain('Dashboard');
+      expect(result.output).not.toContain('Hero Section');
+      expect(result.output).not.toContain('Settings Panel');
+    });
+
+    it('filters screenshots by id', () => {
+      const result = runCli(`snippet ghi789 -c ${snippetConfigPath}`);
+      expect(result.success).toBe(true);
+      expect(result.output).toContain('Settings Panel');
+      expect(result.output).not.toContain('Dashboard');
+    });
+
+    it('generates <picture> element for light/dark variants', () => {
+      const result = runCli(`snippet dashboard -c ${snippetConfigPath}`);
+      expect(result.success).toBe(true);
+      expect(result.output).toContain('<picture>');
+      expect(result.output).toContain('prefers-color-scheme: dark');
+      expect(result.output).toContain('dashboard-light.png');
+      expect(result.output).toContain('dashboard-dark.png');
+    });
+
+    it('uses custom path prefix', () => {
+      const result = runCli(`snippet dashboard -c ${snippetConfigPath} --path-prefix ./images/`);
+      expect(result.success).toBe(true);
+      expect(result.output).toContain('./images/dashboard-light.png');
+    });
+
+    it('fails when no config exists', () => {
+      const result = runCli('snippet -c nonexistent.json');
+      expect(result.success).toBe(false);
+      expect(result.output).toContain('not found');
+    });
+
+    it('fails when no screenshots match pattern', () => {
+      const result = runCli(`snippet nonexistent -c ${snippetConfigPath}`);
+      expect(result.success).toBe(false);
+      expect(result.output).toContain('No screenshots matching');
+    });
+  });
 });

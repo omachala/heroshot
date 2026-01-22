@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import type { ShotCommandOptions } from '../types';
 import { intro, setVerbose } from '../ui';
 import { configAction, sessionKeyAction, shotAction } from './handlers';
+import { type SnippetOptions, snippetAction } from './snippet';
 import type { ConfigActionOptions, GlobalOptions } from './types';
 
 // Version is injected at build time for standalone binaries, or read from package.json for development
@@ -91,6 +92,16 @@ program
   .description('Print the session key for this project (for CI setup)')
   .action(() => {
     const success = sessionKeyAction();
+    if (!success) process.exitCode = 1;
+  });
+
+program
+  .command('snippet [pattern]')
+  .description('Generate markdown/HTML snippets for GitHub README and Wiki')
+  .option('--path-prefix <prefix>', 'Image path prefix (default: ./heroshots/)')
+  .action((pattern?: string, options?: SnippetOptions) => {
+    const globalOptions = program.opts<GlobalOptions>();
+    const success = snippetAction(pattern, options ?? {}, globalOptions.config);
     if (!success) process.exitCode = 1;
   });
 
