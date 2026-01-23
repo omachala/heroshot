@@ -104,6 +104,7 @@ const EXAMPLE_VALUES: Record<string, unknown> = {
   modifiers: ['Control'],
   values: ['option-1', 'option-2'],
   paths: ['./screenshot.png'],
+  id: 'abc12345',
   name: 'My Screenshot',
   outputDirectory: 'screenshots',
   outputFormat: 'png',

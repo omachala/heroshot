@@ -30,7 +30,7 @@ Back to [Configuration overview](./config#screenshot-definition).
 
 ```json
 {
-  "id": "2cc1640a",
+  "id": "abc12345",
   "name": "My Screenshot",
   "url": "/dashboard",
   "selector": ".my-element",
