@@ -1,5 +1,12 @@
 # heroshot
 
+## 0.8.0
+
+### Minor Changes
+
+- ccb499d: Add pre-screenshot actions for interacting with pages before capture. Supports click, type, hover, select_option, press_key, drag, wait, navigate, evaluate, fill_form, handle_dialog, file_upload, and resize actions aligned with Playwright API.
+- 76ea4ca: Add `heroshot snippet [pattern]` command for generating markdown/HTML snippets for GitHub README and Wiki integration. Generates `<picture>` elements with `prefers-color-scheme` media queries for automatic light/dark mode support.
+
 ## 0.7.0
 
 ### Minor Changes
