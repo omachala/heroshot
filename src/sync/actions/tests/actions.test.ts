@@ -225,7 +225,7 @@ describe('executeActions', () => {
       ];
       await executeActions(page as never, actions);
       expect(page.evaluate).toHaveBeenCalledWith(
-        "((el) => el.remove())(document.querySelector('[data-id=\\'test\\']'))"
+        String.raw`((el) => el.remove())(document.querySelector('[data-id=\'test\']'))`
       );
     });
   });

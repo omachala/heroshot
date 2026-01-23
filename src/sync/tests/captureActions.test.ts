@@ -65,13 +65,13 @@ describe('captureScreenshot — actions integration', () => {
     ];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    await captureScreenshot(page as never, screenshot, '/test-output', captureOptions);
 
     expect(executeActionsMock).toHaveBeenCalledWith(page, actions);
   });
 
   it('does not call executeActions when actions is undefined', async () => {
-    await captureScreenshot(page as never, baseScreenshot, '/tmp/out', captureOptions);
+    await captureScreenshot(page as never, baseScreenshot, '/test-output', captureOptions);
 
     expect(executeActionsMock).not.toHaveBeenCalled();
   });
@@ -79,7 +79,7 @@ describe('captureScreenshot — actions integration', () => {
   it('does not call executeActions when actions is empty array', async () => {
     const screenshot: Screenshot = { ...baseScreenshot, actions: [] };
 
-    await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    await captureScreenshot(page as never, screenshot, '/test-output', captureOptions);
 
     expect(executeActionsMock).not.toHaveBeenCalled();
   });
@@ -88,7 +88,7 @@ describe('captureScreenshot — actions integration', () => {
     const actions = [{ type: 'click' as const, selector: '.btn' }];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    await captureScreenshot(page as never, screenshot, '/test-output', captureOptions);
 
     // waitForTimeout is called during navigation (2000ms) and after actions (500ms)
     const calls = page.waitForTimeout.mock.calls.map((c: unknown[]) => c[0]);
@@ -100,7 +100,12 @@ describe('captureScreenshot — actions integration', () => {
     const actions = [{ type: 'click' as const, selector: '.missing' }];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    const result = await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    const result = await captureScreenshot(
+      page as never,
+      screenshot,
+      '/test-output',
+      captureOptions
+    );
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Action failed: Element not found: .missing');
@@ -111,7 +116,12 @@ describe('captureScreenshot — actions integration', () => {
     const actions = [{ type: 'click' as const, selector: '.btn' }];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    const result = await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    const result = await captureScreenshot(
+      page as never,
+      screenshot,
+      '/test-output',
+      captureOptions
+    );
 
     expect(result.success).toBe(false);
     expect(result.error).toBe('Action failed: timeout exceeded');
@@ -122,7 +132,12 @@ describe('captureScreenshot — actions integration', () => {
     const actions = [{ type: 'click' as const, selector: '.btn' }];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    const result = await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    const result = await captureScreenshot(
+      page as never,
+      screenshot,
+      '/test-output',
+      captureOptions
+    );
 
     expect(result.filename).toBeTruthy();
     expect(result.filename).toContain('test-screenshot');
@@ -141,7 +156,7 @@ describe('captureScreenshot — actions integration', () => {
     const actions = [{ type: 'click' as const, selector: '.btn' }];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    await captureScreenshot(page as never, screenshot, '/test-output', captureOptions);
 
     expect(callOrder).toEqual(['actions', 'screenshot']);
   });
@@ -153,7 +168,7 @@ describe('captureScreenshot — actions integration', () => {
     const actions = [{ type: 'click' as const, selector: '.btn' }];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    await captureScreenshot(page as never, screenshot, '/test-output', captureOptions);
 
     expect(takeScreenshot).not.toHaveBeenCalled();
   });
@@ -165,7 +180,7 @@ describe('captureScreenshot — actions integration', () => {
     const actions = [{ type: 'click' as const, selector: '.btn' }];
     const screenshot: Screenshot = { ...baseScreenshot, actions, selector: '#hero' };
 
-    await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    await captureScreenshot(page as never, screenshot, '/test-output', captureOptions);
 
     expect(captureElementWithOptions).not.toHaveBeenCalled();
   });
@@ -180,7 +195,7 @@ describe('captureScreenshot — actions integration', () => {
     ];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    await captureScreenshot(page as never, screenshot, '/test-output', captureOptions);
 
     expect(executeActionsMock).toHaveBeenCalledWith(page, actions);
   });
@@ -190,7 +205,12 @@ describe('captureScreenshot — actions integration', () => {
     const actions = [{ type: 'click' as const, selector: '.btn' }];
     const screenshot: Screenshot = { ...baseScreenshot, actions };
 
-    const result = await captureScreenshot(page as never, screenshot, '/tmp/out', captureOptions);
+    const result = await captureScreenshot(
+      page as never,
+      screenshot,
+      '/test-output',
+      captureOptions
+    );
 
     expect(result.success).toBe(true);
     expect(takeScreenshot).toHaveBeenCalled();
