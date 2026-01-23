@@ -77,6 +77,10 @@ your-project/
 | `workers`         | number              | `1`           | Number of parallel capture workers                   |
 | `screenshots`     | array               | `[]`          | Screenshot definitions                               |
 
+::: info Full Reference
+See the [Global Config Reference](./config-reference) for all options with detailed descriptions.
+:::
+
 ## Browser Settings
 
 | Property            | Type                  | Default | Description                          |
@@ -85,6 +89,10 @@ your-project/
 | `viewport.height`   | number                | `800`   | Browser viewport height in pixels    |
 | `colorScheme`       | `"light"` \| `"dark"` | -       | Color scheme for capture (see below) |
 | `deviceScaleFactor` | number (1-3)          | `1`     | Retina scale (2 = 2x resolution)     |
+
+::: info Full Reference
+See the [Browser Settings Reference](./browser-reference) for all options with detailed descriptions.
+:::
 
 ### Color Scheme Values
 
@@ -96,18 +104,23 @@ your-project/
 
 ## Screenshot Definition
 
-| Property        | Type     | Required | Description                                       |
-| --------------- | -------- | -------- | ------------------------------------------------- |
-| `id`            | string   | auto     | Unique identifier (auto-generated if omitted)     |
-| `name`          | string   | yes      | Display name (also used for filename)             |
-| `url`           | string   | yes      | Full URL to capture                               |
-| `selector`      | string   | no       | CSS selector for element capture                  |
-| `padding`       | object   | no       | Expand capture area beyond element                |
-| `scroll`        | object   | no       | Scroll position before capture                    |
-| `paddingFill`   | string   | no       | Padding background: `"inherit"`, `"solid"`        |
-| `elementFill`   | string   | no       | Element background: `"original"`, `"solid"`       |
-| `viewports`     | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`) |
-| `textOverrides` | object   | no       | Replace text content in elements before capture   |
+| Property        | Type     | Required | Description                                               |
+| --------------- | -------- | -------- | --------------------------------------------------------- |
+| `id`            | string   | auto     | Unique identifier (auto-generated if omitted)             |
+| `name`          | string   | yes      | Display name (also used for filename)                     |
+| `url`           | string   | yes      | Full URL to capture                                       |
+| `selector`      | string   | no       | CSS selector for element capture                          |
+| `padding`       | object   | no       | Expand capture area beyond element                        |
+| `scroll`        | object   | no       | Scroll position before capture                            |
+| `paddingFill`   | string   | no       | Padding background: `"inherit"`, `"solid"`                |
+| `elementFill`   | string   | no       | Element background: `"original"`, `"solid"`               |
+| `viewports`     | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`)         |
+| `textOverrides` | object   | no       | Replace text content in elements before capture           |
+| `actions`       | array    | no       | Pre-screenshot actions ([reference](./actions-reference)) |
+
+::: info Full Reference
+See the [Screenshot Definition Reference](./screenshot-reference) for all options with detailed descriptions.
+:::
 
 ::: tip Filename Generation
 Filenames are automatically derived from the screenshot `name`. Heroshot slugifies the name and appends suffixes for variants:
@@ -257,6 +270,42 @@ Text overrides support shadow DOM piercing with the `>>>` syntax:
 ```
 
 :::
+
+### Actions
+
+Actions are commands that run **before** each screenshot capture. They let you set up the exact page state you need — open a menu, fill a form, dismiss a banner, wait for content to load.
+
+```json
+{
+  "name": "Settings with dark mode",
+  "url": "https://myapp.com/settings",
+  "actions": [
+    { "type": "click", "selector": ".dark-mode-toggle" },
+    { "type": "wait", "time": 0.3 }
+  ]
+}
+```
+
+Common patterns:
+
+```json
+// Dismiss a cookie banner
+{ "type": "click", "selector": ".cookie-accept" }
+
+// Fill an input field
+{ "type": "type", "selector": "#search", "text": "demo query" }
+
+// Wait for async content
+{ "type": "wait", "text": "Dashboard loaded" }
+
+// Remove an element via JS
+{ "type": "evaluate", "function": "() => { document.querySelector('.chat-widget').remove() }" }
+
+// Hover to show a tooltip
+{ "type": "hover", "selector": ".info-icon" }
+```
+
+See the [Actions API Reference](./actions-reference) for the full list of action types and their properties.
 
 ## Minimal Config
 

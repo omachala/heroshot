@@ -146,10 +146,19 @@ export default defineConfig({
           ],
         },
         {
-          text: 'CLI',
+          text: 'Reference',
           items: [
-            { text: 'CLI Reference', link: '/docs/cli' },
-            { text: 'Configuration', link: '/docs/config' },
+            { text: 'CLI', link: '/docs/cli' },
+            {
+              text: 'Configuration',
+              link: '/docs/config',
+              items: [
+                { text: 'Global Config', link: '/docs/config-reference' },
+                { text: 'Screenshot', link: '/docs/screenshot-reference' },
+                { text: 'Browser', link: '/docs/browser-reference' },
+                { text: 'Actions', link: '/docs/actions-reference' },
+              ],
+            },
           ],
         },
         {

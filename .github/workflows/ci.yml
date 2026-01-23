@@ -269,6 +269,39 @@ jobs:
           path: editor/test-results/
           retention-days: 7
 
+  # Verify API reference docs are up-to-date with Zod schemas
+  generate-docs:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate API reference docs
+        run: |
+          pnpm docs:generate
+          pnpm prettier --write docs/docs/*-reference.md
+
+      - name: Verify docs are up-to-date
+        run: |
+          if [ -n "$(git status --porcelain docs/docs/*-reference.md)" ]; then
+            echo "::error::API reference docs are out of date. Run 'pnpm docs:generate' and commit the changes."
+            git diff docs/docs/*-reference.md
+            exit 1
+          else
+            echo "Docs are up-to-date"
+          fi
+
   # CLI integration tests - run in parallel with everything else
   cli-tests:
     needs: install

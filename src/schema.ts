@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { actionsSchema } from './actionSchema';
 import { generateUid } from './utils/generateUid';
 
 /** Viewport preset names */
@@ -20,8 +21,8 @@ export const VIEWPORT_PRESETS: Record<ViewportPreset, { width: number; height: n
 
 /** Browser viewport settings */
 export const viewportSchema = z.object({
-  width: z.number().int().positive().default(1280),
-  height: z.number().int().positive().default(800),
+  width: z.number().int().positive().default(1280).describe('Browser viewport width in pixels'),
+  height: z.number().int().positive().default(800).describe('Browser viewport height in pixels'),
 });
 
 /** Color scheme for light/dark mode (undefined = both, captures two screenshots) */
@@ -32,16 +33,16 @@ export const outputFormatSchema = z.enum(['png', 'jpeg']).default('png');
 
 /** Padding around element (can expand capture area) */
 export const paddingSchema = z.object({
-  top: z.number().int().min(0).default(0),
-  right: z.number().int().min(0).default(0),
-  bottom: z.number().int().min(0).default(0),
-  left: z.number().int().min(0).default(0),
+  top: z.number().int().min(0).default(0).describe('Top padding in pixels'),
+  right: z.number().int().min(0).default(0).describe('Right padding in pixels'),
+  bottom: z.number().int().min(0).default(0).describe('Bottom padding in pixels'),
+  left: z.number().int().min(0).default(0).describe('Left padding in pixels'),
 });
 
 /** Scroll position to restore when capturing */
 export const scrollPositionSchema = z.object({
-  x: z.number().int().min(0).default(0),
-  y: z.number().int().min(0).default(0),
+  x: z.number().int().min(0).default(0).describe('Horizontal scroll offset in pixels'),
+  y: z.number().int().min(0).default(0).describe('Vertical scroll offset in pixels'),
 });
 
 /**
@@ -77,30 +78,53 @@ export const viewportVariantSchema = z.string().refine(
 
 /** Single screenshot definition */
 export const screenshotSchema = z.object({
-  id: z.string().min(1).default(generateUid),
-  name: z.string().min(1),
-  url: z.url(),
-  selector: z.string().optional(),
-  /** Padding to expand capture area beyond element bounds */
-  padding: paddingSchema.optional(),
-  /** Scroll position to restore when capturing */
-  scroll: scrollPositionSchema.optional(),
-  /** Background fill mode for padding area */
-  paddingFill: paddingFillSchema.optional(),
-  /** Background fill mode for element area */
-  elementFill: elementFillSchema.optional(),
-  /** Viewport variants - generates screenshot for each (e.g., ["desktop", "mobile", "400x500"]) */
-  viewports: z.array(viewportVariantSchema).optional(),
-  /** Text overrides - selector (relative to main element) -> replacement text */
-  textOverrides: z.record(z.string(), z.string()).optional(),
+  id: z
+    .string()
+    .min(1)
+    .default(generateUid)
+    .describe('Unique identifier (auto-generated if omitted)'),
+  name: z.string().min(1).describe('Display name, also used to derive the output filename'),
+  url: z.url().describe('Full URL of the page to capture'),
+  selector: z.string().optional().describe('CSS selector for element capture (omit for full-page)'),
+  padding: paddingSchema.optional().describe('Expand capture area beyond element bounds'),
+  scroll: scrollPositionSchema.optional().describe('Scroll position to restore before capturing'),
+  paddingFill: paddingFillSchema
+    .optional()
+    .describe(
+      'Background fill for padding area: "inherit" (default) shows page content, "solid" fills with detected background color'
+    ),
+  elementFill: elementFillSchema
+    .optional()
+    .describe(
+      'Background fill for element area: "original" (default) keeps actual background, "solid" replaces with detected color'
+    ),
+  viewports: z
+    .array(viewportVariantSchema)
+    .optional()
+    .describe(
+      'Viewport variants to generate — preset names ("desktop", "tablet", "mobile") or custom "WIDTHxHEIGHT"'
+    ),
+  textOverrides: z
+    .record(z.string(), z.string())
+    .optional()
+    .describe(
+      'Replace text content before capture. Keys are CSS selectors, values are replacement text'
+    ),
+  actions: actionsSchema.optional(),
 });
 
 /** Browser settings */
 export const browserSchema = z.object({
-  viewport: viewportSchema.optional(),
-  colorScheme: colorSchemeSchema.optional(),
-  /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
-  deviceScaleFactor: z.number().min(1).max(3).optional(),
+  viewport: viewportSchema.optional().describe('Browser viewport dimensions'),
+  colorScheme: colorSchemeSchema
+    .optional()
+    .describe('Color scheme for capture. Omit to capture both light and dark variants'),
+  deviceScaleFactor: z
+    .number()
+    .min(1)
+    .max(3)
+    .optional()
+    .describe('Device pixel ratio (1 = standard, 2 = retina, 3 = ultra-high DPI)'),
 });
 
 /** Shared CLI options for URL capture */
@@ -147,21 +171,24 @@ export const shotCommandOptionsSchema = shotCliOptionsSchema.extend({
 
 /** Global config */
 export const configSchema = z.object({
-  /** Output directory for screenshots (relative to config file) */
-  outputDirectory: z.string().default('heroshots'),
-
-  /** Output format for screenshots (png or jpeg) */
-  outputFormat: outputFormatSchema.optional(),
-
-  /** JPEG quality (1-100), only used when outputFormat is 'jpeg' */
-  jpegQuality: z.number().int().min(1).max(100).default(80),
-
-  /** Browser settings (viewport, colorScheme) */
-  browser: browserSchema.optional(),
-
-  /** Number of parallel capture workers (default: 1) */
-  workers: z.number().int().min(1).optional(),
-
-  /** Screenshot definitions */
-  screenshots: z.array(screenshotSchema).default([]),
+  outputDirectory: z
+    .string()
+    .default('heroshots')
+    .describe('Output directory for screenshots (relative to config file)'),
+  outputFormat: outputFormatSchema.optional().describe('Image format for all screenshots'),
+  jpegQuality: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(80)
+    .describe('JPEG compression quality (1-100), only used when outputFormat is "jpeg"'),
+  browser: browserSchema.optional().describe('Default browser settings applied to all screenshots'),
+  workers: z
+    .number()
+    .int()
+    .min(1)
+    .optional()
+    .describe('Number of parallel capture workers (default: 1)'),
+  screenshots: z.array(screenshotSchema).default([]).describe('Screenshot definitions'),
 });
