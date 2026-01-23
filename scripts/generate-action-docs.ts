@@ -72,7 +72,11 @@ function formatType(prop: JsonSchemaProperty): string {
 
 function formatDefault(prop: JsonSchemaProperty): string {
   if (prop.default === undefined) return '-';
-  if (typeof prop.default === 'string') return `\`"${prop.default}"\``;
+  if (typeof prop.default === 'string') {
+    // Skip random/dynamic defaults (e.g., generated UIDs)
+    if (/^[\da-f]{8}$/.test(prop.default)) return 'auto';
+    return `\`"${prop.default}"\``;
+  }
   return `\`${JSON.stringify(prop.default)}\``;
 }
 
