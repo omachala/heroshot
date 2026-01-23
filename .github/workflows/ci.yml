@@ -288,7 +288,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate API reference docs
-        run: pnpm docs:generate
+        run: |
+          pnpm docs:generate
+          pnpm prettier --write docs/docs/*-reference.md
 
       - name: Verify docs are up-to-date
         run: |
