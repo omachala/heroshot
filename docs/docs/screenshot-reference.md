@@ -8,7 +8,7 @@ Back to [Configuration overview](./config#screenshot-definition).
 
 | Property           | Type                                         | Default      | Description                                                                                                                           |
 | ------------------ | -------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`               | string                                       | `"a32abb4f"` | Unique identifier (auto-generated if omitted)                                                                                         |
+| `id`               | string                                       | `"3a81b08c"` | Unique identifier (auto-generated if omitted)                                                                                         |
 | `name`             | string                                       | -            | Display name, also used to derive the output filename                                                                                 |
 | `url`              | string                                       | -            | Full URL of the page to capture                                                                                                       |
 | `selector`         | string                                       | -            | CSS selector for element capture (omit for full-page)                                                                                 |
@@ -30,7 +30,7 @@ Back to [Configuration overview](./config#screenshot-definition).
 
 ```json
 {
-  "id": "a32abb4f",
+  "id": "3a81b08c",
   "name": "My Screenshot",
   "url": "/dashboard",
   "selector": ".my-element",
