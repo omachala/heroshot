@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const activeTab = ref<'npm' | 'curl' | 'npx' | 'binary'>('npm');
+const activeTab = ref<'npm' | 'curl' | 'brew' | 'docker' | 'npx'>('npm');
 
 const tabs = [
   { id: 'npm', name: 'npm' },
   { id: 'curl', name: 'curl' },
+  { id: 'brew', name: 'Homebrew' },
+  { id: 'docker', name: 'Docker' },
   { id: 'npx', name: 'npx' },
-  { id: 'binary', name: 'Binary' },
 ] as const;
 
 const codeBlocks = {
@@ -41,14 +42,24 @@ const codeBlocks = {
       html: '<span class="hl-cmd">npx</span> heroshot https://example.com -o screenshot.png --light',
     },
   },
-  binary: {
+  brew: {
     install: {
-      raw: 'gh release download --repo omachala/heroshot --pattern "heroshot-linux-x64"',
-      html: '<span class="hl-comment"># Download from GitHub Releases:</span>\n<span class="hl-cmd">gh</span> release download --repo omachala/heroshot --pattern <span class="hl-string">"heroshot-*"</span>',
+      raw: 'brew install omachala/heroshot/heroshot',
+      html: '<span class="hl-cmd">brew</span> install omachala/heroshot/heroshot',
     },
     run: {
-      raw: 'chmod +x heroshot-* && ./heroshot-linux-x64',
-      html: '<span class="hl-cmd">chmod</span> +x heroshot-* && ./heroshot-linux-x64',
+      raw: 'heroshot',
+      html: '<span class="hl-cmd">heroshot</span>                  <span class="hl-comment"># opens visual editor</span>',
+    },
+  },
+  docker: {
+    install: {
+      raw: 'docker pull heroshot/heroshot',
+      html: '<span class="hl-cmd">docker</span> pull heroshot/heroshot',
+    },
+    run: {
+      raw: 'docker run --rm -v $(pwd):/work heroshot/heroshot sync',
+      html: '<span class="hl-cmd">docker</span> run --rm -v $(pwd):/work heroshot/heroshot sync',
     },
   },
 };
