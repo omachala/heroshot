@@ -86,7 +86,7 @@ function copyCode(code: string, event: MouseEvent) {
     </div>
 
     <div class="tabs-content">
-      <div v-for="tab in tabs" :key="tab.id" v-show="activeTab === tab.id" class="tab-panel">
+      <div v-show="activeTab === 'npm'" class="tab-panel">
         <div class="code-section">
           <p class="code-label" data-step="1">Install</p>
           <div class="code-block">
@@ -95,10 +95,10 @@ function copyCode(code: string, event: MouseEvent) {
               <button
                 class="copy"
                 title="Copy Code"
-                @click="copyCode(codeBlocks[tab.id].install.raw, $event)"
+                @click="copyCode(codeBlocks.npm.install.raw, $event)"
               ></button>
             </div>
-            <pre><code v-html="codeBlocks[tab.id].install.html"></code></pre>
+            <pre><code v-html="codeBlocks.npm.install.html"></code></pre>
           </div>
         </div>
         <div class="code-section">
@@ -109,13 +109,138 @@ function copyCode(code: string, event: MouseEvent) {
               <button
                 class="copy"
                 title="Copy Code"
-                @click="copyCode(codeBlocks[tab.id].run.raw, $event)"
+                @click="copyCode(codeBlocks.npm.run.raw, $event)"
               ></button>
             </div>
-            <pre><code v-html="codeBlocks[tab.id].run.html"></code></pre>
+            <pre><code v-html="codeBlocks.npm.run.html"></code></pre>
           </div>
         </div>
       </div>
+
+      <div v-show="activeTab === 'curl'" class="tab-panel">
+        <div class="code-section">
+          <p class="code-label" data-step="1">Install</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">shell</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.curl.install.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.curl.install.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="2">Run</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">shell</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.curl.run.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.curl.run.html"></code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div v-show="activeTab === 'brew'" class="tab-panel">
+        <div class="code-section">
+          <p class="code-label" data-step="1">Install</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">shell</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.brew.install.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.brew.install.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="2">Run</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">shell</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.brew.run.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.brew.run.html"></code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div v-show="activeTab === 'docker'" class="tab-panel">
+        <div class="code-section">
+          <p class="code-label" data-step="1">Install</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">shell</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.docker.install.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.docker.install.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="2">Run</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">shell</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.docker.run.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.docker.run.html"></code></pre>
+          </div>
+        </div>
+      </div>
+
+      <div v-show="activeTab === 'npx'" class="tab-panel">
+        <div class="code-section">
+          <p class="code-label" data-step="1">Install</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">shell</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.npx.install.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.npx.install.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="2">Run</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">shell</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.npx.run.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.npx.run.html"></code></pre>
+          </div>
+        </div>
+      </div>
+
       <a href="/docs/getting-started" class="learn-more">Full guide</a>
     </div>
 
