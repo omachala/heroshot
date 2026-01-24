@@ -1,67 +1,30 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const activeTab = ref<'npm' | 'curl' | 'brew' | 'docker' | 'npx'>('npm');
+const activeTab = ref<'npm' | 'curl' | 'brew' | 'docker'>('npm');
 
-const tabs = [
-  { id: 'npm', name: 'npm' },
-  { id: 'curl', name: 'curl' },
-  { id: 'brew', name: 'Homebrew' },
-  { id: 'docker', name: 'Docker' },
-  { id: 'npx', name: 'npx' },
-] as const;
-
-const codeBlocks = {
+const installCommands = {
   npm: {
-    install: {
-      raw: 'npm install -g heroshot',
-      html: '<span class="hl-cmd">npm</span> install -g heroshot',
-    },
-    run: {
-      raw: 'heroshot',
-      html: '<span class="hl-cmd">heroshot</span>                  <span class="hl-comment"># opens visual editor</span>',
-    },
+    raw: 'npm install -g heroshot',
+    html: '<span class="hl-cmd">npm</span> install -g heroshot',
   },
   curl: {
-    install: {
-      raw: 'curl -fsSL https://heroshot.sh/install.sh | sh',
-      html: '<span class="hl-cmd">curl</span> -fsSL https://heroshot.sh/install.sh | sh',
-    },
-    run: {
-      raw: 'heroshot',
-      html: '<span class="hl-cmd">heroshot</span>                  <span class="hl-comment"># opens visual editor</span>',
-    },
-  },
-  npx: {
-    install: {
-      raw: 'npx heroshot https://example.com',
-      html: '<span class="hl-cmd">npx</span> heroshot https://example.com',
-    },
-    run: {
-      raw: 'npx heroshot https://example.com -o screenshot.png --light',
-      html: '<span class="hl-cmd">npx</span> heroshot https://example.com -o screenshot.png --light',
-    },
+    raw: 'curl -fsSL https://heroshot.sh/install.sh | sh',
+    html: '<span class="hl-cmd">curl</span> -fsSL https://heroshot.sh/install.sh | sh',
   },
   brew: {
-    install: {
-      raw: 'brew install omachala/heroshot/heroshot',
-      html: '<span class="hl-cmd">brew</span> install omachala/heroshot/heroshot',
-    },
-    run: {
-      raw: 'heroshot',
-      html: '<span class="hl-cmd">heroshot</span>                  <span class="hl-comment"># opens visual editor</span>',
-    },
+    raw: 'brew install omachala/heroshot/heroshot',
+    html: '<span class="hl-cmd">brew</span> install omachala/heroshot/heroshot',
   },
   docker: {
-    install: {
-      raw: 'docker pull heroshot/heroshot',
-      html: '<span class="hl-cmd">docker</span> pull heroshot/heroshot',
-    },
-    run: {
-      raw: 'docker run --rm -v $(pwd):/work heroshot/heroshot sync',
-      html: '<span class="hl-cmd">docker</span> run --rm -v $(pwd):/work heroshot/heroshot sync',
-    },
+    raw: 'docker pull heroshot/heroshot',
+    html: '<span class="hl-cmd">docker</span> pull heroshot/heroshot',
   },
+};
+
+const quickStart = {
+  raw: 'npx heroshot',
+  html: '<span class="hl-cmd">npx</span> heroshot',
 };
 
 function copyCode(code: string, event: MouseEvent) {
@@ -74,180 +37,86 @@ function copyCode(code: string, event: MouseEvent) {
 
 <template>
   <div class="install-tabs">
-    <div class="tabs-header">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        :class="['tab-button', { active: activeTab === tab.id }]"
-        @click="activeTab = tab.id"
-      >
-        {{ tab.name }}
-      </button>
+    <!-- Quick Start -->
+    <div class="quick-start">
+      <p class="quick-label">Try it now <span class="no-install">— no install needed</span></p>
+      <div class="code-block featured">
+        <div class="code-header">
+          <span class="lang">shell</span>
+          <button class="copy" title="Copy Code" @click="copyCode(quickStart.raw, $event)"></button>
+        </div>
+        <pre><code v-html="quickStart.html"></code></pre>
+      </div>
     </div>
 
-    <div class="tabs-content">
-      <div v-show="activeTab === 'npm'" class="tab-panel">
-        <div class="code-section">
-          <p class="code-label" data-step="1">Install</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.npm.install.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.npm.install.html"></code></pre>
-          </div>
-        </div>
-        <div class="code-section">
-          <p class="code-label" data-step="2">Run</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.npm.run.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.npm.run.html"></code></pre>
-          </div>
-        </div>
+    <!-- Install options -->
+    <div class="install-options">
+      <p class="install-label">Or install permanently:</p>
+      <div class="tabs-row">
+        <button :class="['tab-btn', { active: activeTab === 'npm' }]" @click="activeTab = 'npm'">
+          npm
+        </button>
+        <button :class="['tab-btn', { active: activeTab === 'curl' }]" @click="activeTab = 'curl'">
+          curl
+        </button>
+        <button :class="['tab-btn', { active: activeTab === 'brew' }]" @click="activeTab = 'brew'">
+          Homebrew
+        </button>
+        <button
+          :class="['tab-btn', { active: activeTab === 'docker' }]"
+          @click="activeTab = 'docker'"
+        >
+          Docker
+        </button>
       </div>
 
-      <div v-show="activeTab === 'curl'" class="tab-panel">
-        <div class="code-section">
-          <p class="code-label" data-step="1">Install</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.curl.install.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.curl.install.html"></code></pre>
-          </div>
+      <div v-show="activeTab === 'npm'" class="code-block">
+        <div class="code-header">
+          <span class="lang">shell</span>
+          <button
+            class="copy"
+            title="Copy Code"
+            @click="copyCode(installCommands.npm.raw, $event)"
+          ></button>
         </div>
-        <div class="code-section">
-          <p class="code-label" data-step="2">Run</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.curl.run.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.curl.run.html"></code></pre>
-          </div>
-        </div>
+        <pre><code v-html="installCommands.npm.html"></code></pre>
       </div>
-
-      <div v-show="activeTab === 'brew'" class="tab-panel">
-        <div class="code-section">
-          <p class="code-label" data-step="1">Install</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.brew.install.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.brew.install.html"></code></pre>
-          </div>
+      <div v-show="activeTab === 'curl'" class="code-block">
+        <div class="code-header">
+          <span class="lang">shell</span>
+          <button
+            class="copy"
+            title="Copy Code"
+            @click="copyCode(installCommands.curl.raw, $event)"
+          ></button>
         </div>
-        <div class="code-section">
-          <p class="code-label" data-step="2">Run</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.brew.run.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.brew.run.html"></code></pre>
-          </div>
-        </div>
+        <pre><code v-html="installCommands.curl.html"></code></pre>
       </div>
-
-      <div v-show="activeTab === 'docker'" class="tab-panel">
-        <div class="code-section">
-          <p class="code-label" data-step="1">Install</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.docker.install.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.docker.install.html"></code></pre>
-          </div>
+      <div v-show="activeTab === 'brew'" class="code-block">
+        <div class="code-header">
+          <span class="lang">shell</span>
+          <button
+            class="copy"
+            title="Copy Code"
+            @click="copyCode(installCommands.brew.raw, $event)"
+          ></button>
         </div>
-        <div class="code-section">
-          <p class="code-label" data-step="2">Run</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.docker.run.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.docker.run.html"></code></pre>
-          </div>
-        </div>
+        <pre><code v-html="installCommands.brew.html"></code></pre>
       </div>
-
-      <div v-show="activeTab === 'npx'" class="tab-panel">
-        <div class="code-section">
-          <p class="code-label" data-step="1">Install</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.npx.install.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.npx.install.html"></code></pre>
-          </div>
+      <div v-show="activeTab === 'docker'" class="code-block">
+        <div class="code-header">
+          <span class="lang">shell</span>
+          <button
+            class="copy"
+            title="Copy Code"
+            @click="copyCode(installCommands.docker.raw, $event)"
+          ></button>
         </div>
-        <div class="code-section">
-          <p class="code-label" data-step="2">Run</p>
-          <div class="code-block">
-            <div class="code-header">
-              <span class="lang">shell</span>
-              <button
-                class="copy"
-                title="Copy Code"
-                @click="copyCode(codeBlocks.npx.run.raw, $event)"
-              ></button>
-            </div>
-            <pre><code v-html="codeBlocks.npx.run.html"></code></pre>
-          </div>
-        </div>
+        <pre><code v-html="installCommands.docker.html"></code></pre>
       </div>
-
-      <a href="/docs/getting-started" class="learn-more">Full guide</a>
     </div>
 
-    <p class="install-note">
-      No config needed. Heroshot opens a browser, you point and click to select elements,
-      screenshots are saved automatically.
-    </p>
+    <a href="/docs/getting-started" class="learn-more">Full getting started guide</a>
   </div>
 </template>
 
@@ -256,115 +125,65 @@ function copyCode(code: string, event: MouseEvent) {
   margin-top: 24px;
 }
 
-.tabs-header {
+/* Quick Start */
+.quick-start {
+  margin-bottom: 20px;
+}
+
+.quick-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+  margin: 0 0 8px 0;
+}
+
+.quick-label .no-install {
+  font-weight: 400;
+  color: var(--vp-c-text-2);
+}
+
+/* Install options */
+.install-options {
+  margin-bottom: 16px;
+}
+
+.install-label {
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+  margin: 0 0 10px 0;
+}
+
+.tabs-row {
   display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: 6px;
+  margin-bottom: 10px;
   flex-wrap: wrap;
 }
 
-.tab-button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border: 2px solid var(--vp-c-divider);
-  border-radius: 12px;
-  background: var(--vp-c-bg);
+.tab-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
+  background: var(--vp-c-bg-soft);
   cursor: pointer;
+  font-size: 13px;
   font-weight: 500;
-  font-size: 15px;
   color: var(--vp-c-text-2);
   transition: all 0.2s ease;
 }
 
-.tab-button:hover {
+.tab-btn:hover {
   border-color: var(--vp-c-brand-1);
   color: var(--vp-c-text-1);
 }
 
-.tab-button.active {
+.tab-btn.active {
   background: var(--vp-c-brand-soft);
   border-color: var(--vp-c-brand-1);
   color: var(--vp-c-brand-1);
 }
 
-.tabs-content {
-  position: relative;
-  background: var(--vp-c-bg);
-  border-radius: 12px;
-  padding: 24px;
-  border: 1px solid var(--vp-c-divider);
-  overflow: hidden;
-}
-
-.tab-panel {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  min-width: 0;
-}
-
-@media (max-width: 768px) {
-  .tab-panel {
-    grid-template-columns: 1fr;
-  }
-}
-
-.code-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.code-section .code-block {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.code-section .code-block pre {
-  flex: 1;
-}
-
-.code-label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--vp-c-text-1);
-  margin: 0;
-}
-
-.code-label::before {
-  content: '';
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--vp-c-brand-soft);
-  border-radius: 8px;
-  flex-shrink: 0;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 16px;
-}
-
-/* Install icon - download arrow */
-.code-label[data-step='1']::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ea580c' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4'/%3E%3C/svg%3E");
-}
-
-/* Run icon - play */
-.code-label[data-step='2']::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ea580c' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z'/%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 12a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E");
-}
-
+/* Code blocks */
 .code-block {
   position: relative;
   border-radius: 8px;
@@ -372,11 +191,15 @@ function copyCode(code: string, event: MouseEvent) {
   background: var(--vp-code-block-bg);
 }
 
+.code-block.featured {
+  border: 2px solid var(--vp-c-brand-1);
+}
+
 .code-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 6px 12px;
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -416,25 +239,26 @@ function copyCode(code: string, event: MouseEvent) {
 
 .code-block pre {
   margin: 0;
-  padding: 16px;
+  padding: 12px 16px;
   overflow-x: auto;
 }
 
 .code-block code {
   font-family: var(--vp-font-family-mono);
-  font-size: 13px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
   color: var(--vp-c-text-1);
   white-space: pre;
   display: block;
 }
 
-/* Simple syntax highlighting */
+.code-block.featured code {
+  font-size: 15px;
+}
+
+/* Syntax highlighting */
 .code-block :deep(.hl-cmd) {
   color: #0550ae;
-}
-.code-block :deep(.hl-string) {
-  color: #0a3069;
 }
 .code-block :deep(.hl-comment) {
   color: #6e7781;
@@ -443,17 +267,13 @@ function copyCode(code: string, event: MouseEvent) {
 .dark .code-block :deep(.hl-cmd) {
   color: #79c0ff;
 }
-.dark .code-block :deep(.hl-string) {
-  color: #a5d6ff;
-}
 .dark .code-block :deep(.hl-comment) {
   color: #8b949e;
 }
 
 .learn-more {
-  position: absolute;
-  top: 24px;
-  right: 24px;
+  display: inline-block;
+  margin-top: 16px;
   font-size: 14px;
   font-weight: 500;
   color: var(--vp-c-brand-1);
@@ -468,34 +288,10 @@ function copyCode(code: string, event: MouseEvent) {
   content: ' \2192';
 }
 
-.install-note {
-  text-align: center;
-  margin-top: 16px;
-  font-size: 14px;
-  color: var(--vp-c-text-2);
-}
-
-@media (max-width: 768px) {
-  .learn-more {
-    position: static;
-    display: block;
-    margin-top: 16px;
-    text-align: right;
-  }
-}
-
 @media (max-width: 640px) {
-  .tabs-header {
-    gap: 6px;
-  }
-
-  .tab-button {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
-  .tabs-content {
-    padding: 10px;
+  .tab-btn {
+    padding: 5px 10px;
+    font-size: 12px;
   }
 
   .code-block pre {
@@ -504,6 +300,10 @@ function copyCode(code: string, event: MouseEvent) {
 
   .code-block code {
     font-size: 12px;
+  }
+
+  .code-block.featured code {
+    font-size: 13px;
   }
 }
 </style>

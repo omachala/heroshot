@@ -73,7 +73,7 @@ features:
 
 <div class="install-section">
   <h2>Getting Started</h2>
-  <p class="subtitle">Install heroshot and capture your first screenshot in under a minute.</p>
+  <p class="subtitle">Capture your first screenshot in under a minute.</p>
 
   <InstallTabs />
 </div>
