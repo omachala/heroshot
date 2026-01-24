@@ -1,3 +1,8 @@
+/* Prevent horizontal overflow on mobile */
+.VPContent.is-home {
+  overflow-x: hidden;
+}
+
 /* Hide VitePress auto-generated hr */
 .VPHome hr,
 .VPContent.is-home hr {
