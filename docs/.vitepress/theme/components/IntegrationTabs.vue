@@ -450,6 +450,7 @@ function copyCode(code: string, event: MouseEvent) {
   line-height: 1.6;
   color: var(--vp-c-text-1);
   white-space: pre;
+  display: block;
 }
 
 /* Simple syntax highlighting */
