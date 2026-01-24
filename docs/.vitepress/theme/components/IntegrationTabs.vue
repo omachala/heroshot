@@ -531,12 +531,16 @@ function copyCode(code: string, event: MouseEvent) {
   }
 
   .tab-button {
-    padding: 10px 14px;
+    padding: 8px 12px;
     font-size: 13px;
   }
 
   .tabs-content {
-    padding: 16px;
+    padding: 10px;
+  }
+
+  .code-block pre {
+    padding: 10px;
   }
 
   .code-block code {

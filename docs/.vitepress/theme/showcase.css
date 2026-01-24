@@ -3,6 +3,13 @@
   overflow-x: hidden;
 }
 
+/* Reduce VitePress default padding on mobile home page */
+@media (max-width: 640px) {
+  .VPHome .vp-doc {
+    padding: 0 12px;
+  }
+}
+
 /* Hide VitePress auto-generated hr */
 .VPHome hr,
 .VPContent.is-home hr {
@@ -149,7 +156,11 @@
 
 @media (max-width: 768px) {
   .picker-section {
-    margin: 32px 16px 0;
+    margin: 24px 8px 0;
+    padding: 16px 8px 24px;
+  }
+
+  .showcase {
     padding: 24px 16px 32px;
   }
 }
@@ -179,8 +190,8 @@
 
 @media (max-width: 768px) {
   .install-section {
-    margin: 32px 16px 0;
-    padding: 24px 16px 32px;
+    margin: 24px 8px 0;
+    padding: 16px 8px 24px;
   }
 
   .install-section h2 {
@@ -206,8 +217,8 @@
 
 @media (max-width: 768px) {
   .integrations-section {
-    margin: 32px 16px 48px;
-    padding: 24px 16px 32px;
+    margin: 24px 8px 48px;
+    padding: 16px 8px 24px;
   }
 
   .integrations-section h2 {
