@@ -8,11 +8,13 @@ Project-URL: Homepage, https://heroshot.sh
 Project-URL: Repository, https://github.com/omachala/heroshot
 Project-URL: Documentation, https://heroshot.sh/docs/integrations/mkdocs
 Project-URL: Issues, https://github.com/omachala/heroshot/issues
-Keywords: screenshot,automation,documentation,mkdocs,mkdocs-material,dark-mode
+Keywords: screenshot,automation,documentation,mkdocs,mkdocs-material,sphinx,dark-mode
 Classifier: Development Status :: 4 - Beta
 Classifier: Environment :: Console
 Classifier: Environment :: Plugins
 Classifier: Framework :: MkDocs
+Classifier: Framework :: Sphinx
+Classifier: Framework :: Sphinx :: Extension
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
@@ -27,12 +29,14 @@ Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 Provides-Extra: mkdocs
 Requires-Dist: mkdocs-macros-plugin>=1.0.0; extra == "mkdocs"
+Provides-Extra: sphinx
+Requires-Dist: sphinx>=4.0; extra == "sphinx"
 
 # Heroshot
 
 Screenshot automation for Python documentation tools.
 
-## Quick Start
+## MkDocs
 
 ```bash
 pip install heroshot[mkdocs]
@@ -52,7 +56,27 @@ Use in markdown:
 {{ heroshot("dashboard", "Dashboard overview") }}
 ```
 
+## Sphinx
+
+```bash
+pip install heroshot[sphinx]
+```
+
+Add to `conf.py`:
+
+```python
+extensions = ['heroshot.sphinx']
+```
+
+Use in RST:
+
+```rst
+.. heroshot:: dashboard
+   :alt: Dashboard overview
+```
+
 ## Links
 
-- [Full Documentation](https://heroshot.sh/docs/integrations/mkdocs)
+- [MkDocs Documentation](https://heroshot.sh/docs/integrations/mkdocs)
+- [Sphinx Documentation](https://heroshot.sh/docs/integrations/sphinx)
 - [GitHub](https://github.com/omachala/heroshot)

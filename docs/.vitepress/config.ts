@@ -174,6 +174,7 @@ export default defineConfig({
                 { text: 'VitePress', link: '/docs/integrations/vitepress' },
                 { text: 'Docusaurus', link: '/docs/integrations/docusaurus' },
                 { text: 'MkDocs', link: '/docs/integrations/mkdocs' },
+                { text: 'Sphinx', link: '/docs/integrations/sphinx' },
                 { text: 'GitBook', link: '/docs/integrations/gitbook' },
               ],
             },
