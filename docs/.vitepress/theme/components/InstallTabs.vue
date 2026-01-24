@@ -23,8 +23,8 @@ const codeBlocks = {
   },
   curl: {
     install: {
-      raw: 'curl -fsSL https://heroshot.dev/install.sh | sh',
-      html: '<span class="hl-cmd">curl</span> -fsSL https://heroshot.dev/install.sh | sh',
+      raw: 'curl -fsSL https://heroshot.sh/install.sh | sh',
+      html: '<span class="hl-cmd">curl</span> -fsSL https://heroshot.sh/install.sh | sh',
     },
     run: {
       raw: 'heroshot',
