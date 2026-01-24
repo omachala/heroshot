@@ -149,7 +149,39 @@
   }
 }
 
-/* Integrations section */
+/* Install / Getting Started section */
+.install-section {
+  max-width: 1152px;
+  margin: 48px auto 0;
+  padding: 32px 0 48px;
+}
+
+.install-section h2 {
+  text-align: center;
+  font-size: 28px;
+  margin: 0 0 8px 0;
+  padding: 0;
+  border: none;
+  color: var(--navy-base);
+}
+
+.install-section .subtitle {
+  text-align: center;
+  color: var(--vp-c-text-2);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .install-section {
+    margin: 32px 16px 0;
+    padding: 24px 16px 32px;
+  }
+
+  .install-section h2 {
+    font-size: 24px;
+  }
+}
+
 .integrations-section {
   max-width: 1152px;
   margin: 48px auto 64px;
