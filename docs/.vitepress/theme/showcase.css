@@ -154,6 +154,7 @@
   max-width: 1152px;
   margin: 48px auto 0;
   padding: 32px 0 48px;
+  overflow: hidden;
 }
 
 .install-section h2 {
@@ -186,6 +187,7 @@
   max-width: 1152px;
   margin: 48px auto 64px;
   padding: 32px 0 48px;
+  overflow: hidden;
 }
 
 .integrations-section h2 {

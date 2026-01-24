@@ -296,12 +296,14 @@ function copyCode(code: string, event: MouseEvent) {
   border-radius: 12px;
   padding: 24px;
   border: 1px solid var(--vp-c-divider);
+  overflow: hidden;
 }
 
 .tab-panel {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+  min-width: 0;
 }
 
 @media (max-width: 768px) {
@@ -314,6 +316,8 @@ function copyCode(code: string, event: MouseEvent) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .code-section .code-block {
