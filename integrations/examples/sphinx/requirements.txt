@@ -1,0 +1,5 @@
+sphinx>=7.0
+furo>=2024.0
+sphinx-autobuild>=2024.0
+# Local package until published to PyPI
+../../python/

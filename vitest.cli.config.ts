@@ -9,5 +9,7 @@ export default defineConfig({
     globals: true,
     include: ['src/tests/cli/**/*.test.ts'],
     exclude: ['**/node_modules/**'],
+    maxConcurrency: 20,
+    testTimeout: 60_000,
   },
 });

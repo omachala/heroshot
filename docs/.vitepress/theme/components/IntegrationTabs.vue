@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const activeTab = ref<'vitepress' | 'docusaurus' | 'mkdocs'>('docusaurus');
+const activeTab = ref<'vitepress' | 'docusaurus' | 'mkdocs' | 'sphinx'>('docusaurus');
 
 const tabs = [
   { id: 'docusaurus', name: 'Docusaurus' },
   { id: 'vitepress', name: 'VitePress' },
   { id: 'mkdocs', name: 'MkDocs' },
+  { id: 'sphinx', name: 'Sphinx' },
 ] as const;
 
 // Simple manual syntax highlighting with HTML spans
@@ -94,6 +95,24 @@ import { Heroshot } from 'heroshot/vue';
       lang: 'jinja',
       raw: '{{ heroshot("dashboard", "Dashboard overview") }}',
       html: '{{ <span class="hl-fn">heroshot</span>(<span class="hl-string">"dashboard"</span>, <span class="hl-string">"Dashboard overview"</span>) }}',
+    },
+  },
+  sphinx: {
+    step1: {
+      lang: 'bash',
+      raw: 'pip install heroshot[sphinx]\nnpx heroshot',
+      html: '<span class="hl-cmd">pip</span> install heroshot[sphinx]\n<span class="hl-cmd">npx</span> heroshot',
+    },
+    step2: {
+      lang: 'python',
+      file: 'conf.py',
+      raw: `extensions = ['heroshot.sphinx']`,
+      html: `<span class="hl-attr">extensions</span> = [<span class="hl-string">'heroshot.sphinx'</span>]`,
+    },
+    step3: {
+      lang: 'rst',
+      raw: '.. heroshot:: dashboard\n   :alt: Dashboard overview',
+      html: '<span class="hl-tag">.. heroshot::</span> dashboard\n   <span class="hl-attr">:alt:</span> <span class="hl-string">Dashboard overview</span>',
     },
   },
 };
@@ -259,6 +278,53 @@ function copyCode(code: string, event: MouseEvent) {
           </div>
         </div>
         <a href="/docs/integrations/mkdocs" class="learn-more">Full MkDocs Guide</a>
+      </div>
+
+      <!-- Sphinx -->
+      <div v-show="activeTab === 'sphinx'" class="tab-panel">
+        <div class="code-section">
+          <p class="code-label" data-step="1">Install</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">{{ codeBlocks.sphinx.step1.lang }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.sphinx.step1.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.sphinx.step1.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="2">Configure</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="file">{{ codeBlocks.sphinx.step2.file }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.sphinx.step2.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.sphinx.step2.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="3">Use</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">{{ codeBlocks.sphinx.step3.lang }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.sphinx.step3.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.sphinx.step3.html"></code></pre>
+          </div>
+        </div>
+        <a href="/docs/integrations/sphinx" class="learn-more">Full Sphinx Guide</a>
       </div>
     </div>
   </div>

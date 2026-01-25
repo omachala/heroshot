@@ -2,7 +2,7 @@
 
 Screenshot automation for Python documentation tools.
 
-## Quick Start
+## MkDocs
 
 ```bash
 pip install heroshot[mkdocs]
@@ -22,7 +22,27 @@ Use in markdown:
 {{ heroshot("dashboard", "Dashboard overview") }}
 ```
 
+## Sphinx
+
+```bash
+pip install heroshot[sphinx]
+```
+
+Add to `conf.py`:
+
+```python
+extensions = ['heroshot.sphinx']
+```
+
+Use in RST:
+
+```rst
+.. heroshot:: dashboard
+   :alt: Dashboard overview
+```
+
 ## Links
 
-- [Full Documentation](https://heroshot.sh/docs/integrations/mkdocs)
+- [MkDocs Documentation](https://heroshot.sh/docs/integrations/mkdocs)
+- [Sphinx Documentation](https://heroshot.sh/docs/integrations/sphinx)
 - [GitHub](https://github.com/omachala/heroshot)
