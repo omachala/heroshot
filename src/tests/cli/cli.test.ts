@@ -2,7 +2,10 @@
  * CLI integration tests
  * Tests the actual CLI binary with various flag combinations
  */
-import { execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const execAsync = promisify(exec);
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -13,15 +16,18 @@ const TEST_OUTPUT_DIR = path.join(import.meta.dirname, '../../../.test-output-cl
 const CLI_PATH = path.join(import.meta.dirname, '../../../dist/cli.js');
 
 /** Run CLI command and return result */
-function runCli(args: string): { success: boolean; output: string } {
+async function runCli(
+  args: string,
+  cwd: string = TEST_OUTPUT_DIR
+): Promise<{ success: boolean; output: string }> {
   try {
     // eslint-disable-next-line sonarjs/os-command -- Test file with controlled inputs
-    const output = execSync(`node ${CLI_PATH} ${args}`, {
+    const { stdout } = await execAsync(`node ${CLI_PATH} ${args}`, {
       encoding: 'utf8',
       timeout: 60_000,
-      cwd: TEST_OUTPUT_DIR,
+      cwd,
     });
-    return { success: true, output };
+    return { success: true, output: stdout };
   } catch (error) {
     const execError = error as { stdout?: string; stderr?: string };
     return { success: false, output: execError.stdout ?? execError.stderr ?? '' };
@@ -37,7 +43,7 @@ async function getImageDimensions(filePath: string): Promise<{ width: number; he
   };
 }
 
-describe('CLI URL capture', () => {
+describe.concurrent('CLI URL capture', () => {
   beforeAll(() => {
     // Create test output directory
     if (!existsSync(TEST_OUTPUT_DIR)) {
@@ -58,7 +64,7 @@ describe('CLI URL capture', () => {
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
       // Use --light to get single file (no color scheme = both light & dark)
-      const result = runCli(`${TEST_URL} -o ${output} --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -71,7 +77,7 @@ describe('CLI URL capture', () => {
       const output = 'mobile.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --mobile --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --mobile --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -86,7 +92,7 @@ describe('CLI URL capture', () => {
       const output = 'custom.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} -w 1024 --height 768 --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} -w 1024 --height 768 --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -101,7 +107,7 @@ describe('CLI URL capture', () => {
       const output = 'element.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --selector "#hero" --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --selector "#hero" --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -112,21 +118,24 @@ describe('CLI URL capture', () => {
     }, 60_000);
 
     it('captures element with padding', async () => {
-      const output = 'element-padded.png';
-      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+      const testId = Date.now() + '-' + Math.random().toString(36).slice(2);
+      const outputNoPad = `element-no-padding-${testId}.png`;
+      const outputPadded = `element-padded-${testId}.png`;
+      const outputPathNoPad = path.join(TEST_OUTPUT_DIR, outputNoPad);
+      const outputPathPadded = path.join(TEST_OUTPUT_DIR, outputPadded);
 
       // First without padding
-      runCli(`${TEST_URL} -o element-no-padding.png --selector "#hero" --light`);
+      await runCli(`${TEST_URL} -o ${outputNoPad} --selector "#hero" --light`);
       // Then with padding
-      const result = runCli(`${TEST_URL} -o ${output} --selector "#hero" -p 20 --light`);
+      const result = await runCli(
+        `${TEST_URL} -o ${outputPadded} --selector "#hero" -p 20 --light`
+      );
 
       expect(result.success).toBe(true);
-      expect(existsSync(outputPath)).toBe(true);
+      expect(existsSync(outputPathPadded)).toBe(true);
 
-      const dimWithout = await getImageDimensions(
-        path.join(TEST_OUTPUT_DIR, 'element-no-padding.png')
-      );
-      const dimWith = await getImageDimensions(outputPath);
+      const dimWithout = await getImageDimensions(outputPathNoPad);
+      const dimWith = await getImageDimensions(outputPathPadded);
 
       expect(dimWith.width).toBe(dimWithout.width + 40);
       expect(dimWith.height).toBe(dimWithout.height + 40);
@@ -138,7 +147,7 @@ describe('CLI URL capture', () => {
       const output = 'retina.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --mobile --retina --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --mobile --retina --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -155,7 +164,7 @@ describe('CLI URL capture', () => {
       const output = 'format.jpg';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} -q 85 --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} -q 85 --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -167,7 +176,7 @@ describe('CLI URL capture', () => {
 
   describe('filename generation', () => {
     it('auto-generates filename from URL', async () => {
-      const result = runCli(TEST_URL);
+      const result = await runCli(TEST_URL);
 
       expect(result.success).toBe(true);
 
@@ -182,7 +191,7 @@ describe('CLI URL capture', () => {
       const output = 'tablet.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --tablet --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --tablet --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -197,7 +206,7 @@ describe('CLI URL capture', () => {
       const output = 'desktop.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --desktop --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --desktop --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -212,7 +221,7 @@ describe('CLI URL capture', () => {
       const output = 'dark-only.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --dark`);
+      const result = await runCli(`${TEST_URL} -o ${output} --dark`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -221,7 +230,7 @@ describe('CLI URL capture', () => {
     }, 60_000);
 
     it('captures both light and dark variants when both flags specified', async () => {
-      const result = runCli(`${TEST_URL} -o both-schemes.png --light --dark`);
+      const result = await runCli(`${TEST_URL} -o both-schemes.png --light --dark`);
 
       expect(result.success).toBe(true);
       // Should create both variants with suffixes
@@ -235,7 +244,7 @@ describe('CLI URL capture', () => {
       const output = 'scale-1.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --mobile --scale 1 --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --mobile --scale 1 --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -250,7 +259,7 @@ describe('CLI URL capture', () => {
       const output = 'scale-3.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --mobile --scale 3 --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --mobile --scale 3 --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -267,7 +276,7 @@ describe('CLI URL capture', () => {
       const output = 'viewport-only.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --viewport-only --light`);
+      const result = await runCli(`${TEST_URL} -o ${output} --viewport-only --light`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -280,8 +289,8 @@ describe('CLI URL capture', () => {
   });
 
   describe('global options', () => {
-    it('shows version with --version', () => {
-      const result = runCli('--version');
+    it('shows version with --version', async () => {
+      const result = await runCli('--version');
 
       expect(result.success).toBe(true);
       // Version should be a semver-like string
@@ -291,7 +300,7 @@ describe('CLI URL capture', () => {
     it('shows verbose output with -v flag', async () => {
       const output = 'verbose-test.png';
 
-      const result = runCli(`${TEST_URL} -o ${output} --light -v`);
+      const result = await runCli(`${TEST_URL} -o ${output} --light -v`);
 
       expect(result.success).toBe(true);
       // Verbose output should contain additional details
@@ -301,7 +310,7 @@ describe('CLI URL capture', () => {
 
   describe('error handling', () => {
     it('fails gracefully with invalid selector', async () => {
-      const result = runCli(
+      const result = await runCli(
         `${TEST_URL} -o invalid-selector.png --selector "#nonexistent-element-xyz" --light`
       );
 
@@ -315,7 +324,7 @@ describe('CLI URL capture', () => {
       const output = 'combo-tablet-retina-dark.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --tablet --retina --dark`);
+      const result = await runCli(`${TEST_URL} -o ${output} --tablet --retina --dark`);
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -330,7 +339,9 @@ describe('CLI URL capture', () => {
       const output = 'combo-selector-padding-mobile.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --selector "#hero" -p 10 --mobile --light`);
+      const result = await runCli(
+        `${TEST_URL} -o ${output} --selector "#hero" -p 10 --mobile --light`
+      );
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -344,7 +355,9 @@ describe('CLI URL capture', () => {
       const output = 'combo-viewport-custom.png';
       const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-      const result = runCli(`${TEST_URL} -o ${output} --viewport-only -w 800 --height 600 --light`);
+      const result = await runCli(
+        `${TEST_URL} -o ${output} --viewport-only -w 800 --height 600 --light`
+      );
 
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
@@ -357,15 +370,16 @@ describe('CLI URL capture', () => {
 
   describe('config integration', () => {
     it('saves screenshot to config with --save flag', async () => {
-      const configDir = path.join(TEST_OUTPUT_DIR, '.heroshot');
+      const testId = Date.now() + '-' + Math.random().toString(36).slice(2);
+      const testDir = path.join(TEST_OUTPUT_DIR, `save-test-${testId}`);
+      const configDir = path.join(testDir, '.heroshot');
       const configPath = path.join(configDir, 'config.json');
+      mkdirSync(testDir, { recursive: true });
 
-      // Ensure clean state
-      if (existsSync(configPath)) {
-        rmSync(configPath);
-      }
-
-      const result = runCli(`${TEST_URL} -o save-test.png --selector "#hero" --light --save`);
+      const result = await runCli(
+        `${TEST_URL} -o save-test.png --selector "#hero" --light --save`,
+        testDir
+      );
 
       expect(result.success).toBe(true);
       expect(existsSync(configPath)).toBe(true);
@@ -378,11 +392,10 @@ describe('CLI URL capture', () => {
     }, 60_000);
 
     it('uses custom config path with -c flag', async () => {
-      // Create a .heroshot subdirectory to mimic standard structure
-      const heroshotDir = path.join(TEST_OUTPUT_DIR, '.heroshot');
-      if (!existsSync(heroshotDir)) {
-        mkdirSync(heroshotDir, { recursive: true });
-      }
+      const testId = Date.now() + '-' + Math.random().toString(36).slice(2);
+      // Create a unique .heroshot subdirectory to mimic standard structure
+      const heroshotDir = path.join(TEST_OUTPUT_DIR, `.heroshot-custom-${testId}`);
+      mkdirSync(heroshotDir, { recursive: true });
       const customConfigPath = path.join(heroshotDir, 'config.json');
 
       // Create a minimal config file with colorScheme set to light (sync mode uses config's colorScheme)
@@ -402,7 +415,7 @@ describe('CLI URL capture', () => {
       writeFileSync(customConfigPath, JSON.stringify(config, null, 2));
 
       // Run sync with custom config
-      const result = runCli(`-c ${customConfigPath}`);
+      const result = await runCli(`-c ${customConfigPath}`);
 
       // Should succeed and create the screenshot in outputDirectory relative to project root
       expect(result.success).toBe(true);
@@ -411,8 +424,8 @@ describe('CLI URL capture', () => {
       ).toBe(true);
     }, 60_000);
 
-    it('errors when custom config file not found', () => {
-      const result = runCli('-c nonexistent-config.json');
+    it('errors when custom config file not found', async () => {
+      const result = await runCli('-c nonexistent-config.json');
 
       expect(result.success).toBe(false);
       expect(result.output).toContain('not found');
@@ -420,17 +433,13 @@ describe('CLI URL capture', () => {
   });
 
   describe('actions', () => {
-    const actionsConfigDir = path.join(TEST_OUTPUT_DIR, '.heroshot-actions');
-    const actionsConfigPath = path.join(actionsConfigDir, 'config.json');
-    const actionsOutputDir = path.join(TEST_OUTPUT_DIR, 'actions-output');
-
-    beforeAll(() => {
-      if (!existsSync(actionsConfigDir)) {
-        mkdirSync(actionsConfigDir, { recursive: true });
-      }
-    });
-
     it('executes actions before capturing screenshot', async () => {
+      const testId = `actions-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const actionsConfigDir = path.join(TEST_OUTPUT_DIR, `.heroshot-${testId}`);
+      const actionsConfigPath = path.join(actionsConfigDir, 'config.json');
+      const actionsOutputDir = path.join(TEST_OUTPUT_DIR, `output-${testId}`);
+      mkdirSync(actionsConfigDir, { recursive: true });
+
       const config = {
         outputDirectory: actionsOutputDir,
         browser: { colorScheme: 'light' },
@@ -457,7 +466,7 @@ describe('CLI URL capture', () => {
       };
       writeFileSync(actionsConfigPath, JSON.stringify(config, null, 2));
 
-      const result = runCli(`-c ${actionsConfigPath}`);
+      const result = await runCli(`-c ${actionsConfigPath}`);
 
       expect(result.success).toBe(true);
       const outputPath = path.join(actionsOutputDir, 'actions-result.png');
@@ -469,7 +478,13 @@ describe('CLI URL capture', () => {
       expect(dimensions.height).toBeGreaterThan(50);
     }, 60_000);
 
-    it('reports failure when action targets missing element', () => {
+    it('reports failure when action targets missing element', async () => {
+      const testId = `actions-fail-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const actionsConfigDir = path.join(TEST_OUTPUT_DIR, `.heroshot-${testId}`);
+      const actionsConfigPath = path.join(actionsConfigDir, 'config.json');
+      const actionsOutputDir = path.join(TEST_OUTPUT_DIR, `output-${testId}`);
+      mkdirSync(actionsConfigDir, { recursive: true });
+
       const config = {
         outputDirectory: actionsOutputDir,
         browser: { colorScheme: 'light' },
@@ -484,7 +499,7 @@ describe('CLI URL capture', () => {
       };
       writeFileSync(actionsConfigPath, JSON.stringify(config, null, 2));
 
-      const result = runCli(`-c ${actionsConfigPath}`);
+      const result = await runCli(`-c ${actionsConfigPath}`);
 
       // CLI exits with non-zero when any screenshot fails
       expect(result.success).toBe(false);
@@ -511,37 +526,37 @@ describe('CLI URL capture', () => {
       writeFileSync(snippetConfigPath, JSON.stringify(config, null, 2));
     });
 
-    it('shows help for snippet command', () => {
-      const result = runCli('snippet --help');
+    it('shows help for snippet command', async () => {
+      const result = await runCli('snippet --help');
       expect(result.success).toBe(true);
       expect(result.output).toContain('Generate markdown/HTML snippets');
     });
 
-    it('generates snippets for all screenshots when no pattern', () => {
-      const result = runCli(`snippet -c ${snippetConfigPath}`);
+    it('generates snippets for all screenshots when no pattern', async () => {
+      const result = await runCli(`snippet -c ${snippetConfigPath}`);
       expect(result.success).toBe(true);
       expect(result.output).toContain('Dashboard');
       expect(result.output).toContain('Hero Section');
       expect(result.output).toContain('Settings Panel');
     });
 
-    it('filters screenshots by name pattern', () => {
-      const result = runCli(`snippet dashboard -c ${snippetConfigPath}`);
+    it('filters screenshots by name pattern', async () => {
+      const result = await runCli(`snippet dashboard -c ${snippetConfigPath}`);
       expect(result.success).toBe(true);
       expect(result.output).toContain('Dashboard');
       expect(result.output).not.toContain('Hero Section');
       expect(result.output).not.toContain('Settings Panel');
     });
 
-    it('filters screenshots by id', () => {
-      const result = runCli(`snippet ghi789 -c ${snippetConfigPath}`);
+    it('filters screenshots by id', async () => {
+      const result = await runCli(`snippet ghi789 -c ${snippetConfigPath}`);
       expect(result.success).toBe(true);
       expect(result.output).toContain('Settings Panel');
       expect(result.output).not.toContain('Dashboard');
     });
 
-    it('generates <picture> element for light/dark variants', () => {
-      const result = runCli(`snippet dashboard -c ${snippetConfigPath}`);
+    it('generates <picture> element for light/dark variants', async () => {
+      const result = await runCli(`snippet dashboard -c ${snippetConfigPath}`);
       expect(result.success).toBe(true);
       expect(result.output).toContain('<picture>');
       expect(result.output).toContain('prefers-color-scheme: dark');
@@ -549,20 +564,22 @@ describe('CLI URL capture', () => {
       expect(result.output).toContain('dashboard-dark.png');
     });
 
-    it('uses custom path prefix', () => {
-      const result = runCli(`snippet dashboard -c ${snippetConfigPath} --path-prefix ./images/`);
+    it('uses custom path prefix', async () => {
+      const result = await runCli(
+        `snippet dashboard -c ${snippetConfigPath} --path-prefix ./images/`
+      );
       expect(result.success).toBe(true);
       expect(result.output).toContain('./images/dashboard-light.png');
     });
 
-    it('fails when no config exists', () => {
-      const result = runCli('snippet -c nonexistent.json');
+    it('fails when no config exists', async () => {
+      const result = await runCli('snippet -c nonexistent.json');
       expect(result.success).toBe(false);
       expect(result.output).toContain('not found');
     });
 
-    it('fails when no screenshots match pattern', () => {
-      const result = runCli(`snippet nonexistent -c ${snippetConfigPath}`);
+    it('fails when no screenshots match pattern', async () => {
+      const result = await runCli(`snippet nonexistent -c ${snippetConfigPath}`);
       expect(result.success).toBe(false);
       expect(result.output).toContain('No screenshots matching');
     });
