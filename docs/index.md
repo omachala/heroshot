@@ -71,6 +71,12 @@ features:
   <PickerCarousel />
 </div>
 
+<div class="install-section">
+  <h2>Getting Started</h2>
+
+  <InstallTabs />
+</div>
+
 <div class="showcase">
   <h2>One Config, Many Variants</h2>
   <p class="subtitle">This screenshot of the hero section above is captured by Heroshot - desktop, tablet, mobile, light and dark.<br>Resize your browser or toggle the theme - the matching variant loads automatically.</p>

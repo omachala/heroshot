@@ -1,3 +1,15 @@
+/* Prevent horizontal overflow on mobile */
+.VPContent.is-home {
+  overflow-x: hidden;
+}
+
+/* Reduce VitePress default padding on mobile home page */
+@media (max-width: 640px) {
+  .VPHome .vp-doc {
+    padding: 0 12px;
+  }
+}
+
 /* Hide VitePress auto-generated hr */
 .VPHome hr,
 .VPContent.is-home hr {
@@ -144,16 +156,54 @@
 
 @media (max-width: 768px) {
   .picker-section {
-    margin: 32px 16px 0;
+    margin: 24px 8px 0;
+    padding: 16px 8px 24px;
+  }
+
+  .showcase {
     padding: 24px 16px 32px;
   }
 }
 
-/* Integrations section */
+/* Install / Getting Started section */
+.install-section {
+  max-width: 1152px;
+  margin: 48px auto 0;
+  padding: 32px 0 48px;
+  overflow: hidden;
+}
+
+.install-section h2 {
+  text-align: center;
+  font-size: 28px;
+  margin: 0 0 8px 0;
+  padding: 0;
+  border: none;
+  color: var(--navy-base);
+}
+
+.install-section .subtitle {
+  text-align: center;
+  color: var(--vp-c-text-2);
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .install-section {
+    margin: 24px 8px 0;
+    padding: 16px 8px 24px;
+  }
+
+  .install-section h2 {
+    font-size: 24px;
+  }
+}
+
 .integrations-section {
   max-width: 1152px;
   margin: 48px auto 64px;
   padding: 32px 0 48px;
+  overflow: hidden;
 }
 
 .integrations-section h2 {
@@ -167,8 +217,8 @@
 
 @media (max-width: 768px) {
   .integrations-section {
-    margin: 32px 16px 48px;
-    padding: 24px 16px 32px;
+    margin: 24px 8px 48px;
+    padding: 16px 8px 24px;
   }
 
   .integrations-section h2 {

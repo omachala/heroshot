@@ -375,12 +375,14 @@ function copyCode(code: string, event: MouseEvent) {
   border-radius: 12px;
   padding: 24px;
   border: 1px solid var(--vp-c-divider);
+  overflow: hidden;
 }
 
 .tab-panel {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
@@ -393,6 +395,8 @@ function copyCode(code: string, event: MouseEvent) {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .code-section .code-block {
@@ -512,6 +516,7 @@ function copyCode(code: string, event: MouseEvent) {
   line-height: 1.6;
   color: var(--vp-c-text-1);
   white-space: pre;
+  display: block;
 }
 
 /* Simple syntax highlighting */
@@ -592,12 +597,16 @@ function copyCode(code: string, event: MouseEvent) {
   }
 
   .tab-button {
-    padding: 10px 14px;
+    padding: 8px 12px;
     font-size: 13px;
   }
 
   .tabs-content {
-    padding: 16px;
+    padding: 10px;
+  }
+
+  .code-block pre {
+    padding: 10px;
   }
 
   .code-block code {

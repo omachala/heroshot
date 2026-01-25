@@ -1,6 +1,7 @@
 import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
 import Heroshot from '../../../integrations/vue/src/components/Heroshot.vue';
+import InstallTabs from './components/InstallTabs.vue';
 import IntegrationTabs from './components/IntegrationTabs.vue';
 import PickerCarousel from './components/PickerCarousel.vue';
 import { setManifest } from '../../../integrations/shared/manifestStore';
@@ -16,6 +17,7 @@ export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
     app.component('Heroshot', Heroshot);
+    app.component('InstallTabs', InstallTabs);
     app.component('IntegrationTabs', IntegrationTabs);
     app.component('PickerCarousel', PickerCarousel);
   },
