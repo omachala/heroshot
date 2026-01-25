@@ -272,16 +272,16 @@ class TestSetup:
                 self.directives = []
 
             def add_config_value(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
             def add_directive(self, name, cls):
                 self.directives.append(name)
 
             def add_css_file(self, *args, **kwargs):
-                pass
+                pass  # Stub - not needed for this test
 
             def connect(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
         app = FakeApp()
         setup(app)
@@ -298,13 +298,13 @@ class TestSetup:
                 self.config_values[name] = default
 
             def add_directive(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
             def add_css_file(self, *args, **kwargs):
-                pass
+                pass  # Stub - not needed for this test
 
             def connect(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
         app = FakeApp()
         setup(app)
@@ -320,16 +320,16 @@ class TestSetup:
                 self.css_files = []
 
             def add_config_value(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
             def add_directive(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
             def add_css_file(self, filename, **kwargs):
                 self.css_files.append(filename)
 
             def connect(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
         app = FakeApp()
         setup(app)
@@ -342,13 +342,13 @@ class TestSetup:
                 self.connections = []
 
             def add_config_value(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
             def add_directive(self, *args):
-                pass
+                pass  # Stub - not needed for this test
 
             def add_css_file(self, *args, **kwargs):
-                pass
+                pass  # Stub - not needed for this test
 
             def connect(self, event, handler):
                 self.connections.append(event)
