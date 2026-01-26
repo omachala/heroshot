@@ -163,7 +163,10 @@ export default defineConfig({
         },
         {
           text: 'Guides',
-          items: [{ text: 'Automated Updates', link: '/docs/guide/automated-updates' }],
+          items: [
+            { text: 'Automated Updates', link: '/docs/guide/automated-updates' },
+            { text: 'AI Agents', link: '/docs/ai-agents' },
+          ],
         },
         {
           text: 'Integrations',

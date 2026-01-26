@@ -60,6 +60,12 @@ features:
     link: /docs/getting-started#sites-that-need-login
     linkText: Session handling
   - icon:
+      src: /icons/robot.svg
+    title: AI Agent Ready
+    details: MCP server lets Claude Code, Cursor, and Copilot manage screenshots directly. Just ask.
+    link: /docs/ai-agents
+    linkText: Configure MCP
+  - icon:
       src: /icons/sliders.svg
     title: Visual Editor
     details: Refine your screenshots with adjustable padding, margins, and borders - all without touching code.

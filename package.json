@@ -6,12 +6,17 @@
   "author": "Ondrej Machala",
   "license": "MIT",
   "bin": {
-    "heroshot": "dist/cli.js"
+    "heroshot": "dist/cli/cli.js",
+    "heroshot-mcp": "dist/mcp/index.js"
   },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./mcp": {
+      "types": "./dist/mcp/index.d.ts",
+      "import": "./dist/mcp/index.js"
     },
     "./vue": {
       "types": "./dist/integrations/vue/index.d.ts",
@@ -151,6 +156,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0",
+    "@modelcontextprotocol/sdk": "^1.12.1",
     "commander": "^12.1.0",
     "p-limit": "^7.2.0",
     "playwright": "^1.49.0",
