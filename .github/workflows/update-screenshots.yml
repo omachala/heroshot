@@ -38,7 +38,7 @@ jobs:
         run: pnpm exec playwright install chromium
 
       - name: Run heroshot
-        run: node ../dist/cli.js
+        run: node ../dist/cli/cli.js
         working-directory: docs
         env:
           HEROSHOT_SESSION_KEY: ${{ secrets.HEROSHOT_SESSION_KEY }}
