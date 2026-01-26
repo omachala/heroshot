@@ -13,7 +13,7 @@ import sharp from 'sharp';
 
 const TEST_URL = 'https://heroshot.sh/__tests__/toolbar.html';
 const TEST_OUTPUT_DIR = path.join(import.meta.dirname, '../../../.test-output-cli');
-const CLI_PATH = path.join(import.meta.dirname, '../../../dist/cli.js');
+const CLI_PATH = path.join(import.meta.dirname, '../../../dist/cli/cli.js');
 
 /** Run CLI command and return result */
 async function runCli(
