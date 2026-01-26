@@ -17,18 +17,6 @@ const platforms = [
   { id: 'curl', label: 'curl', command: 'curl -fsSL https://heroshot.sh/install.sh | bash' },
   { id: 'brew', label: 'brew', command: 'brew install heroshot' },
   { id: 'docker', label: 'docker', command: 'docker run -it heroshot/heroshot' },
-  {
-    id: 'mcp',
-    label: 'MCP',
-    command: `{
-  "heroshot": {
-    "command": "npx",
-    "args": ["-y", "heroshot-mcp"]
-  }
-}`,
-    icon: '/icons/robot.svg',
-    multiline: true,
-  },
 ];
 
 const activePlatform = ref('npx');
@@ -120,11 +108,6 @@ const copyCommand = async () => {
       <div class="terminal-wrapper">
         <div class="terminal">
           <div class="terminal-header">
-            <div class="terminal-dots">
-              <span class="dot red"></span>
-              <span class="dot yellow"></span>
-              <span class="dot green"></span>
-            </div>
             <div class="terminal-tabs">
               <button
                 v-for="platform in platforms"
@@ -455,41 +438,15 @@ const copyCommand = async () => {
 .terminal-header {
   display: flex;
   align-items: center;
-  gap: 16px;
   padding: 12px 16px;
   background: #e9ecef;
   border-bottom: 1px solid var(--vp-c-divider);
-}
-
-.terminal-dots {
-  display: flex;
-  gap: 8px;
-}
-
-.dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.dot.red {
-  background: #ff5f56;
-}
-.dot.yellow {
-  background: #ffbd2e;
-}
-.dot.green {
-  background: #27ca40;
 }
 
 .terminal-tabs {
   display: flex;
   flex: 1;
   gap: 2px;
-}
-
-.terminal-tabs button:last-child {
-  margin-left: auto;
 }
 
 .terminal-tabs button {
