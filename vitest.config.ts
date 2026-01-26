@@ -21,6 +21,7 @@ export default defineConfig({
         'src/browser/saveCurrentConfig.ts', // browser integration, tested via e2e tests
         'src/browser/types.ts', // type definitions only
         'src/cli/cli.ts', // thin commander wrapper, tested via CLI integration tests
+        'src/mcp/index.ts', // MCP server entry point, tested via CLI integration tests
         'src/cli/handlers.ts', // async orchestration, tested via CLI integration tests
         'src/cli/types.ts', // type definitions only
         'src/sync/browserFunctions.ts', // browser context functions, tested via e2e tests
