@@ -1,21 +1,6 @@
 ---
 layout: home
 
-hero:
-  name: heroshot
-  text: free, open-source screenshot automation framework
-  tagline: Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.
-  image:
-    src: /logo.svg
-    alt: Heroshot Logo
-  actions:
-    - theme: brand
-      text: Get Started
-      link: /docs/getting-started
-    - theme: alt
-      text: View on GitHub
-      link: https://github.com/omachala/heroshot
-
 features:
   - icon:
       src: /icons/refresh.svg
@@ -75,12 +60,6 @@ features:
 
 <div class="picker-section">
   <PickerCarousel />
-</div>
-
-<div class="install-section">
-  <h2>Getting Started</h2>
-
-  <InstallTabs />
 </div>
 
 <div class="showcase">

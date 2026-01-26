@@ -1,5 +1,6 @@
 import DefaultTheme from 'vitepress/theme';
 import type { Theme } from 'vitepress';
+import Layout from './Layout.vue';
 import Heroshot from '../../../integrations/vue/src/components/Heroshot.vue';
 import InstallTabs from './components/InstallTabs.vue';
 import IntegrationTabs from './components/IntegrationTabs.vue';
@@ -15,6 +16,7 @@ setManifest(manifest);
 
 export default {
   extends: DefaultTheme,
+  Layout,
   enhanceApp({ app }) {
     app.component('Heroshot', Heroshot);
     app.component('InstallTabs', InstallTabs);

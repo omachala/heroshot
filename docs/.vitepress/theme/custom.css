@@ -204,3 +204,85 @@
     font-size: 2rem;
   }
 }
+
+/* Feature cards - white background with subtle lift on hover */
+.VPFeatures .VPFeature {
+  background: white !important;
+  border: 1px solid var(--vp-c-divider) !important;
+  border-radius: 12px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.VPFeatures .VPFeature:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(42, 85, 128, 0.12);
+}
+
+.dark .VPFeatures .VPFeature {
+  background: rgba(30, 30, 32, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.dark .VPFeatures .VPFeature:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode terminal */
+.dark .custom-hero .terminal {
+  background: #1e1e1e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dark .custom-hero .terminal-header {
+  background: #2d2d2d;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .custom-hero .terminal-tabs button {
+  color: #888;
+}
+
+.dark .custom-hero .terminal-tabs button:hover {
+  color: #ccc;
+}
+
+.dark .custom-hero .terminal-tabs button.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: none;
+}
+
+.dark .custom-hero .terminal-body {
+  background: #1e1e1e;
+}
+
+.dark .custom-hero .prompt {
+  color: #27ca40;
+}
+
+.dark .custom-hero .command {
+  color: #fff;
+}
+
+.dark .custom-hero .copy-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #888;
+}
+
+.dark .custom-hero .copy-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.dark .custom-hero .terminal-wrapper::before {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(251, 146, 60, 0.3) 0%,
+    rgba(234, 88, 12, 0.15) 40%,
+    transparent 70%
+  );
+}
