@@ -1,5 +1,14 @@
 # heroshot
 
+## 0.9.0
+
+### Minor Changes
+
+- Add Sphinx extension for theme-aware screenshots in Python documentation
+  - New `heroshot.sphinx` extension with `.. heroshot::` and `.. heroshot-single::` directives
+  - CSS-based theme switching supports Furo, PyData, and `prefers-color-scheme` fallback
+  - Responsive viewport support via `<picture>` elements sorted by width
+
 ## 0.8.0
 
 ### Minor Changes
