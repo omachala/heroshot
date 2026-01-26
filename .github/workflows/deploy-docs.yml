@@ -6,9 +6,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: docs
 
     steps:
       - uses: actions/checkout@v4
@@ -19,13 +16,37 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: docs/pnpm-lock.yaml
 
-      - name: Install dependencies
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build heroshot
+        run: pnpm build
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: v1-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium
+
+      - name: Update screenshots with heroshot
+        run: node ../dist/cli.js
+        working-directory: docs
+        env:
+          HEROSHOT_SESSION_KEY: ${{ secrets.HEROSHOT_SESSION_KEY }}
+
+      - name: Install docs dependencies
         run: pnpm install
+        working-directory: docs
 
       - name: Build docs
         run: pnpm build
+        working-directory: docs
 
       - name: Deploy to server
         env:
@@ -40,5 +61,5 @@ jobs:
 
           rsync -avz --delete \
             -e "ssh -p ${SSH_PORT} -i ~/.ssh/deploy_key" \
-            .vitepress/dist/ \
+            docs/.vitepress/dist/ \
             root@${SSH_HOST}:~/dockers/swag/swag/config/www/heroshot/
