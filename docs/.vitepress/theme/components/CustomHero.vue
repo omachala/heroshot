@@ -17,6 +17,17 @@ const platforms = [
   { id: 'curl', label: 'curl', command: 'curl -fsSL https://heroshot.sh/install.sh | bash' },
   { id: 'brew', label: 'brew', command: 'brew install heroshot' },
   { id: 'docker', label: 'docker', command: 'docker run -it heroshot/heroshot' },
+  {
+    id: 'mcp',
+    label: 'MCP',
+    command: `{
+  "heroshot": {
+    "command": "npx",
+    "args": ["-y", "heroshot-mcp"]
+  }
+}`,
+    multiline: true,
+  },
 ];
 
 const activePlatform = ref('npx');
@@ -447,6 +458,10 @@ const copyCommand = async () => {
   display: flex;
   flex: 1;
   gap: 2px;
+}
+
+.terminal-tabs button:last-child {
+  margin-left: auto;
 }
 
 .terminal-tabs button {
