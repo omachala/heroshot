@@ -338,8 +338,8 @@ function copyCode(code: string, event: MouseEvent) {
 .tabs-header {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: 10px;
+  margin-bottom: 28px;
   flex-wrap: wrap;
 }
 
@@ -347,41 +347,51 @@ function copyCode(code: string, event: MouseEvent) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 20px;
+  padding: 12px 24px;
   border: 2px solid var(--vp-c-divider);
   border-radius: 12px;
   background: var(--vp-c-bg);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 15px;
   color: var(--vp-c-text-2);
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .tab-button:hover {
   border-color: var(--vp-c-brand-1);
   color: var(--vp-c-text-1);
+  transform: translateY(-2px);
 }
 
 .tab-button.active {
-  background: var(--vp-c-brand-soft);
+  background: var(--vp-c-brand-1);
   border-color: var(--vp-c-brand-1);
-  color: var(--vp-c-brand-1);
+  color: white;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+  transform: translateY(-2px);
 }
 
 .tabs-content {
   position: relative;
   background: var(--vp-c-bg);
-  border-radius: 12px;
-  padding: 24px;
+  border-radius: 20px;
+  padding: 32px;
   border: 1px solid var(--vp-c-divider);
   overflow: hidden;
+  box-shadow: 0 4px 24px rgba(42, 85, 128, 0.06);
+}
+
+.dark .tabs-content {
+  background: rgba(22, 45, 74, 0.4);
+  border-color: rgba(61, 106, 153, 0.3);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 .tab-panel {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 24px;
   min-width: 0;
 }
 
@@ -394,7 +404,7 @@ function copyCode(code: string, event: MouseEvent) {
 .code-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
   overflow: hidden;
 }
@@ -414,7 +424,7 @@ function copyCode(code: string, event: MouseEvent) {
   align-items: center;
   gap: 12px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--vp-c-text-1);
   margin: 0;
 }
@@ -424,14 +434,18 @@ function copyCode(code: string, event: MouseEvent) {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--vp-c-brand-soft);
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.1), rgba(251, 146, 60, 0.15));
+  border-radius: 10px;
   flex-shrink: 0;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 16px;
+  background-size: 18px;
+}
+
+.dark .code-label::before {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.15), rgba(234, 88, 12, 0.2));
 }
 
 /* Install icon - download arrow */
@@ -451,21 +465,23 @@ function copyCode(code: string, event: MouseEvent) {
 
 .code-block {
   position: relative;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   background: var(--vp-code-block-bg);
+  border: 1px solid var(--vp-c-divider);
 }
 
 .code-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.05);
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.04);
+  border-bottom: 1px solid var(--vp-c-divider);
 }
 
 .dark .code-header {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .code-header .lang {

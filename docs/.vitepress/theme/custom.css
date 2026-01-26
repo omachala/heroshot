@@ -204,3 +204,114 @@
     font-size: 2rem;
   }
 }
+
+/* ============================================
+   Feature Cards Enhancement
+   ============================================ */
+
+.VPFeatures .VPFeature {
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.VPFeatures .VPFeature::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--brand-main), var(--brand-light));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.VPFeatures .VPFeature:hover {
+  border-color: var(--brand-light);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(42, 85, 128, 0.12);
+}
+
+.VPFeatures .VPFeature:hover::before {
+  opacity: 1;
+}
+
+.dark .VPFeatures .VPFeature {
+  background: rgba(22, 45, 74, 0.4);
+  border-color: rgba(61, 106, 153, 0.3);
+}
+
+.dark .VPFeatures .VPFeature:hover {
+  border-color: var(--brand-light);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Feature icon enhancement */
+.VPFeatures .VPFeature .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, rgba(234, 88, 12, 0.1), rgba(251, 146, 60, 0.15));
+  border-radius: 14px;
+  margin-bottom: 16px;
+  transition: transform 0.3s ease;
+}
+
+.VPFeatures .VPFeature:hover .icon {
+  transform: scale(1.1);
+}
+
+.VPFeatures .VPFeature .icon img {
+  width: 28px;
+  height: 28px;
+}
+
+.dark .VPFeatures .VPFeature .icon {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.15), rgba(234, 88, 12, 0.2));
+}
+
+/* Feature title */
+.VPFeatures .VPFeature .title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--navy-darkest);
+  margin-bottom: 8px;
+}
+
+.dark .VPFeatures .VPFeature .title {
+  color: #f1f5f9;
+}
+
+/* Feature details */
+.VPFeatures .VPFeature .details {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--vp-c-text-2);
+}
+
+/* Feature link */
+.VPFeatures .VPFeature .link-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-main);
+  transition: gap 0.2s ease;
+}
+
+.VPFeatures .VPFeature:hover .link-text {
+  gap: 8px;
+}
+
+.VPFeatures .VPFeature .link-text::after {
+  content: '→';
+}

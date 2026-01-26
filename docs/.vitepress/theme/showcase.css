@@ -25,24 +25,40 @@
 .showcase {
   max-width: 1152px;
   margin: 48px auto 0;
-  padding: 32px 48px 48px;
-  background: var(--navy-soft);
-  border-radius: 16px;
+  padding: 48px 48px 56px;
+  background: linear-gradient(135deg, var(--brand-main) 0%, #d35400 100%);
+  border-radius: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.showcase::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 60%;
+  height: 200%;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .showcase h2 {
   text-align: center;
-  font-size: 28px;
-  margin: 0 0 8px 0;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
   padding: 0;
   border: none;
-  color: var(--navy-base);
+  color: white;
 }
 
 .showcase .subtitle {
   text-align: center;
-  color: var(--vp-c-text-2);
+  color: rgba(255, 255, 255, 0.9);
   margin-bottom: 32px;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 .theme-tabs {
@@ -82,15 +98,25 @@
 .screenshot-showcase .hero-screenshot {
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
 .showcase-note {
   text-align: center;
-  color: var(--vp-c-text-2);
-  font-size: 14px;
-  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  margin-top: 20px;
+}
+
+.showcase-note a {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.showcase-note a:hover {
+  text-decoration-thickness: 2px;
 }
 
 /* Legacy grid (keep for reference or other pages) */
@@ -126,17 +152,20 @@
 
 .try-link a {
   display: inline-block;
-  padding: 12px 24px;
-  background: var(--vp-c-brand-1);
-  color: white;
-  border-radius: 8px;
-  font-weight: 500;
+  padding: 14px 32px;
+  background: white;
+  color: var(--brand-main);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 15px;
   text-decoration: none;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .try-link a:hover {
-  background: var(--vp-c-brand-2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
 /* Visual Element Picker section */
