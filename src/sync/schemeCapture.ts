@@ -20,6 +20,8 @@ export type CaptureSchemeOptions = {
     deviceScaleFactor?: number;
     storageState?: BrowserContextOptions['storageState'];
     bypassCSP?: boolean;
+    reducedMotion?: 'reduce' | 'no-preference';
+    userAgent?: string;
   };
   colorScheme: 'light' | 'dark' | undefined;
   schemes: ('light' | 'dark')[];
@@ -53,6 +55,8 @@ export async function captureWithScheme(
     storageState: browserOptions.storageState,
     colorScheme,
     bypassCSP: browserOptions.bypassCSP,
+    reducedMotion: browserOptions.reducedMotion,
+    userAgent: browserOptions.userAgent,
   });
 
   const page = await context.newPage();

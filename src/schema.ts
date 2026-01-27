@@ -131,6 +131,11 @@ export const browserSchema = z.object({
     .describe(
       'Bypass Content-Security-Policy restrictions. Enabled by default for reliable page.evaluate() calls'
     ),
+  reducedMotion: z
+    .enum(['reduce', 'no-preference'])
+    .optional()
+    .describe('Emulate prefers-reduced-motion media feature. Use "reduce" to disable animations'),
+  userAgent: z.string().optional().describe('Custom user agent string for the browser'),
 });
 
 /** Shared CLI options for URL capture */

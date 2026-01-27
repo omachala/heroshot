@@ -73,6 +73,8 @@ export async function launchBrowser(
     ...(options.deviceScaleFactor && { deviceScaleFactor: options.deviceScaleFactor }),
     ...(options.storageState && { storageState: options.storageState }),
     ...(options.colorScheme && { colorScheme: options.colorScheme }),
+    ...(options.reducedMotion && { reducedMotion: options.reducedMotion }),
+    ...(options.userAgent && { userAgent: options.userAgent }),
   });
 
   return { browser, context };

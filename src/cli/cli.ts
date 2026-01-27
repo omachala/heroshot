@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import type { ShotCommandOptions } from '../types';
 import { intro, setVerbose } from '../ui';
 import { configAction, sessionKeyAction, shotAction } from './handlers';
+import { type ListOptions, listAction } from './list';
 import { type SnippetOptions, snippetAction } from './snippet';
 import type { ConfigActionOptions, GlobalOptions } from './types';
 
@@ -102,6 +103,16 @@ program
   .action((pattern?: string, options?: SnippetOptions) => {
     const globalOptions = program.opts<GlobalOptions>();
     const success = snippetAction(pattern, options ?? {}, globalOptions.config);
+    if (!success) process.exitCode = 1;
+  });
+
+program
+  .command('list')
+  .description('List all configured screenshots')
+  .option('--json', 'Output as JSON')
+  .action((options: ListOptions) => {
+    const globalOptions = program.opts<GlobalOptions>();
+    const success = listAction(options, globalOptions);
     if (!success) process.exitCode = 1;
   });
 

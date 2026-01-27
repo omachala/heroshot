@@ -8,6 +8,7 @@ import type { Config, Screenshot } from '../types';
 import { error as logError, outro, spinner, verbose, warn } from '../ui';
 import { getColorSchemes } from '../utils/getColorSchemes';
 import {
+  buildBrowserOptions,
   buildCaptureOptions,
   calculateTotalCaptures,
   filterScreenshots,
@@ -29,6 +30,8 @@ type CaptureContext = {
     deviceScaleFactor?: number;
     storageState: Awaited<ReturnType<typeof loadEncryptedSession>>;
     bypassCSP?: boolean;
+    reducedMotion?: 'reduce' | 'no-preference';
+    userAgent?: string;
   };
   schemes: ('light' | 'dark')[];
   workers: number;
@@ -125,10 +128,8 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
 
   // Browser options
   const browserOptions = {
-    viewport: config.browser?.viewport ?? { width: 1280, height: 800 },
-    deviceScaleFactor: config.browser?.deviceScaleFactor,
+    ...buildBrowserOptions(config),
     storageState,
-    bypassCSP: config.browser?.bypassCSP,
   };
 
   // Start capture

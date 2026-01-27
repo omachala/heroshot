@@ -64,3 +64,16 @@ export function buildCaptureOptions(config: Config, viewportOnly?: boolean): Cap
     fullPage: !viewportOnly,
   };
 }
+
+/**
+ * Build browser options from config.
+ */
+export function buildBrowserOptions(config: Config) {
+  return {
+    viewport: config.browser?.viewport ?? { width: 1280, height: 800 },
+    deviceScaleFactor: config.browser?.deviceScaleFactor,
+    bypassCSP: config.browser?.bypassCSP,
+    reducedMotion: config.browser?.reducedMotion,
+    userAgent: config.browser?.userAgent,
+  };
+}
