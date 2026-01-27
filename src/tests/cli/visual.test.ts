@@ -14,7 +14,7 @@ import { compareToBaseline } from './visual-regression';
 
 const execAsync = promisify(exec);
 
-/** Run visual tests only on CI where baselines are generated */
+/** Visual tests only run on CI for consistent font rendering */
 const isCI = process.env['CI'] === 'true';
 
 const TEST_URL = 'https://heroshot.sh/__tests__/toolbar.html';
