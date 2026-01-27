@@ -125,6 +125,12 @@ export const browserSchema = z.object({
     .max(3)
     .optional()
     .describe('Device pixel ratio (1 = standard, 2 = retina, 3 = ultra-high DPI)'),
+  bypassCSP: z
+    .boolean()
+    .optional()
+    .describe(
+      'Bypass Content-Security-Policy restrictions. Enabled by default for reliable page.evaluate() calls'
+    ),
 });
 
 /** Shared CLI options for URL capture */

@@ -28,6 +28,7 @@ type CaptureContext = {
     viewport: { width: number; height: number };
     deviceScaleFactor?: number;
     storageState: Awaited<ReturnType<typeof loadEncryptedSession>>;
+    bypassCSP?: boolean;
   };
   schemes: ('light' | 'dark')[];
   workers: number;
@@ -127,6 +128,7 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
     viewport: config.browser?.viewport ?? { width: 1280, height: 800 },
     deviceScaleFactor: config.browser?.deviceScaleFactor,
     storageState,
+    bypassCSP: config.browser?.bypassCSP,
   };
 
   // Start capture

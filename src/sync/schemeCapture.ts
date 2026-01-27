@@ -19,6 +19,7 @@ export type CaptureSchemeOptions = {
     viewport: { width: number; height: number };
     deviceScaleFactor?: number;
     storageState?: BrowserContextOptions['storageState'];
+    bypassCSP?: boolean;
   };
   colorScheme: 'light' | 'dark' | undefined;
   schemes: ('light' | 'dark')[];
@@ -51,6 +52,7 @@ export async function captureWithScheme(
     deviceScaleFactor: browserOptions.deviceScaleFactor,
     storageState: browserOptions.storageState,
     colorScheme,
+    bypassCSP: browserOptions.bypassCSP,
   });
 
   const page = await context.newPage();

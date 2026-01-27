@@ -66,8 +66,10 @@ export async function launchBrowser(
   }
 
   // Create context with viewport and optional storage state
+  // bypassCSP defaults to true to ensure page.evaluate() works reliably
   const context = await browser.newContext({
     viewport,
+    bypassCSP: options.bypassCSP ?? true,
     ...(options.deviceScaleFactor && { deviceScaleFactor: options.deviceScaleFactor }),
     ...(options.storageState && { storageState: options.storageState }),
     ...(options.colorScheme && { colorScheme: options.colorScheme }),
