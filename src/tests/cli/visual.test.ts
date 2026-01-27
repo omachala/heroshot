@@ -1,6 +1,9 @@
 /**
  * Visual regression tests for CLI screenshots
  * Compares captured screenshots against stored baselines using pixelmatch
+ *
+ * Note: These tests run only on CI to ensure consistent font rendering.
+ * Baselines are generated on CI and committed to the repo.
  */
 import { exec } from 'node:child_process';
 import { existsSync, mkdirSync, rmSync } from 'node:fs';
@@ -10,6 +13,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { compareToBaseline } from './visual-regression';
 
 const execAsync = promisify(exec);
+
+/** Run visual tests only on CI where baselines are generated */
+const isCI = process.env['CI'] === 'true';
 
 const TEST_URL = 'https://heroshot.sh/__tests__/toolbar.html';
 const TEST_OUTPUT_DIR = path.join(import.meta.dirname, '../../../.test-output-visual');
@@ -44,72 +50,84 @@ describe('Visual regression tests', () => {
     }
   });
 
-  it('full page screenshot matches baseline', async () => {
-    const output = 'visual-fullpage.png';
-    const outputPath = path.join(TEST_OUTPUT_DIR, output);
+  it.skipIf(!isCI)(
+    'full page screenshot matches baseline',
+    async () => {
+      const output = 'visual-fullpage.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-    const result = await runCli(`${TEST_URL} -o ${output} --light`);
-    expect(result.success).toBe(true);
-    expect(existsSync(outputPath)).toBe(true);
+      const result = await runCli(`${TEST_URL} -o ${output} --light`);
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
 
-    const comparison = compareToBaseline(outputPath, 'fullpage-light');
+      const comparison = compareToBaseline(outputPath, 'fullpage-light');
 
-    if (comparison.isNewBaseline) {
-      console.log(`Created new baseline: ${comparison.baselinePath}`);
-    }
-
-    expect(comparison.match).toBe(true);
-    if (!comparison.match) {
-      console.log(`Diff pixels: ${comparison.diffPixels}`);
-      if (comparison.diffPath) {
-        console.log(`Diff saved to: ${comparison.diffPath}`);
+      if (comparison.isNewBaseline) {
+        console.log(`Created new baseline: ${comparison.baselinePath}`);
       }
-    }
-  }, 60_000);
 
-  it('element screenshot matches baseline', async () => {
-    const output = 'visual-element.png';
-    const outputPath = path.join(TEST_OUTPUT_DIR, output);
-
-    const result = await runCli(`${TEST_URL} -o ${output} --selector "#test-form" --light`);
-    expect(result.success).toBe(true);
-    expect(existsSync(outputPath)).toBe(true);
-
-    const comparison = compareToBaseline(outputPath, 'element-form');
-
-    if (comparison.isNewBaseline) {
-      console.log(`Created new baseline: ${comparison.baselinePath}`);
-    }
-
-    expect(comparison.match).toBe(true);
-    if (!comparison.match) {
-      console.log(`Diff pixels: ${comparison.diffPixels}`);
-      if (comparison.diffPath) {
-        console.log(`Diff saved to: ${comparison.diffPath}`);
+      expect(comparison.match).toBe(true);
+      if (!comparison.match) {
+        console.log(`Diff pixels: ${comparison.diffPixels}`);
+        if (comparison.diffPath) {
+          console.log(`Diff saved to: ${comparison.diffPath}`);
+        }
       }
-    }
-  }, 60_000);
+    },
+    60_000
+  );
 
-  it('mobile viewport matches baseline', async () => {
-    const output = 'visual-mobile.png';
-    const outputPath = path.join(TEST_OUTPUT_DIR, output);
+  it.skipIf(!isCI)(
+    'element screenshot matches baseline',
+    async () => {
+      const output = 'visual-element.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
 
-    const result = await runCli(`${TEST_URL} -o ${output} --mobile --light`);
-    expect(result.success).toBe(true);
-    expect(existsSync(outputPath)).toBe(true);
+      const result = await runCli(`${TEST_URL} -o ${output} --selector "#test-form" --light`);
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
 
-    const comparison = compareToBaseline(outputPath, 'mobile-light');
+      const comparison = compareToBaseline(outputPath, 'element-form');
 
-    if (comparison.isNewBaseline) {
-      console.log(`Created new baseline: ${comparison.baselinePath}`);
-    }
-
-    expect(comparison.match).toBe(true);
-    if (!comparison.match) {
-      console.log(`Diff pixels: ${comparison.diffPixels}`);
-      if (comparison.diffPath) {
-        console.log(`Diff saved to: ${comparison.diffPath}`);
+      if (comparison.isNewBaseline) {
+        console.log(`Created new baseline: ${comparison.baselinePath}`);
       }
-    }
-  }, 60_000);
+
+      expect(comparison.match).toBe(true);
+      if (!comparison.match) {
+        console.log(`Diff pixels: ${comparison.diffPixels}`);
+        if (comparison.diffPath) {
+          console.log(`Diff saved to: ${comparison.diffPath}`);
+        }
+      }
+    },
+    60_000
+  );
+
+  it.skipIf(!isCI)(
+    'mobile viewport matches baseline',
+    async () => {
+      const output = 'visual-mobile.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = await runCli(`${TEST_URL} -o ${output} --mobile --light`);
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      const comparison = compareToBaseline(outputPath, 'mobile-light');
+
+      if (comparison.isNewBaseline) {
+        console.log(`Created new baseline: ${comparison.baselinePath}`);
+      }
+
+      expect(comparison.match).toBe(true);
+      if (!comparison.match) {
+        console.log(`Diff pixels: ${comparison.diffPixels}`);
+        if (comparison.diffPath) {
+          console.log(`Diff saved to: ${comparison.diffPath}`);
+        }
+      }
+    },
+    60_000
+  );
 });
