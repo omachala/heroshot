@@ -125,6 +125,17 @@ export const browserSchema = z.object({
     .max(3)
     .optional()
     .describe('Device pixel ratio (1 = standard, 2 = retina, 3 = ultra-high DPI)'),
+  bypassCSP: z
+    .boolean()
+    .optional()
+    .describe(
+      'Bypass Content-Security-Policy restrictions. Enabled by default for reliable page.evaluate() calls'
+    ),
+  reducedMotion: z
+    .enum(['reduce', 'no-preference'])
+    .optional()
+    .describe('Emulate prefers-reduced-motion media feature. Use "reduce" to disable animations'),
+  userAgent: z.string().optional().describe('Custom user agent string for the browser'),
 });
 
 /** Shared CLI options for URL capture */

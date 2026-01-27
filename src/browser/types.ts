@@ -8,6 +8,12 @@ export type LaunchOptions = {
   deviceScaleFactor?: number;
   storageState?: BrowserContextOptions['storageState'];
   colorScheme?: 'light' | 'dark';
+  /** Bypass Content-Security-Policy. Defaults to true for reliable page.evaluate() */
+  bypassCSP?: boolean;
+  /** Emulate prefers-reduced-motion media feature */
+  reducedMotion?: 'reduce' | 'no-preference';
+  /** Custom user agent string */
+  userAgent?: string;
 };
 
 /** Internal screenshot data used by toolbar */

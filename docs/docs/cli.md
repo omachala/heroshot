@@ -248,6 +248,39 @@ If your config has `browser.colorScheme` set to `light` or `dark` (not both), th
 
 :::
 
+### `heroshot list`
+
+List all configured screenshots. Useful for scripting or quickly checking what's defined.
+
+```bash
+heroshot list                # Human-readable output
+heroshot list --json         # JSON output for scripting
+```
+
+| Option   | Description    |
+| -------- | -------------- |
+| `--json` | Output as JSON |
+
+**Example output:**
+
+```
+Found 3 screenshot(s):
+
+  Dashboard
+    URL:      https://example.com/dashboard
+    Selector: .dashboard
+
+  Hero Section
+    URL:      https://example.com
+    Selector: .hero
+    Viewports: desktop, mobile
+
+  Settings Panel
+    URL:      https://example.com/settings
+    Selector: (full page)
+    Actions:  2
+```
+
 ### `heroshot session-key`
 
 When you log into a site during `heroshot config`, that session is saved encrypted. The encryption key is machine-specific by default, which is fine for local use.
@@ -302,6 +335,10 @@ heroshot --workers 4
 # Generate README snippets for GitHub
 heroshot snippet
 heroshot snippet dashboard --path-prefix ./images/
+
+# List configured screenshots
+heroshot list
+heroshot list --json
 
 # Verbose output (works with any command)
 heroshot -v

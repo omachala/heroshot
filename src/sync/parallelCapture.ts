@@ -29,6 +29,9 @@ export type ParallelCaptureOptions = {
     viewport: { width: number; height: number };
     deviceScaleFactor?: number;
     storageState?: BrowserContextOptions['storageState'];
+    bypassCSP?: boolean;
+    reducedMotion?: 'reduce' | 'no-preference';
+    userAgent?: string;
   };
   workers: number;
   captureSpinner: ReturnType<typeof spinner>;
@@ -97,6 +100,9 @@ async function executeBatch(
     viewport: browserOptions.viewport,
     deviceScaleFactor: browserOptions.deviceScaleFactor,
     storageState: browserOptions.storageState,
+    bypassCSP: browserOptions.bypassCSP,
+    reducedMotion: browserOptions.reducedMotion,
+    userAgent: browserOptions.userAgent,
   });
 
   const page = await context.newPage();

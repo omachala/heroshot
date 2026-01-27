@@ -15,6 +15,7 @@ import { executeEvaluate } from './evaluate';
 import { executeFileUpload } from './fileUpload';
 import { executeFillForm } from './fillForm';
 import { executeHandleDialog } from './handleDialog';
+import { executeHide } from './hide';
 import { executeHover } from './hover';
 import { executeNavigate } from './navigate';
 import { executePressKey } from './pressKey';
@@ -39,6 +40,7 @@ const actionHandlers: Record<Action['type'], ActionHandler> = {
   handle_dialog: executeHandleDialog,
   file_upload: executeFileUpload,
   resize: executeResize,
+  hide: executeHide,
 };
 
 /**
