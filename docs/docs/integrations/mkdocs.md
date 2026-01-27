@@ -1,6 +1,9 @@
 ---
+title: MkDocs Screenshot Integration
 description: Use Heroshot with MkDocs and Material theme. Generate theme-aware screenshots for Python documentation.
 ---
+
+title: MkDocs Screenshot Integration
 
 # MkDocs
 

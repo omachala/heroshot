@@ -1,4 +1,5 @@
 ---
+title: CLI Reference - Commands and Options
 description: Heroshot CLI reference. Commands, options, and flags for screenshot automation from the command line.
 ---
 

@@ -1,4 +1,5 @@
 ---
+title: What is Heroshot? - Documentation Screenshot Automation
 description: Heroshot is a free, open-source screenshot automation tool. Define screenshots once with a visual picker, regenerate them forever with one command.
 ---
 

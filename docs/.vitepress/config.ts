@@ -5,8 +5,11 @@ import { heroshot } from '../../integrations/shared/vitePlugin';
 
 const SITE_URL = 'https://heroshot.sh';
 const SITE_NAME = 'Heroshot';
+const SITE_TITLE = 'Heroshot - Screenshot Automation for Documentation';
 const DEFAULT_DESCRIPTION =
-  'Free, open-source screenshot automation. Your UI changes constantly. Heroshot updates every screenshot in your docs with a single command.';
+  'Free, open-source CLI tool that automates documentation screenshots. Define once with a visual picker, regenerate forever with one command. Works with VitePress, Docusaurus, MkDocs, Sphinx, and more.';
+const DEFAULT_KEYWORDS =
+  'screenshot automation, documentation screenshots, automated screenshots, screenshot tool, documentation tool, playwright screenshots, vitepress, docusaurus, mkdocs';
 const OG_IMAGE = `${SITE_URL}/screenshots/hero-desktop-light.png`;
 
 export default defineConfig({
@@ -23,6 +26,7 @@ export default defineConfig({
     },
   },
   title: SITE_NAME,
+  titleTemplate: `:title | ${SITE_NAME}`,
   description: DEFAULT_DESCRIPTION,
   sitemap: { hostname: SITE_URL },
 
@@ -33,11 +37,17 @@ export default defineConfig({
       .replace(/index\.md$/, '')
       .replace(/\.md$/, '.html');
 
-    // Get page-specific title and description
+    // Homepage gets the full branded title, other pages get "Page | Heroshot"
+    const isHomePage = pageData.relativePath === 'index.md';
     const pageTitle = pageData.frontmatter.title || pageData.title;
-    const fullTitle = pageTitle ? `${pageTitle} | ${SITE_NAME}` : SITE_NAME;
+    const fullTitle = isHomePage
+      ? pageTitle || SITE_TITLE
+      : pageTitle
+        ? `${pageTitle} | ${SITE_NAME}`
+        : SITE_NAME;
     const pageDescription =
       pageData.frontmatter.description || pageData.description || DEFAULT_DESCRIPTION;
+    const pageKeywords = pageData.frontmatter.keywords || DEFAULT_KEYWORDS;
 
     // Add dynamic head tags
     pageData.frontmatter.head ??= [];
@@ -46,6 +56,8 @@ export default defineConfig({
       ['link', { rel: 'canonical', href: canonicalUrl }],
       // Robots
       ['meta', { name: 'robots', content: 'index, follow' }],
+      // Keywords
+      ['meta', { name: 'keywords', content: pageKeywords }],
       // Dynamic Open Graph
       ['meta', { property: 'og:title', content: fullTitle }],
       ['meta', { property: 'og:description', content: pageDescription }],
@@ -75,16 +87,43 @@ export default defineConfig({
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
         name: SITE_NAME,
+        alternateName: 'heroshot',
         url: SITE_URL,
         logo: `${SITE_URL}/favicon-192.png`,
-        image: `${SITE_URL}/favicon-192.png`,
+        image: OG_IMAGE,
+        screenshot: OG_IMAGE,
         description: DEFAULT_DESCRIPTION,
         applicationCategory: 'DeveloperApplication',
+        applicationSubCategory: 'Documentation Tools',
         operatingSystem: 'Windows, macOS, Linux',
+        programmingLanguage: 'TypeScript',
+        runtimePlatform: 'Node.js',
+        softwareRequirements: 'Node.js 18+',
+        downloadUrl: 'https://www.npmjs.com/package/heroshot',
+        installUrl: 'https://www.npmjs.com/package/heroshot',
+        releaseNotes: 'https://github.com/omachala/heroshot/releases',
+        keywords:
+          'screenshot automation, documentation screenshots, automated screenshots, playwright, CLI tool',
         offers: {
           '@type': 'Offer',
           price: '0',
           priceCurrency: 'USD',
+          availability: 'https://schema.org/InStock',
+        },
+        author: {
+          '@type': 'Person',
+          name: 'Ondrej Machala',
+          url: 'https://github.com/omachala',
+        },
+        maintainer: {
+          '@type': 'Person',
+          name: 'Ondrej Machala',
+          url: 'https://github.com/omachala',
+        },
+        sourceOrganization: {
+          '@type': 'Organization',
+          name: 'Heroshot',
+          url: SITE_URL,
         },
       }),
     ],

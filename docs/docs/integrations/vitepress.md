@@ -1,6 +1,9 @@
 ---
+title: VitePress Screenshot Integration
 description: Use Heroshot with VitePress. Auto-refresh screenshots in dev mode with the Vite plugin integration.
 ---
+
+title: VitePress Screenshot Integration
 
 # VitePress
 

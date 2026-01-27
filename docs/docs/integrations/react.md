@@ -1,6 +1,9 @@
 ---
+title: React Screenshot Component
 description: Use Heroshot with React. The Heroshot component for automatic light/dark mode and responsive screenshots.
 ---
+
+title: React Screenshot Component
 
 # React
 

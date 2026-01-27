@@ -1,6 +1,9 @@
 ---
+title: GitBook Screenshot Integration
 description: Use Heroshot with GitBook. Automated screenshots for GitBook documentation via Git Sync.
 ---
+
+title: GitBook Screenshot Integration
 
 # GitBook
 

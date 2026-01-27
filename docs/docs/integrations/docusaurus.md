@@ -1,6 +1,9 @@
 ---
+title: Docusaurus Screenshot Integration
 description: Use Heroshot with Docusaurus. Auto-refresh screenshots with the Docusaurus plugin integration.
 ---
+
+title: Docusaurus Screenshot Integration
 
 # Docusaurus
 

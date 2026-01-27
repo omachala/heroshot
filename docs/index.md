@@ -1,5 +1,11 @@
 ---
 layout: home
+title: Screenshot Automation for Documentation
+description: Free, open-source CLI tool that automates documentation screenshots. Define once with a visual picker, regenerate forever with one command. Works with VitePress, Docusaurus, MkDocs, and more.
+head:
+  - - meta
+    - name: keywords
+      content: screenshot automation, documentation screenshots, automated screenshots, docs screenshots, screenshot tool, documentation tool, vitepress screenshots, docusaurus screenshots, mkdocs screenshots, playwright screenshots
 
 features:
   - icon:

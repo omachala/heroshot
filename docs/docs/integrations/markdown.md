@@ -1,6 +1,9 @@
 ---
+title: Markdown Screenshot Integration
 description: Use Heroshot with plain Markdown. Light/dark mode screenshots for GitHub READMEs and GitLab wikis.
 ---
+
+title: Markdown Screenshot Integration
 
 # Markdown
 

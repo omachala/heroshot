@@ -1,6 +1,9 @@
 ---
+title: Vue Screenshot Component
 description: Use Heroshot with Vue. The Heroshot component for automatic light/dark mode and responsive screenshots.
 ---
+
+title: Vue Screenshot Component
 
 # Vue
 

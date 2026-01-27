@@ -1,4 +1,5 @@
 ---
+title: Getting Started - Automated Screenshots in 5 Minutes
 description: Get started with Heroshot in 5 minutes. Install, pick elements visually, and generate your first automated screenshots.
 ---
 
