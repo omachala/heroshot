@@ -140,8 +140,14 @@ The `selector` property supports standard CSS selectors and shadow DOM piercing:
 // Standard CSS selector
 "selector": ".my-component"
 
-// Shadow DOM piercing (>>> syntax)
-"selector": "my-element >>> .inner-content"
+// Shadow DOM piercing (>> syntax, Playwright standard)
+"selector": "my-element >> .inner-content"
+
+// XPath selector
+"selector": "xpath=//button[@data-testid='submit']"
+
+// Text selector
+"selector": "text=Submit"
 
 // Omit for full-page screenshot
 "selector": null
@@ -149,6 +155,10 @@ The `selector` property supports standard CSS selectors and shadow DOM piercing:
 
 ::: tip Full-Page Screenshots
 Omit the `selector` property (or set it to `null`) to capture the entire scrollable page.
+:::
+
+::: info Selector Formats
+Heroshot supports all [Playwright selector formats](/docs/screenshot-reference#selector-formats): CSS, XPath, text, role, and chained selectors.
 :::
 
 ### Padding
@@ -261,11 +271,11 @@ Replace text content in specific elements before capturing. Useful for:
 The keys are CSS selectors, and values are the replacement text. All matching elements will have their `textContent` replaced before the screenshot is taken.
 
 ::: tip Shadow DOM Support
-Text overrides support shadow DOM piercing with the `>>>` syntax:
+Text overrides support shadow DOM piercing with the `>>` syntax:
 
 ```json
 "textOverrides": {
-  "my-component >>> .inner-text": "Replaced"
+  "my-component >> .inner-text": "Replaced"
 }
 ```
 
