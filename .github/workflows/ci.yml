@@ -212,50 +212,29 @@ jobs:
           files: ./coverage/lcov.info,./coverage/editor/lcov.info
           fail_ci_if_error: false
 
-  # Editor E2E tests - run in parallel with everything else
+  # Editor E2E tests - runs on self-hosted Din runners for speed
   editor-e2e:
-    needs: install
-    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: [self-hosted, din]
     steps:
       - uses: actions/checkout@v4
+        with:
+          clean: false
 
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
 
-      - name: Restore node_modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            editor/node_modules
-            integrations/*/node_modules
-            docs/node_modules
-          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Cache editor build
-        uses: actions/cache@v4
-        id: editor-build-cache
-        with:
-          path: editor/dist
-          key: ${{ env.CACHE_PREFIX }}-editor-build-${{ runner.os }}-${{ hashFiles('editor/src/**', 'editor/package.json', 'toolbar/**') }}
+      - name: Install dependencies
+        run: pnpm install --prefer-offline
 
       - name: Build editor
-        if: steps.editor-build-cache.outputs.cache-hit != 'true'
         run: pnpm build:editor
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ env.CACHE_PREFIX }}-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
 
       - name: Run e2e tests
@@ -302,50 +281,29 @@ jobs:
             echo "Docs are up-to-date"
           fi
 
-  # CLI integration tests - run in parallel with everything else
+  # CLI integration tests - runs on self-hosted Din runners for speed
   cli-tests:
-    needs: install
-    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: [self-hosted, din]
     steps:
       - uses: actions/checkout@v4
+        with:
+          clean: false
 
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
 
-      - name: Restore node_modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            editor/node_modules
-            integrations/*/node_modules
-            docs/node_modules
-          key: ${{ env.CACHE_PREFIX }}-modules-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Cache CLI build
-        uses: actions/cache@v4
-        id: cli-build-cache
-        with:
-          path: dist
-          key: ${{ env.CACHE_PREFIX }}-cli-build-${{ runner.os }}-${{ hashFiles('src/**', 'package.json') }}
+      - name: Install dependencies
+        run: pnpm install --prefer-offline
 
       - name: Build CLI
-        if: steps.cli-build-cache.outputs.cache-hit != 'true'
         run: pnpm build
 
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ env.CACHE_PREFIX }}-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
       - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
 
       - name: Run CLI integration tests
