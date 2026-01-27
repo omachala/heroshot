@@ -8,14 +8,14 @@ Back to [Configuration overview](./config#actions).
 
 ### `click`
 
-Click an element. Use to dismiss cookie banners, open menus, expand dropdowns, toggle UI state, or trigger any clickable interaction before capturing.
+Click an element. Use to dismiss cookie banners, open menus, expand dropdowns.
 
-| Property      | Type                                                                     | Required | Description                             |
-| ------------- | ------------------------------------------------------------------------ | -------- | --------------------------------------- |
-| `selector`    | string                                                                   | yes      | CSS selector of the element to click    |
-| `doubleClick` | boolean                                                                  | no       | Whether to perform a double click       |
-| `button`      | `"left"` \| `"right"` \| `"middle"`                                      | no       | Mouse button to click, defaults to left |
-| `modifiers`   | (`"Alt"` \| `"Control"` \| `"ControlOrMeta"` \| `"Meta"` \| `"Shift"`)[] | no       | Modifier keys to hold during click      |
+| Property      | Type                                                                     | Required | Description                          |
+| ------------- | ------------------------------------------------------------------------ | -------- | ------------------------------------ |
+| `selector`    | string                                                                   | yes      | CSS selector of the element to click |
+| `doubleClick` | boolean                                                                  | no       | Whether to perform a double click    |
+| `button`      | `"left"` \| `"right"` \| `"middle"`                                      | no       | Mouse button to click                |
+| `modifiers`   | (`"Alt"` \| `"Control"` \| `"ControlOrMeta"` \| `"Meta"` \| `"Shift"`)[] | no       | Modifier keys to hold during click   |
 
 ```json
 // minimal
@@ -38,14 +38,14 @@ Click an element. Use to dismiss cookie banners, open menus, expand dropdowns, t
 
 ### `type`
 
-Type text into an input, textarea, or contenteditable element. Use to populate forms with demo data, enter search queries, or fill in sample content for screenshots.
+Type text into an input, textarea, or contenteditable element.
 
-| Property   | Type    | Required | Description                                                                                  |
-| ---------- | ------- | -------- | -------------------------------------------------------------------------------------------- |
-| `selector` | string  | yes      | CSS selector of the input element                                                            |
-| `text`     | string  | yes      | Text to type into the element                                                                |
-| `submit`   | boolean | no       | Whether to press Enter after typing (submit form)                                            |
-| `slowly`   | boolean | no       | Whether to type one character at a time. Useful for triggering key handlers or autocomplete. |
+| Property   | Type    | Required | Description                                       |
+| ---------- | ------- | -------- | ------------------------------------------------- |
+| `selector` | string  | yes      | CSS selector of the input element                 |
+| `text`     | string  | yes      | Text to type into the element                     |
+| `submit`   | boolean | no       | Whether to press Enter after typing (submit form) |
+| `slowly`   | boolean | no       | Type one character at a time for key handlers     |
 
 ```json
 // minimal
@@ -67,7 +67,7 @@ Type text into an input, textarea, or contenteditable element. Use to populate f
 
 ### `hover`
 
-Hover over an element to trigger :hover states, show tooltips, or reveal hidden menus before capturing.
+Hover over an element to trigger :hover states, show tooltips, or reveal menus.
 
 | Property   | Type   | Required | Description                               |
 | ---------- | ------ | -------- | ----------------------------------------- |
@@ -82,12 +82,12 @@ Hover over an element to trigger :hover states, show tooltips, or reveal hidden 
 
 ### `select_option`
 
-Select one or more options in a native &lt;select&gt; dropdown to show a specific selection state.
+Select one or more options in a native &lt;select&gt; dropdown.
 
-| Property   | Type     | Required | Description                                                           |
-| ---------- | -------- | -------- | --------------------------------------------------------------------- |
-| `selector` | string   | yes      | CSS selector of the &lt;select&gt; element                            |
-| `values`   | string[] | yes      | Option values to select. Supports multiple for multi-select elements. |
+| Property   | Type     | Required | Description                                 |
+| ---------- | -------- | -------- | ------------------------------------------- |
+| `selector` | string   | yes      | CSS selector of the &lt;select&gt; element  |
+| `values`   | string[] | yes      | Option values to select. Supports multiple. |
 
 ```json
 {
@@ -99,11 +99,11 @@ Select one or more options in a native &lt;select&gt; dropdown to show a specifi
 
 ### `press_key`
 
-Press a keyboard key or combination. Use to close modals (Escape), submit forms (Enter), navigate focus (Tab), trigger shortcuts, or activate keyboard-driven UI.
+Press a keyboard key or combination. Use to close modals, submit forms, etc.
 
-| Property | Type   | Required | Description                                                                    |
-| -------- | ------ | -------- | ------------------------------------------------------------------------------ |
-| `key`    | string | yes      | Key to press, e.g. "Enter", "Escape", "ArrowDown", "Control+a", "Meta+Shift+k" |
+| Property | Type   | Required | Description                                       |
+| -------- | ------ | -------- | ------------------------------------------------- |
+| `key`    | string | yes      | Key to press, e.g. "Enter", "Escape", "Control+a" |
 
 ```json
 {
@@ -114,7 +114,7 @@ Press a keyboard key or combination. Use to close modals (Escape), submit forms 
 
 ### `drag`
 
-Drag an element and drop it onto another. Use to show reordering or drag-and-drop interaction mid-state.
+Drag an element and drop it onto another.
 
 | Property | Type   | Required | Description                         |
 | -------- | ------ | -------- | ----------------------------------- |
@@ -131,7 +131,7 @@ Drag an element and drop it onto another. Use to show reordering or drag-and-dro
 
 ### `wait`
 
-Pause execution until a condition is met. Wait for a fixed duration, for specific text to appear (e.g. after async loading), or for text to disappear (e.g. loading spinners).
+Pause execution until a condition is met.
 
 | Property   | Type   | Required | Description                                   |
 | ---------- | ------ | -------- | --------------------------------------------- |
@@ -156,7 +156,7 @@ Pause execution until a condition is met. Wait for a fixed duration, for specifi
 
 ### `navigate`
 
-Navigate to a different URL or go back in history. Use to reach a specific page state after login, follow a multi-step flow, or return to a previous page.
+Navigate to a different URL or go back in history.
 
 | Property | Type    | Required | Description                               |
 | -------- | ------- | -------- | ----------------------------------------- |
@@ -179,12 +179,12 @@ Navigate to a different URL or go back in history. Use to reach a specific page 
 
 ### `evaluate`
 
-Run arbitrary JavaScript in the browser context. Use as an escape hatch for DOM manipulation not covered by other actions: removing elements, changing styles, modifying text, or setting up complex page state.
+Run arbitrary JavaScript in the browser context. Escape hatch for DOM manipulation.
 
-| Property   | Type   | Required | Description                                                                                                            |
-| ---------- | ------ | -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `function` | string | yes      | JavaScript function to evaluate. Use () =&gt; { ... } for page-level, or (el) =&gt; { ... } when selector is provided. |
-| `selector` | string | no       | CSS selector of element to pass as the first argument to the function                                                  |
+| Property   | Type   | Required | Description                                                 |
+| ---------- | ------ | -------- | ----------------------------------------------------------- |
+| `function` | string | yes      | JavaScript function: () =&gt; { ... } or (el) =&gt; { ... } |
+| `selector` | string | no       | CSS selector of element to pass to function                 |
 
 ```json
 // minimal
@@ -203,14 +203,14 @@ Run arbitrary JavaScript in the browser context. Use as an escape hatch for DOM 
 
 ### `fill_form`
 
-Fill multiple form fields in one action. Supports text inputs, checkboxes, radio buttons, dropdowns (combobox), and sliders. Use to show a completed form state in screenshots.
+Fill multiple form fields in one action.
 
-| Property               | Type                                                                   | Required | Description                                                                               |
-| ---------------------- | ---------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| `fields`               | object[]                                                               | yes      | Array of fields to fill                                                                   |
-| ↳ `fields[].selector`  | string                                                                 | yes      | CSS selector of the form field                                                            |
-| ↳ `fields[].value`     | string                                                                 | yes      | Value to fill. For checkboxes use "true"/"false". For combobox use the option label text. |
-| ↳ `fields[].fieldType` | `"textbox"` \| `"checkbox"` \| `"radio"` \| `"combobox"` \| `"slider"` | yes      | Type of the form field                                                                    |
+| Property               | Type                                                                   | Required | Description                               |
+| ---------------------- | ---------------------------------------------------------------------- | -------- | ----------------------------------------- |
+| `fields`               | object[]                                                               | yes      | Array of fields to fill                   |
+| ↳ `fields[].selector`  | string                                                                 | yes      | CSS selector of the form field            |
+| ↳ `fields[].value`     | string                                                                 | yes      | Value to fill. Checkboxes: "true"/"false" |
+| ↳ `fields[].fieldType` | `"textbox"` \| `"checkbox"` \| `"radio"` \| `"combobox"` \| `"slider"` | yes      | Type of the form field                    |
 
 ```json
 {
@@ -227,7 +227,7 @@ Fill multiple form fields in one action. Supports text inputs, checkboxes, radio
 
 ### `handle_dialog`
 
-Set up a handler for the next browser dialog (alert, confirm, or prompt). Place this action BEFORE the action that triggers the dialog. It will automatically accept or dismiss when the dialog appears.
+Set up handler for browser dialog. Place BEFORE action that triggers dialog.
 
 | Property     | Type    | Required | Description                              |
 | ------------ | ------- | -------- | ---------------------------------------- |
@@ -251,12 +251,12 @@ Set up a handler for the next browser dialog (alert, confirm, or prompt). Place 
 
 ### `file_upload`
 
-Upload one or more files through a file input element. Use to show file upload previews, populated upload zones, or attachment states.
+Upload one or more files through a file input element.
 
-| Property   | Type     | Required | Description                                                |
-| ---------- | -------- | -------- | ---------------------------------------------------------- |
-| `selector` | string   | yes      | CSS selector of the file input element                     |
-| `paths`    | string[] | yes      | File paths to upload (absolute or relative to config file) |
+| Property   | Type     | Required | Description                                           |
+| ---------- | -------- | -------- | ----------------------------------------------------- |
+| `selector` | string   | yes      | CSS selector of the file input element                |
+| `paths`    | string[] | yes      | File paths to upload (absolute or relative to config) |
 
 ```json
 {
@@ -268,7 +268,7 @@ Upload one or more files through a file input element. Use to show file upload p
 
 ### `resize`
 
-Resize the browser viewport mid-flow. Use when you need a different viewport for a specific action (e.g. trigger responsive breakpoints) before capturing.
+Resize the browser viewport mid-flow.
 
 | Property | Type   | Required | Description               |
 | -------- | ------ | -------- | ------------------------- |
@@ -285,15 +285,15 @@ Resize the browser viewport mid-flow. Use when you need a different viewport for
 
 ### `hide`
 
-Hide elements from the screenshot. Use to remove cookie banners, chat widgets, ads, or user-specific content (emails, names) before capturing.
+Hide elements from screenshot. Use to remove cookie banners, chat widgets, ads.
 
-| Property    | Type     | Required | Description                                            |
-| ----------- | -------- | -------- | ------------------------------------------------------ |
-| `selectors` | string[] | yes      | CSS selectors of elements to hide (sets display: none) |
+| Property    | Type     | Required | Description                                       |
+| ----------- | -------- | -------- | ------------------------------------------------- |
+| `selectors` | string[] | yes      | CSS selectors of elements to hide (display: none) |
 
 ```json
 {
   "type": "hide",
-  "selectors": [".cookie-banner", ".chat-widget", ".ad-container"]
+  "selectors": []
 }
 ```
