@@ -30,4 +30,35 @@ describe('normalizeSelector', () => {
       'my-component >> .inner >> button.submit'
     );
   });
+
+  it('trims whitespace from selectors', () => {
+    expect(normalizeSelector('  .button  ')).toBe('.button');
+    expect(normalizeSelector('  #header >> .child  ')).toBe('#header >> .child');
+  });
+
+  it('collapses double spaces', () => {
+    expect(normalizeSelector('div  span')).toBe('div span');
+    expect(normalizeSelector('div >>  span')).toBe('div >> span');
+  });
+
+  it('handles empty string', () => {
+    expect(normalizeSelector('')).toBe('');
+  });
+
+  it('preserves single > (CSS child combinator)', () => {
+    expect(normalizeSelector('div > span > p')).toBe('div > span > p');
+  });
+
+  it('handles mixed >>> and >> in same selector', () => {
+    expect(normalizeSelector('host >>> inner >> .child')).toBe('host >> inner >> .child');
+  });
 });
+
+/**
+ * Note: findElement() function is tested via CLI integration tests (src/tests/cli/cli.test.ts)
+ * as it requires a real Playwright page and browser context.
+ * Tests cover:
+ * - Element location with various selector types (#id, .class, tag)
+ * - Shadow DOM piercing via >> syntax
+ * - Error handling for unfound elements (CLI reports "element not found")
+ */
