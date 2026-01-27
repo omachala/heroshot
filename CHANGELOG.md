@@ -1,5 +1,21 @@
 # heroshot
 
+## 0.10.0
+
+### Minor Changes
+
+- 658d09a: Add hide action, list command, and browser options
+  - `bypassCSP` enabled by default for reliable `evaluate` actions
+  - New `hide` action to remove elements before capture
+  - New `heroshot list` command with `--json` flag
+  - New `browser.reducedMotion` option to disable animations
+  - New `browser.userAgent` option for custom user agent
+
+- 3a28540: Add MCP server for AI agent integration
+  - New `heroshot mcp` command to start MCP server via stdio transport
+  - Tools: `heroshot_sync`, `heroshot_add`, `heroshot_list`, `heroshot_snippet`, `heroshot_remove`
+  - Schema-driven with Zod for auto JSON Schema conversion
+
 ## 0.9.0
 
 ### Minor Changes
