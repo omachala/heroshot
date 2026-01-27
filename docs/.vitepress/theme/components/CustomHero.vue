@@ -230,6 +230,7 @@ const copyCommand = async () => {
                 :class="[
                   'command',
                   { 'command-small': activePlatform === 'curl' || activePlatform === 'mcp' },
+                  { 'command-mcp': activePlatform === 'mcp' },
                 ]"
                 >{{ activeCommand() }}</code
               >
@@ -612,6 +613,10 @@ const copyCommand = async () => {
 
   .title {
     justify-content: center;
+  }
+
+  .command-mcp {
+    text-align: left;
   }
 }
 
