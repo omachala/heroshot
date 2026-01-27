@@ -282,3 +282,18 @@ Resize the browser viewport mid-flow. Use when you need a different viewport for
   "height": 667
 }
 ```
+
+### `hide`
+
+Hide elements from the screenshot. Use to remove cookie banners, chat widgets, ads, or user-specific content (emails, names) before capturing.
+
+| Property    | Type     | Required | Description                                            |
+| ----------- | -------- | -------- | ------------------------------------------------------ |
+| `selectors` | string[] | yes      | CSS selectors of elements to hide (sets display: none) |
+
+```json
+{
+  "type": "hide",
+  "selectors": [".cookie-banner", ".chat-widget", ".ad-container"]
+}
+```

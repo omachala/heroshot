@@ -4,10 +4,9 @@
  * Reference: https://github.com/microsoft/playwright-mcp
  *
  * ROADMAP extensions (not in Playwright MCP):
- * hide, scroll, focus, blur, check, uncheck, set_text, add_class, remove_class,
+ * scroll, focus, blur, check, uncheck, set_text, add_class, remove_class,
  * set_attribute, storage, mock, emulate, date, each, if
  */
-
 import { z } from 'zod';
 
 export const clickActionSchema = z
@@ -15,19 +14,13 @@ export const clickActionSchema = z
     type: z.literal('click'),
     selector: z.string().describe('CSS selector of the element to click'),
     doubleClick: z.boolean().optional().describe('Whether to perform a double click'),
-    button: z
-      .enum(['left', 'right', 'middle'])
-      .optional()
-      .describe('Mouse button to click, defaults to left'),
+    button: z.enum(['left', 'right', 'middle']).optional().describe('Mouse button to click'),
     modifiers: z
       .array(z.enum(['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']))
       .optional()
       .describe('Modifier keys to hold during click'),
   })
-  .describe(
-    'Click an element. Use to dismiss cookie banners, open menus, expand dropdowns, ' +
-      'toggle UI state, or trigger any clickable interaction before capturing.'
-  );
+  .describe('Click an element. Use to dismiss cookie banners, open menus, expand dropdowns.');
 
 export const typeActionSchema = z
   .object({
@@ -35,50 +28,31 @@ export const typeActionSchema = z
     selector: z.string().describe('CSS selector of the input element'),
     text: z.string().describe('Text to type into the element'),
     submit: z.boolean().optional().describe('Whether to press Enter after typing (submit form)'),
-    slowly: z
-      .boolean()
-      .optional()
-      .describe(
-        'Whether to type one character at a time. Useful for triggering key handlers or autocomplete.'
-      ),
+    slowly: z.boolean().optional().describe('Type one character at a time for key handlers'),
   })
-  .describe(
-    'Type text into an input, textarea, or contenteditable element. ' +
-      'Use to populate forms with demo data, enter search queries, or fill in sample content for screenshots.'
-  );
+  .describe('Type text into an input, textarea, or contenteditable element.');
 
 export const hoverActionSchema = z
   .object({
     type: z.literal('hover'),
     selector: z.string().describe('CSS selector of the element to hover over'),
   })
-  .describe(
-    'Hover over an element to trigger :hover states, show tooltips, or reveal hidden menus before capturing.'
-  );
+  .describe('Hover over an element to trigger :hover states, show tooltips, or reveal menus.');
 
 export const selectOptionActionSchema = z
   .object({
     type: z.literal('select_option'),
     selector: z.string().describe('CSS selector of the <select> element'),
-    values: z
-      .array(z.string())
-      .describe('Option values to select. Supports multiple for multi-select elements.'),
+    values: z.array(z.string()).describe('Option values to select. Supports multiple.'),
   })
-  .describe(
-    'Select one or more options in a native <select> dropdown to show a specific selection state.'
-  );
+  .describe('Select one or more options in a native <select> dropdown.');
 
 export const pressKeyActionSchema = z
   .object({
     type: z.literal('press_key'),
-    key: z
-      .string()
-      .describe('Key to press, e.g. "Enter", "Escape", "ArrowDown", "Control+a", "Meta+Shift+k"'),
+    key: z.string().describe('Key to press, e.g. "Enter", "Escape", "Control+a"'),
   })
-  .describe(
-    'Press a keyboard key or combination. Use to close modals (Escape), submit forms (Enter), ' +
-      'navigate focus (Tab), trigger shortcuts, or activate keyboard-driven UI.'
-  );
+  .describe('Press a keyboard key or combination. Use to close modals, submit forms, etc.');
 
 export const dragActionSchema = z
   .object({
@@ -86,9 +60,7 @@ export const dragActionSchema = z
     from: z.string().describe('CSS selector of the element to drag'),
     to: z.string().describe('CSS selector of the drop target'),
   })
-  .describe(
-    'Drag an element and drop it onto another. Use to show reordering or drag-and-drop interaction mid-state.'
-  );
+  .describe('Drag an element and drop it onto another.');
 
 export const waitActionSchema = z
   .object({
@@ -97,10 +69,7 @@ export const waitActionSchema = z
     text: z.string().optional().describe('Wait for this text to appear on the page'),
     textGone: z.string().optional().describe('Wait for this text to disappear from the page'),
   })
-  .describe(
-    'Pause execution until a condition is met. Wait for a fixed duration, for specific text ' +
-      'to appear (e.g. after async loading), or for text to disappear (e.g. loading spinners).'
-  );
+  .describe('Pause execution until a condition is met.');
 
 export const navigateActionSchema = z
   .object({
@@ -108,28 +77,15 @@ export const navigateActionSchema = z
     url: z.string().optional().describe('URL to navigate to (absolute or relative)'),
     back: z.boolean().optional().describe('Navigate back to the previous page'),
   })
-  .describe(
-    'Navigate to a different URL or go back in history. Use to reach a specific page state ' +
-      'after login, follow a multi-step flow, or return to a previous page.'
-  );
+  .describe('Navigate to a different URL or go back in history.');
 
 export const evaluateActionSchema = z
   .object({
     type: z.literal('evaluate'),
-    function: z
-      .string()
-      .describe(
-        'JavaScript function to evaluate. Use () => { ... } for page-level, or (el) => { ... } when selector is provided.'
-      ),
-    selector: z
-      .string()
-      .optional()
-      .describe('CSS selector of element to pass as the first argument to the function'),
+    function: z.string().describe('JavaScript function: () => { ... } or (el) => { ... }'),
+    selector: z.string().optional().describe('CSS selector of element to pass to function'),
   })
-  .describe(
-    'Run arbitrary JavaScript in the browser context. Use as an escape hatch for DOM manipulation ' +
-      'not covered by other actions: removing elements, changing styles, modifying text, or setting up complex page state.'
-  );
+  .describe('Run arbitrary JavaScript in the browser context. Escape hatch for DOM manipulation.');
 
 export const fillFormActionSchema = z
   .object({
@@ -138,11 +94,7 @@ export const fillFormActionSchema = z
       .array(
         z.object({
           selector: z.string().describe('CSS selector of the form field'),
-          value: z
-            .string()
-            .describe(
-              'Value to fill. For checkboxes use "true"/"false". For combobox use the option label text.'
-            ),
+          value: z.string().describe('Value to fill. Checkboxes: "true"/"false"'),
           fieldType: z
             .enum(['textbox', 'checkbox', 'radio', 'combobox', 'slider'])
             .describe('Type of the form field'),
@@ -150,10 +102,7 @@ export const fillFormActionSchema = z
       )
       .describe('Array of fields to fill'),
   })
-  .describe(
-    'Fill multiple form fields in one action. Supports text inputs, checkboxes, radio buttons, ' +
-      'dropdowns (combobox), and sliders. Use to show a completed form state in screenshots.'
-  );
+  .describe('Fill multiple form fields in one action.');
 
 export const handleDialogActionSchema = z
   .object({
@@ -161,24 +110,15 @@ export const handleDialogActionSchema = z
     accept: z.boolean().describe('Whether to accept the dialog'),
     promptText: z.string().optional().describe('Text to enter in case of a prompt dialog'),
   })
-  .describe(
-    'Set up a handler for the next browser dialog (alert, confirm, or prompt). ' +
-      'Place this action BEFORE the action that triggers the dialog. It will automatically ' +
-      'accept or dismiss when the dialog appears.'
-  );
+  .describe('Set up handler for browser dialog. Place BEFORE action that triggers dialog.');
 
 export const fileUploadActionSchema = z
   .object({
     type: z.literal('file_upload'),
     selector: z.string().describe('CSS selector of the file input element'),
-    paths: z
-      .array(z.string())
-      .describe('File paths to upload (absolute or relative to config file)'),
+    paths: z.array(z.string()).describe('File paths to upload (absolute or relative to config)'),
   })
-  .describe(
-    'Upload one or more files through a file input element. ' +
-      'Use to show file upload previews, populated upload zones, or attachment states.'
-  );
+  .describe('Upload one or more files through a file input element.');
 
 export const resizeActionSchema = z
   .object({
@@ -186,15 +126,16 @@ export const resizeActionSchema = z
     width: z.number().int().positive().describe('Viewport width in pixels'),
     height: z.number().int().positive().describe('Viewport height in pixels'),
   })
-  .describe(
-    'Resize the browser viewport mid-flow. Use when you need a different viewport for ' +
-      'a specific action (e.g. trigger responsive breakpoints) before capturing.'
-  );
+  .describe('Resize the browser viewport mid-flow.');
 
-/**
- * Union of all supported action types.
- * Actions are executed sequentially before taking the screenshot.
- */
+export const hideActionSchema = z
+  .object({
+    type: z.literal('hide'),
+    selectors: z.array(z.string()).describe('CSS selectors of elements to hide (display: none)'),
+  })
+  .describe('Hide elements from screenshot. Use to remove cookie banners, chat widgets, ads.');
+
+/** Union of all supported action types. Actions execute sequentially before screenshot. */
 export const actionSchema = z.discriminatedUnion('type', [
   clickActionSchema,
   typeActionSchema,
@@ -209,12 +150,10 @@ export const actionSchema = z.discriminatedUnion('type', [
   handleDialogActionSchema,
   fileUploadActionSchema,
   resizeActionSchema,
+  hideActionSchema,
 ]);
 
 /** Array of actions to execute sequentially before screenshot capture */
 export const actionsSchema = z
   .array(actionSchema)
-  .describe(
-    'Ordered list of actions to execute before capturing the screenshot. ' +
-      'Actions run sequentially — each completes before the next starts.'
-  );
+  .describe('Ordered list of actions to execute before capturing. Actions run sequentially.');
