@@ -224,16 +224,21 @@ export async function captureParallel(
   };
 
   // Execute batches in parallel with concurrency limit
+  // Use Promise.allSettled to collect results even if some batches fail
   const batchPromises = batches.map(async batch =>
     limit(async () =>
       executeBatch(batch, outputDirectory, captureOptions, browserOptions, onProgress)
     )
   );
 
-  const batchResults = await Promise.all(batchPromises);
+  const settledResults = await Promise.allSettled(batchPromises);
 
-  for (const results of batchResults) {
-    allResults.push(...results);
+  for (const settled of settledResults) {
+    if (settled.status === 'fulfilled') {
+      allResults.push(...settled.value);
+    }
+    // Rejected batches (e.g., browser launch failure) are silently skipped
+    // Individual capture failures are already recorded in results with success: false
   }
 
   return allResults;
