@@ -15,6 +15,7 @@ function createMockPage() {
     setInputFiles: vi.fn().mockResolvedValue(undefined),
     setChecked: vi.fn().mockResolvedValue(undefined),
     check: vi.fn().mockResolvedValue(undefined),
+    evaluateAll: vi.fn().mockResolvedValue(undefined),
   };
 
   const mockTextLocator = {
@@ -317,6 +318,26 @@ describe('executeActions', () => {
       const actions: Action[] = [{ type: 'resize', width: 375, height: 667 }];
       await executeActions(page as never, actions);
       expect(page.setViewportSize).toHaveBeenCalledWith({ width: 375, height: 667 });
+    });
+  });
+
+  describe('hide', () => {
+    it('hides elements by selector', async () => {
+      const actions: Action[] = [{ type: 'hide', selectors: ['.cookie-banner'] }];
+      await executeActions(page as never, actions);
+      expect(page.locator).toHaveBeenCalledWith('.cookie-banner');
+      expect(mockLocator.evaluateAll).toHaveBeenCalled();
+    });
+
+    it('hides multiple selectors', async () => {
+      const actions: Action[] = [
+        { type: 'hide', selectors: ['.cookie-banner', '.chat-widget', '.ad-container'] },
+      ];
+      await executeActions(page as never, actions);
+      expect(page.locator).toHaveBeenCalledWith('.cookie-banner');
+      expect(page.locator).toHaveBeenCalledWith('.chat-widget');
+      expect(page.locator).toHaveBeenCalledWith('.ad-container');
+      expect(mockLocator.evaluateAll).toHaveBeenCalledTimes(3);
     });
   });
 
