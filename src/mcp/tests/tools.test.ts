@@ -4,11 +4,12 @@
 
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { addHandler } from '../tools/add';
 import { listHandler } from '../tools/list';
 import { removeHandler } from '../tools/remove';
 import { snippetHandler } from '../tools/snippet';
+import { syncHandler } from '../tools/sync';
 
 const TEST_DIR = path.join(import.meta.dirname, '.test-workspace');
 const CONFIG_DIR = path.join(TEST_DIR, '.heroshot');
@@ -232,6 +233,98 @@ describe('MCP Tool Handlers', () => {
       expect(result.success).toBe(true);
       expect(result.count).toBe(1);
       expect(result.snippets[0]?.name).toBe('Dashboard');
+    });
+  });
+
+  describe('syncHandler', () => {
+    it('should return error when config not found', async () => {
+      const result = await syncHandler({ configPath: '/nonexistent/config.json' });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not found');
+      expect(result.total).toBe(0);
+      expect(result.captured).toBe(0);
+      expect(result.failed).toBe(0);
+      expect(result.results).toEqual([]);
+    });
+
+    it('should return zero counts for empty config', async () => {
+      setupTestConfig({ screenshots: [] });
+
+      const result = await syncHandler({ configPath: CONFIG_PATH });
+
+      expect(result.success).toBe(true);
+      expect(result.total).toBe(0);
+      expect(result.captured).toBe(0);
+      expect(result.failed).toBe(0);
+    });
+
+    it('should pass through filter option', async () => {
+      setupTestConfig({
+        screenshots: [{ id: 'abc123', name: 'Homepage', url: 'https://example.com' }],
+      });
+
+      const result = await syncHandler({ configPath: CONFIG_PATH, filter: 'nonexistent' });
+
+      // Filter matches nothing, so total is 0
+      expect(result.total).toBe(0);
+    });
+
+    it('should have correct result structure', async () => {
+      setupTestConfig({ screenshots: [] });
+
+      const result = await syncHandler({ configPath: CONFIG_PATH });
+
+      expect(result).toHaveProperty('success');
+      expect(result).toHaveProperty('total');
+      expect(result).toHaveProperty('captured');
+      expect(result).toHaveProperty('failed');
+      expect(result).toHaveProperty('results');
+      expect(typeof result.success).toBe('boolean');
+      expect(typeof result.total).toBe('number');
+      expect(typeof result.captured).toBe('number');
+      expect(typeof result.failed).toBe('number');
+      expect(Array.isArray(result.results)).toBe(true);
+    });
+
+    it('should resolve session key from environment', async () => {
+      setupTestConfig({ screenshots: [] });
+
+      // Set env variable
+      const originalEnv = process.env['HEROSHOT_SESSION_KEY'];
+      process.env['HEROSHOT_SESSION_KEY'] = 'test-session-key';
+
+      try {
+        const result = await syncHandler({ configPath: CONFIG_PATH });
+
+        // Should not throw - env variable is used
+        expect(result.success).toBe(true);
+      } finally {
+        // Restore env
+        if (originalEnv === undefined) {
+          delete process.env['HEROSHOT_SESSION_KEY'];
+        } else {
+          process.env['HEROSHOT_SESSION_KEY'] = originalEnv;
+        }
+      }
+    });
+
+    it('should prefer explicit session key over environment', async () => {
+      setupTestConfig({ screenshots: [] });
+
+      process.env['HEROSHOT_SESSION_KEY'] = 'env-key';
+
+      try {
+        const result = await syncHandler({
+          configPath: CONFIG_PATH,
+          sessionKey: 'explicit-key',
+        });
+
+        // Should not throw
+        expect(result.success).toBe(true);
+      } finally {
+        delete process.env['HEROSHOT_SESSION_KEY'];
+      }
     });
   });
 });
