@@ -10,8 +10,8 @@
  */
 export function extractSelectorName(selector: string): string {
   // Get the last part of the selector (most specific)
-  // Split on >>> or > with optional single space around them
-  const parts = selector.split(/ ?(?:>>>|>) ?/);
+  // Split on >> (Playwright shadow piercing), >>> (legacy), or > (child combinator)
+  const parts = selector.split(/ ?(?:>>>|>>|>) ?/);
   const lastPart = parts.at(-1) ?? selector;
 
   // Try to extract ID

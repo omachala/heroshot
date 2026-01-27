@@ -126,7 +126,7 @@ export function getSelector(element: Element): string {
       current = parent;
     } else if (root instanceof ShadowRoot) {
       // Reached top of shadow tree, pierce to host
-      path.unshift('>>>');
+      path.unshift('>>');
       current = root.host;
     } else {
       current = null;
@@ -134,7 +134,7 @@ export function getSelector(element: Element): string {
   }
 
   // Join path and clean up shadow DOM syntax
-  return path.join(' > ').replaceAll('> >>> >', ' >>> ');
+  return path.join(' > ').replaceAll('> >> >', ' >> ');
 }
 
 /**

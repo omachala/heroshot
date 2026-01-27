@@ -235,7 +235,8 @@ describe('getSelector', () => {
     document.body.append(host);
 
     const result = getSelector(inner);
-    expect(result).toContain('>>>');
+    expect(result).toContain('>>');
+    expect(result).not.toContain('>>>'); // Should use Playwright-style >> not legacy >>>
     expect(result).toContain('#host');
     expect(result).toContain('span.inner');
   });
