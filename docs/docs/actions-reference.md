@@ -16,7 +16,7 @@ Click an element. Use to dismiss cookie banners, open menus, expand dropdowns.
 | `doubleClick` | boolean                                                                  | no       | Whether to perform a double click    |
 | `button`      | `"left"` \| `"right"` \| `"middle"`                                      | no       | Mouse button to click                |
 | `modifiers`   | (`"Alt"` \| `"Control"` \| `"ControlOrMeta"` \| `"Meta"` \| `"Shift"`)[] | no       | Modifier keys to hold during click   |
-| `timeout`     | number                                                                   | no       | Timeout in ms (default: 30000)       |
+| `timeout`     | number                                                                   | no       | Timeout in milliseconds              |
 
 ```json
 // minimal
@@ -48,7 +48,7 @@ Type text into an input, textarea, or contenteditable element.
 | `text`     | string  | yes      | Text to type into the element                     |
 | `submit`   | boolean | no       | Whether to press Enter after typing (submit form) |
 | `slowly`   | boolean | no       | Type one character at a time for key handlers     |
-| `timeout`  | number  | no       | Timeout in ms (default: 30000)                    |
+| `timeout`  | number  | no       | Timeout in milliseconds                           |
 
 ```json
 // minimal
@@ -76,7 +76,7 @@ Hover over an element to trigger :hover states, show tooltips, or reveal menus.
 | Property   | Type   | Required | Description                               |
 | ---------- | ------ | -------- | ----------------------------------------- |
 | `selector` | string | yes      | CSS selector of the element to hover over |
-| `timeout`  | number | no       | Timeout in ms (default: 30000)            |
+| `timeout`  | number | no       | Timeout in milliseconds                   |
 
 ```json
 // minimal
@@ -101,7 +101,7 @@ Select one or more options in a native &lt;select&gt; dropdown.
 | ---------- | -------- | -------- | ------------------------------------------- |
 | `selector` | string   | yes      | CSS selector of the &lt;select&gt; element  |
 | `values`   | string[] | yes      | Option values to select. Supports multiple. |
-| `timeout`  | number   | no       | Timeout in ms (default: 30000)              |
+| `timeout`  | number   | no       | Timeout in milliseconds                     |
 
 ```json
 // minimal
@@ -149,7 +149,7 @@ Drag an element and drop it onto another.
 | --------- | ------ | -------- | ----------------------------------- |
 | `from`    | string | yes      | CSS selector of the element to drag |
 | `to`      | string | yes      | CSS selector of the drop target     |
-| `timeout` | number | no       | Timeout in ms (default: 30000)      |
+| `timeout` | number | no       | Timeout in milliseconds             |
 
 ```json
 // minimal
@@ -250,7 +250,7 @@ Fill multiple form fields in one action.
 | ↳ `fields[].selector`  | string                                                                 | yes      | CSS selector of the form field            |
 | ↳ `fields[].value`     | string                                                                 | yes      | Value to fill. Checkboxes: "true"/"false" |
 | ↳ `fields[].fieldType` | `"textbox"` \| `"checkbox"` \| `"radio"` \| `"combobox"` \| `"slider"` | yes      | Type of the form field                    |
-| `timeout`              | number                                                                 | no       | Timeout in ms per field (default: 30000)  |
+| `timeout`              | number                                                                 | no       | Timeout in milliseconds per field         |
 
 ```json
 // minimal
