@@ -19,8 +19,9 @@ function getVersion(): string {
   }
 
   // Fall back to reading package.json (development / npm package)
+  // From src/cli/cli.ts or dist/cli/cli.js, go up two levels to reach package root
   try {
-    const packageJsonPath = path.join(import.meta.dirname, '..', 'package.json');
+    const packageJsonPath = path.join(import.meta.dirname, '..', '..', 'package.json');
     const packageJson: unknown = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
     if (packageJson && typeof packageJson === 'object' && 'version' in packageJson) {
       return String(packageJson.version);

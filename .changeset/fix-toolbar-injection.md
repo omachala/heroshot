@@ -12,4 +12,10 @@ Fixed toolbar not appearing when running heroshot (#47). Multiple root causes id
 
 4. **Silent error swallowing**: Injection errors were caught but not logged, making debugging impossible
 
+**Additional fixes:**
+
+5. **Version flag returning 0.0.0 (#45)**: Path to package.json was going up 1 level from `dist/cli/` but needed 2 levels to reach package root
+
+6. **Action timeout option (#48)**: Added optional `timeout` parameter to `click`, `type`, `hover`, `select_option`, `drag`, and `fill_form` actions for complex component libraries
+
 Added comprehensive tests and documentation to prevent regression.

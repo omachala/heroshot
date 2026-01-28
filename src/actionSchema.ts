@@ -19,6 +19,7 @@ export const clickActionSchema = z
       .array(z.enum(['Alt', 'Control', 'ControlOrMeta', 'Meta', 'Shift']))
       .optional()
       .describe('Modifier keys to hold during click'),
+    timeout: z.number().int().positive().optional().describe('Timeout in milliseconds'),
   })
   .describe('Click an element. Use to dismiss cookie banners, open menus, expand dropdowns.');
 
@@ -29,6 +30,7 @@ export const typeActionSchema = z
     text: z.string().describe('Text to type into the element'),
     submit: z.boolean().optional().describe('Whether to press Enter after typing (submit form)'),
     slowly: z.boolean().optional().describe('Type one character at a time for key handlers'),
+    timeout: z.number().int().positive().optional().describe('Timeout in milliseconds'),
   })
   .describe('Type text into an input, textarea, or contenteditable element.');
 
@@ -36,6 +38,7 @@ export const hoverActionSchema = z
   .object({
     type: z.literal('hover'),
     selector: z.string().describe('CSS selector of the element to hover over'),
+    timeout: z.number().int().positive().optional().describe('Timeout in milliseconds'),
   })
   .describe('Hover over an element to trigger :hover states, show tooltips, or reveal menus.');
 
@@ -44,6 +47,7 @@ export const selectOptionActionSchema = z
     type: z.literal('select_option'),
     selector: z.string().describe('CSS selector of the <select> element'),
     values: z.array(z.string()).describe('Option values to select. Supports multiple.'),
+    timeout: z.number().int().positive().optional().describe('Timeout in milliseconds'),
   })
   .describe('Select one or more options in a native <select> dropdown.');
 
@@ -59,6 +63,7 @@ export const dragActionSchema = z
     type: z.literal('drag'),
     from: z.string().describe('CSS selector of the element to drag'),
     to: z.string().describe('CSS selector of the drop target'),
+    timeout: z.number().int().positive().optional().describe('Timeout in milliseconds'),
   })
   .describe('Drag an element and drop it onto another.');
 
@@ -101,6 +106,7 @@ export const fillFormActionSchema = z
         })
       )
       .describe('Array of fields to fill'),
+    timeout: z.number().int().positive().optional().describe('Timeout in milliseconds per field'),
   })
   .describe('Fill multiple form fields in one action.');
 

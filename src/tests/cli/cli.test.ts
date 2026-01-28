@@ -293,8 +293,11 @@ describe.concurrent('CLI URL capture', () => {
       const result = await runCli('--version');
 
       expect(result.success).toBe(true);
+      const version = result.output.trim();
       // Version should be a semver-like string
-      expect(result.output.trim()).toMatch(/^\d+\.\d+\.\d+/);
+      expect(version).toMatch(/^\d+\.\d+\.\d+/);
+      // Must not be fallback 0.0.0 - indicates broken version detection
+      expect(version).not.toBe('0.0.0');
     });
 
     it('shows verbose output with -v flag', async () => {

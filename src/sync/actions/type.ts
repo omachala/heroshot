@@ -5,6 +5,13 @@ import type { Action } from './types';
 export async function executeType(page: Page, action: Action): Promise<void> {
   if (action.type !== 'type') return;
   const locator = page.locator(action.selector);
-  await (action.slowly ? locator.pressSequentially(action.text) : locator.fill(action.text));
+  if (action.timeout) {
+    const options = { timeout: action.timeout };
+    await (action.slowly
+      ? locator.pressSequentially(action.text, options)
+      : locator.fill(action.text, options));
+  } else {
+    await (action.slowly ? locator.pressSequentially(action.text) : locator.fill(action.text));
+  }
   if (action.submit) await page.keyboard.press('Enter');
 }

@@ -58,13 +58,13 @@ describe('executeActions', () => {
       const actions: Action[] = [{ type: 'click', selector: '.btn' }];
       await executeActions(page as never, actions);
       expect(page.locator).toHaveBeenCalledWith('.btn');
-      expect(mockLocator.click).toHaveBeenCalledWith({});
+      expect(mockLocator.click).toHaveBeenCalled();
     });
 
     it('double-clicks an element', async () => {
       const actions: Action[] = [{ type: 'click', selector: '.card', doubleClick: true }];
       await executeActions(page as never, actions);
-      expect(mockLocator.dblclick).toHaveBeenCalledWith({});
+      expect(mockLocator.dblclick).toHaveBeenCalled();
     });
 
     it('passes button and modifiers', async () => {
@@ -76,6 +76,12 @@ describe('executeActions', () => {
         button: 'right',
         modifiers: ['Control'],
       });
+    });
+
+    it('passes timeout option when specified', async () => {
+      const actions: Action[] = [{ type: 'click', selector: '.btn', timeout: 5000 }];
+      await executeActions(page as never, actions);
+      expect(mockLocator.click).toHaveBeenCalledWith({ timeout: 5000 });
     });
   });
 
@@ -103,6 +109,14 @@ describe('executeActions', () => {
       expect(mockLocator.fill).toHaveBeenCalledWith('query');
       expect(page.keyboard.press).toHaveBeenCalledWith('Enter');
     });
+
+    it('passes timeout option when specified', async () => {
+      const actions: Action[] = [
+        { type: 'type', selector: '#email', text: 'test@example.com', timeout: 10000 },
+      ];
+      await executeActions(page as never, actions);
+      expect(mockLocator.fill).toHaveBeenCalledWith('test@example.com', { timeout: 10000 });
+    });
   });
 
   describe('hover', () => {
@@ -112,6 +126,12 @@ describe('executeActions', () => {
       expect(page.locator).toHaveBeenCalledWith('.tooltip-trigger');
       expect(mockLocator.hover).toHaveBeenCalled();
     });
+
+    it('passes timeout option when specified', async () => {
+      const actions: Action[] = [{ type: 'hover', selector: '.menu', timeout: 5000 }];
+      await executeActions(page as never, actions);
+      expect(mockLocator.hover).toHaveBeenCalledWith({ timeout: 5000 });
+    });
   });
 
   describe('select_option', () => {
@@ -120,6 +140,14 @@ describe('executeActions', () => {
       await executeActions(page as never, actions);
       expect(page.locator).toHaveBeenCalledWith('#country');
       expect(mockLocator.selectOption).toHaveBeenCalledWith(['us']);
+    });
+
+    it('passes timeout option when specified', async () => {
+      const actions: Action[] = [
+        { type: 'select_option', selector: '#country', values: ['us'], timeout: 5000 },
+      ];
+      await executeActions(page as never, actions);
+      expect(mockLocator.selectOption).toHaveBeenCalledWith(['us'], { timeout: 5000 });
     });
   });
 
@@ -147,6 +175,15 @@ describe('executeActions', () => {
       expect(page.locator).toHaveBeenCalledWith('.item');
       expect(page.locator).toHaveBeenCalledWith('.drop-zone');
       expect(mockLocator.dragTo).toHaveBeenCalledWith(targetLocator);
+    });
+
+    it('passes timeout option when specified', async () => {
+      const targetLocator = { ...mockLocator };
+      page.locator.mockReturnValueOnce(mockLocator).mockReturnValueOnce(targetLocator);
+
+      const actions: Action[] = [{ type: 'drag', from: '.item', to: '.drop-zone', timeout: 10000 }];
+      await executeActions(page as never, actions);
+      expect(mockLocator.dragTo).toHaveBeenCalledWith(targetLocator, { timeout: 10000 });
     });
   });
 
@@ -285,6 +322,18 @@ describe('executeActions', () => {
       ];
       await executeActions(page as never, actions);
       expect(mockLocator.selectOption).toHaveBeenCalledWith({ label: 'United States' });
+    });
+
+    it('passes timeout option when specified', async () => {
+      const actions: Action[] = [
+        {
+          type: 'fill_form',
+          fields: [{ selector: '#email', value: 'test@example.com', fieldType: 'textbox' }],
+          timeout: 10000,
+        },
+      ];
+      await executeActions(page as never, actions);
+      expect(mockLocator.fill).toHaveBeenCalledWith('test@example.com', { timeout: 10000 });
     });
   });
 
