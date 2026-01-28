@@ -179,58 +179,47 @@ features:
 </div>
 
 <div class="faq-section">
-  <h2>Frequently Asked Questions</h2>
-
-  <div class="faq-list">
-    <details class="faq-item">
-      <summary>How do I automate documentation screenshots?</summary>
-      <p>Install Heroshot with <code>npx heroshot</code>, use the visual picker to select elements you want to capture, and run <code>npx heroshot</code> anytime to regenerate all screenshots. You can also <a href="/docs/guide/automated-updates">set it up in CI/CD</a> to update screenshots automatically on every deploy.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>Is Heroshot free?</summary>
-      <p>Yes, Heroshot is completely free and open-source under the MIT license. There are no usage limits, no accounts required, and no paid tiers. Everything runs locally on your machine or CI.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>What documentation platforms does Heroshot support?</summary>
-      <p>Heroshot works with <a href="/docs/integrations/vitepress">VitePress</a>, <a href="/docs/integrations/docusaurus">Docusaurus</a>, <a href="/docs/integrations/mkdocs">MkDocs</a>, <a href="/docs/integrations/sphinx">Sphinx</a>, <a href="/docs/integrations/gitbook">GitBook</a>, and any static site generator. It also provides <a href="/docs/integrations/react">React</a> and <a href="/docs/integrations/vue">Vue</a> components for automatic light/dark mode switching.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>How do I capture screenshots of pages that require login?</summary>
-      <p>Heroshot supports persistent authentication. Run <code>npx heroshot --login</code> to open a browser, log into your site manually, then Heroshot encrypts and saves your session. Future captures will use this session automatically, even in headless CI environments. <a href="/docs/getting-started#sites-that-need-login">Learn more</a>.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>Can I capture both light and dark mode screenshots?</summary>
-      <p>Yes, set <code>colorScheme</code> to <code>"both"</code> in your config, and Heroshot generates separate light and dark variants in a single run. The React/Vue components automatically show the right variant based on the user's theme preference. <a href="/docs/config#color-scheme-values">See color scheme options</a>.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>How do I set up screenshot automation in GitHub Actions?</summary>
-      <p>Add a workflow that runs <code>npx heroshot</code> after your site builds. Heroshot provides a <a href="/docs/guide/automated-updates">ready-to-use GitHub Actions workflow</a> that captures screenshots, commits changes, and creates a PR automatically. Works with any CI provider.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>How do I capture mobile and tablet screenshots?</summary>
-      <p>Use the <a href="/docs/config#viewports">viewports option</a> in your config or pass <code>--viewports</code> via CLI. Heroshot supports presets like <code>desktop</code>, <code>tablet</code>, <code>mobile</code>, or custom dimensions. One config entry generates all viewport variants automatically.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>Can AI assistants like Claude or Cursor manage my screenshots?</summary>
-      <p>Yes, Heroshot includes an <a href="/docs/ai-agents">MCP server</a> that lets AI coding assistants capture and update screenshots directly. Claude Code, Cursor, Windsurf, and GitHub Copilot can all use Heroshot through the Model Context Protocol.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>How do I keep screenshots up to date when my UI changes?</summary>
-      <p>Run <code>npx heroshot</code> locally to regenerate all screenshots, or <a href="/docs/guide/automated-updates">set up CI automation</a> to update them on every deploy. Screenshots are stored as regular image files in your project, so changes show up in git diffs for easy review.</p>
-    </details>
-
-    <details class="faq-item">
-      <summary>What is Heroshot and how does it work?</summary>
-      <p>Heroshot is a CLI tool that automates documentation screenshots. You define what to capture once using a <a href="/docs/getting-started">visual picker</a>, then regenerate all screenshots with one command. It uses Playwright under the hood for reliable, cross-browser captures.</p>
-    </details>
-
-  </div>
+<h2>Frequently Asked Questions</h2>
+<div class="faq-list">
+<details class="faq-item">
+<summary>How do I automate documentation screenshots?</summary>
+<p>Install Heroshot with <code>npx heroshot</code>, use the visual picker to select elements you want to capture, and run <code>npx heroshot</code> anytime to regenerate all screenshots. You can also <a href="/docs/guide/automated-updates">set it up in CI/CD</a> to update screenshots automatically on every deploy.</p>
+</details>
+<details class="faq-item">
+<summary>Is Heroshot free?</summary>
+<p>Yes, Heroshot is completely free and open-source under the MIT license. There are no usage limits, no accounts required, and no paid tiers. Everything runs locally on your machine or CI.</p>
+</details>
+<details class="faq-item">
+<summary>What documentation platforms does Heroshot support?</summary>
+<p>Heroshot works with <a href="/docs/integrations/vitepress">VitePress</a>, <a href="/docs/integrations/docusaurus">Docusaurus</a>, <a href="/docs/integrations/mkdocs">MkDocs</a>, <a href="/docs/integrations/sphinx">Sphinx</a>, <a href="/docs/integrations/gitbook">GitBook</a>, and any static site generator. It also provides <a href="/docs/integrations/react">React</a> and <a href="/docs/integrations/vue">Vue</a> components for automatic light/dark mode switching.</p>
+</details>
+<details class="faq-item">
+<summary>How do I capture screenshots of pages that require login?</summary>
+<p>Heroshot supports persistent authentication. Run <code>npx heroshot --login</code> to open a browser, log into your site manually, then Heroshot encrypts and saves your session. Future captures will use this session automatically, even in headless CI environments. <a href="/docs/getting-started#sites-that-need-login">Learn more</a>.</p>
+</details>
+<details class="faq-item">
+<summary>Can I capture both light and dark mode screenshots?</summary>
+<p>Yes, set <code>colorScheme</code> to <code>"both"</code> in your config, and Heroshot generates separate light and dark variants in a single run. The React/Vue components automatically show the right variant based on the user's theme preference. <a href="/docs/config#color-scheme-values">See color scheme options</a>.</p>
+</details>
+<details class="faq-item">
+<summary>How do I set up screenshot automation in GitHub Actions?</summary>
+<p>Add a workflow that runs <code>npx heroshot</code> after your site builds. Heroshot provides a <a href="/docs/guide/automated-updates">ready-to-use GitHub Actions workflow</a> that captures screenshots, commits changes, and creates a PR automatically. Works with any CI provider.</p>
+</details>
+<details class="faq-item">
+<summary>How do I capture mobile and tablet screenshots?</summary>
+<p>Use the <a href="/docs/config#viewports">viewports option</a> in your config or pass <code>--viewports</code> via CLI. Heroshot supports presets like <code>desktop</code>, <code>tablet</code>, <code>mobile</code>, or custom dimensions. One config entry generates all viewport variants automatically.</p>
+</details>
+<details class="faq-item">
+<summary>Can AI assistants like Claude or Cursor manage my screenshots?</summary>
+<p>Yes, Heroshot includes an <a href="/docs/ai-agents">MCP server</a> that lets AI coding assistants capture and update screenshots directly. Claude Code, Cursor, Windsurf, and GitHub Copilot can all use Heroshot through the Model Context Protocol.</p>
+</details>
+<details class="faq-item">
+<summary>How do I keep screenshots up to date when my UI changes?</summary>
+<p>Run <code>npx heroshot</code> locally to regenerate all screenshots, or <a href="/docs/guide/automated-updates">set up CI automation</a> to update them on every deploy. Screenshots are stored as regular image files in your project, so changes show up in git diffs for easy review.</p>
+</details>
+<details class="faq-item">
+<summary>What is Heroshot and how does it work?</summary>
+<p>Heroshot is a CLI tool that automates documentation screenshots. You define what to capture once using a <a href="/docs/getting-started">visual picker</a>, then regenerate all screenshots with one command. It uses Playwright under the hood for reliable, cross-browser captures.</p>
+</details>
+</div>
 </div>
