@@ -188,8 +188,12 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
           sidebarExpanded,
           onEvent: handleEvent,
         });
-      } catch {
-        // Toolbar injection can fail on some pages, ignore silently
+        verbose(`Toolbar injected on ${url}`);
+      } catch (error) {
+        // Toolbar injection can fail on some pages (e.g., CSP restrictions)
+        verbose(
+          `Toolbar injection failed on ${url}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     });
   };
@@ -219,6 +223,22 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
 
   // Navigate to heroshot.sh welcome page
   await page.goto('https://heroshot.sh/welcome', { waitUntil: 'domcontentloaded' });
+
+  // Explicitly inject toolbar after initial navigation (event listener may miss first load)
+  try {
+    await injectToolbar(page, {
+      screenshots: allScreenshots,
+      pendingJob,
+      selectedId,
+      sidebarExpanded,
+      onEvent: handleEvent,
+    });
+    verbose('Toolbar injected on welcome page');
+  } catch (error) {
+    verbose(
+      `Initial toolbar injection failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 
   // Wait for browser to close (either via Close button or manual close)
   await new Promise<void>(resolve => {

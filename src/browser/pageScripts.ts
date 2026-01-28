@@ -1,6 +1,55 @@
 /**
  * Scripts to be executed in browser page context via page.evaluate().
- * These are pure functions that get serialized and run in the browser.
+ *
+ * ============================================================================
+ * CRITICAL: esbuild __name HELPER ISSUE - READ THIS BEFORE MODIFYING
+ * ============================================================================
+ *
+ * BACKGROUND:
+ * When we run the CLI with `tsx` (which uses esbuild under the hood), esbuild
+ * adds a __name() helper function to preserve function names for debugging.
+ *
+ * THE PROBLEM:
+ * When Playwright's page.evaluate(fn, args) is called, it serializes the
+ * function using Function.prototype.toString(). If esbuild has modified the
+ * function to include __name() calls, the serialized code will reference
+ * __name - but __name doesn't exist in the browser context!
+ *
+ * This causes: ReferenceError: __name is not defined
+ *
+ * WHEN DOES esbuild ADD __name?
+ * esbuild adds __name() wrapper specifically when:
+ *   1. A function is EXPORTED from a module, AND
+ *   2. That function contains a NESTED FUNCTION ASSIGNED TO A PROPERTY
+ *
+ * Examples:
+ *
+ *   // BROKEN - nested function property gets __name wrapper
+ *   export function init() {
+ *     return {
+ *       callback: function(x) { ... }  // ← __name wraps this!
+ *     };
+ *   }
+ *   // Serializes to: { callback: __name(function(x) { ... }, "callback") }
+ *
+ *   // SAFE - no nested function properties
+ *   export function getValue() {
+ *     return globalThis.someValue;
+ *   }
+ *   // Serializes cleanly without __name
+ *
+ * WHY THIS FILE EXISTS:
+ * This file contains ONLY functions that are SAFE to use with page.evaluate().
+ * These functions have NO nested function properties, so esbuild doesn't add
+ * __name wrappers and they serialize correctly for browser execution.
+ *
+ * WHAT ABOUT initHeroshot?
+ * The initHeroshot function needs to create __heroshot.emit = function() {...}
+ * which is a nested function property. Therefore it CANNOT be defined here.
+ * It must use STRING-BASED evaluation in injectToolbar.ts instead.
+ *
+ * See injectToolbar.ts for how initialization is handled safely.
+ * ============================================================================
  */
 
 import type { ScreenshotData, ToolbarJob } from './types';
@@ -25,54 +74,31 @@ type BrowserGlobal = {
   dispatchEvent: (event: Event) => boolean;
 };
 
-/**
- * Type-safe accessor for browser globals.
- * This cast is necessary because these functions run in browser context
- * where globalThis has different properties than in Node.js.
- */
-// eslint-disable-next-line no-restricted-syntax -- required for browser/Node bridge
-const browser = globalThis as unknown as BrowserGlobal;
-
-/** Options for initializing heroshot global */
-type InitHeroshotOptions = {
-  screenshots: ScreenshotData[];
-  pendingJob: ToolbarJob | null;
-  selectedId: string | null;
-  sidebarExpanded: boolean;
-};
-
-/**
- * Initialize the __heroshot global namespace in the page.
- * Must be called before injecting the editor script.
- */
-export function initHeroshot(options: InitHeroshotOptions): void {
-  browser.__heroshot = {
-    initialized: false,
-    screenshots: options.screenshots,
-    pendingJob: options.pendingJob,
-    selectedId: options.selectedId,
-    sidebarExpanded: options.sidebarExpanded,
-    emit: (event: unknown) => {
-      browser.__heroshotEmit(JSON.stringify(event));
-    },
-  };
-}
+// NOTE: Module-level variables are NOT available when functions are serialized
+// for page.evaluate(). Each function must access globalThis directly.
 
 /**
  * Check if heroshot toolbar is already initialized on the page.
+ *
+ * SAFE for page.evaluate() - no nested function properties.
  */
 export function isHeroshotInitialized(): boolean {
-  return browser.__heroshot?.initialized === true;
+  // eslint-disable-next-line no-restricted-syntax -- browser context requires globalThis cast
+  return (globalThis as unknown as BrowserGlobal).__heroshot?.initialized === true;
 }
 
 /**
  * Update the pending job and dispatch event to notify toolbar.
+ *
+ * SAFE for page.evaluate() - no nested function properties.
  */
 export function updatePendingJob(pendingJob: ToolbarJob | null): void {
-  if (browser.__heroshot) {
-    browser.__heroshot.pendingJob = pendingJob;
+  // eslint-disable-next-line no-restricted-syntax -- browser context requires globalThis cast
+  const g = globalThis as unknown as BrowserGlobal;
+  if (g.__heroshot) {
+    g.__heroshot.pendingJob = pendingJob;
   }
-  browser.dispatchEvent(new CustomEvent('heroshot-job', { detail: pendingJob }));
+  g.dispatchEvent(new CustomEvent('heroshot-job', { detail: pendingJob }));
 }
 
 /** Options for dispatching highlight job */
@@ -83,9 +109,12 @@ type DispatchHighlightOptions = {
 
 /**
  * Dispatch a highlight job event to the toolbar.
+ *
+ * SAFE for page.evaluate() - no nested function properties.
  */
 export function dispatchHighlightJob(options: DispatchHighlightOptions): void {
-  browser.dispatchEvent(
+  // eslint-disable-next-line no-restricted-syntax -- browser context requires globalThis cast
+  (globalThis as unknown as BrowserGlobal).dispatchEvent(
     new CustomEvent('heroshot-job', {
       detail: {
         type: 'highlight',

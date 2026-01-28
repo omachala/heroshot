@@ -194,6 +194,42 @@ describe('session file operations', () => {
       const result = loadSession(sessionKey, testDir);
       expect(result).toBeNull();
     });
+
+    it('returns null for empty session file', () => {
+      const sessionKey = generateSessionKey();
+      const sessionPath = getSessionPath(testDir);
+
+      writeFileSync(sessionPath, Buffer.alloc(0));
+
+      const result = loadSession(sessionKey, testDir);
+      expect(result).toBeNull();
+    });
+
+    it('returns null for truncated/corrupted session file', () => {
+      const sessionKey = generateSessionKey();
+      const sessionPath = getSessionPath(testDir);
+
+      // Write truncated encrypted data (too short to be valid)
+      writeFileSync(sessionPath, Buffer.from('too short'));
+
+      const result = loadSession(sessionKey, testDir);
+      expect(result).toBeNull();
+    });
+
+    it('returns null for random binary garbage', () => {
+      const sessionKey = generateSessionKey();
+      const sessionPath = getSessionPath(testDir);
+
+      // Write random bytes that don't follow encryption format
+      const randomBytes = Buffer.alloc(100);
+      for (let i = 0; i < 100; i++) {
+        randomBytes[i] = Math.floor(Math.random() * 256); // NOSONAR - intentionally using non-crypto random for test data
+      }
+      writeFileSync(sessionPath, randomBytes);
+
+      const result = loadSession(sessionKey, testDir);
+      expect(result).toBeNull();
+    });
   });
 });
 
