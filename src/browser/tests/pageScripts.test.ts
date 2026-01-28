@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  dispatchHighlightJob,
-  initHeroshot,
-  isHeroshotInitialized,
-  updatePendingJob,
-} from '../pageScripts';
+import { dispatchHighlightJob, isHeroshotInitialized, updatePendingJob } from '../pageScripts';
 
 describe('pageScripts', () => {
   /**
@@ -12,21 +7,14 @@ describe('pageScripts', () => {
    * They must NOT reference module-level variables, as those won't be available
    * when the function is serialized and executed in a different context.
    *
-   * This test verifies the functions can be serialized and evaluated without
-   * ReferenceErrors from missing module-level variables.
+   * IMPORTANT: Only functions WITHOUT nested function properties can be exported
+   * from pageScripts.ts. Functions with nested function properties (like initHeroshot)
+   * would get esbuild's __name wrapper which breaks page.evaluate serialization.
+   * See pageScripts.ts header comment for full explanation.
    */
   describe('serialization safety', () => {
     it('isHeroshotInitialized does not reference module-level variables', () => {
-      // Serialize and re-evaluate the function in an isolated context
       const fnString = isHeroshotInitialized.toString();
-      // Should not contain references to 'browser' variable (the old bug)
-      expect(fnString).not.toMatch(/\bbrowser\./);
-      // Should use globalThis directly
-      expect(fnString).toContain('globalThis');
-    });
-
-    it('initHeroshot does not reference module-level variables', () => {
-      const fnString = initHeroshot.toString();
       expect(fnString).not.toMatch(/\bbrowser\./);
       expect(fnString).toContain('globalThis');
     });
@@ -41,6 +29,14 @@ describe('pageScripts', () => {
       const fnString = dispatchHighlightJob.toString();
       expect(fnString).not.toMatch(/\bbrowser\./);
       expect(fnString).toContain('globalThis');
+    });
+
+    it('functions do not contain esbuild __name helper', () => {
+      // These functions should NOT have nested function properties,
+      // so esbuild won't add __name wrappers
+      expect(isHeroshotInitialized.toString()).not.toContain('__name');
+      expect(updatePendingJob.toString()).not.toContain('__name');
+      expect(dispatchHighlightJob.toString()).not.toContain('__name');
     });
   });
 
@@ -70,49 +66,10 @@ describe('pageScripts', () => {
     });
   });
 
-  describe('initHeroshot', () => {
-    beforeEach(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access -- test setup
-      (globalThis as any).__heroshotEmit = vi.fn();
-    });
-
-    it('creates __heroshot global with provided options', () => {
-      const options = {
-        screenshots: [
-          { id: '1', name: 'Test', url: 'https://example.com', selector: '', createdAt: 0 },
-        ],
-        pendingJob: null,
-        selectedId: 'selected-1',
-        sidebarExpanded: true,
-      };
-
-      initHeroshot(options);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access -- test assertion
-      const heroshot = (globalThis as any).__heroshot;
-      expect(heroshot).toBeDefined();
-      expect(heroshot.initialized).toBe(false);
-      expect(heroshot.screenshots).toEqual(options.screenshots);
-      expect(heroshot.pendingJob).toBeNull();
-      expect(heroshot.selectedId).toBe('selected-1');
-      expect(heroshot.sidebarExpanded).toBe(true);
-    });
-
-    it('creates emit function that calls __heroshotEmit with JSON', () => {
-      initHeroshot({
-        screenshots: [],
-        pendingJob: null,
-        selectedId: null,
-        sidebarExpanded: false,
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call -- test
-      (globalThis as any).__heroshot.emit({ type: 'done' });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access -- test assertion
-      expect((globalThis as any).__heroshotEmit).toHaveBeenCalledWith('{"type":"done"}');
-    });
-  });
+  // NOTE: initHeroshot is NOT tested here because it cannot be exported as a
+  // typed function - it contains a nested function property (emit) which would
+  // get esbuild's __name wrapper. It's implemented via string evaluation in
+  // injectToolbar.ts. The integration is tested via e2e tests.
 
   describe('updatePendingJob', () => {
     let dispatchEventMock: ReturnType<typeof vi.fn>;

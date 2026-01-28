@@ -70,7 +70,7 @@
   ],
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "dev": "tsx src/cli.ts",
+    "dev": "tsx src/cli/cli.ts",
     "build": "tsup",
     "build:binary": "bun run scripts/build-binary.ts",
     "build:binary:single": "bun run scripts/build-binary.ts --single",
