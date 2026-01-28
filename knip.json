@@ -1,6 +1,5 @@
 {
-  "ignoreDependencies": ["tailwindcss", "heroshot", "lefthook"],
-  "ignoreBinaries": ["lefthook"],
+  "ignoreDependencies": ["tailwindcss", "heroshot", "postcss"],
   "ignore": [
     "editor/**",
     "src/capture.ts",
