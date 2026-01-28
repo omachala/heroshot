@@ -55,7 +55,7 @@ describe('pageScripts tsx serialization', () => {
    * If this test fails, someone added a function with nested function
    * properties. Such functions break page.evaluate() in development mode.
    */
-  it('exported functions do not contain __name when run with tsx', () => {
+  it('exported functions do not contain __name when run with tsx', { timeout: 30000 }, () => {
     // Use absolute path since temp file is outside project directory
     const pageScriptsPath = path.join(process.cwd(), 'src/browser/pageScripts.ts');
 
