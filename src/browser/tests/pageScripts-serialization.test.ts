@@ -83,8 +83,8 @@ console.log(JSON.stringify(results));
 
     writeFileSync(TEMP_SCRIPT, script);
 
-    // NOSONAR - Safe: TEMP_SCRIPT is a constant path we control, not user input
     const output = execSync(`npx tsx ${TEMP_SCRIPT}`, {
+      // NOSONAR - Safe: TEMP_SCRIPT is a constant path we control
       encoding: 'utf8',
       cwd: process.cwd(),
     });
