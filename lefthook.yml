@@ -1,10 +1,10 @@
 # Lefthook config - https://lefthook.dev/configuration/
 #
-# Runs checks sequentially (piped mode) to ensure format completes
-# before quality checks. All tools use caching so this is still fast.
+# Maximum parallel execution for speed.
+# Format and all quality checks run simultaneously.
 
 pre-commit:
-  piped: true
+  parallel: true
   jobs:
     - name: block-ai-dirs
       run: |
