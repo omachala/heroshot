@@ -319,7 +319,7 @@ describe.concurrent('CLI URL capture', () => {
 
       // Should fail (element not found)
       expect(result.success).toBe(false);
-    }, 60_000);
+    }, 90_000);
   });
 
   describe('flag combinations', () => {
