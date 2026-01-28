@@ -31,11 +31,13 @@
  */
 
 import { execSync } from 'node:child_process';
-import { writeFileSync, unlinkSync } from 'node:fs';
+import { writeFileSync, unlinkSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { describe, expect, it, afterAll } from 'vitest';
 
-const TEMP_SCRIPT = path.join(process.cwd(), 'node_modules', '.cache', 'test-serialization.ts');
+// Use system temp directory to avoid CI issues with missing .cache folder
+const TEMP_SCRIPT = path.join(os.tmpdir(), 'heroshot-test-serialization.ts');
 
 describe('pageScripts tsx serialization', () => {
   afterAll(() => {
@@ -54,13 +56,16 @@ describe('pageScripts tsx serialization', () => {
    * properties. Such functions break page.evaluate() in development mode.
    */
   it('exported functions do not contain __name when run with tsx', () => {
+    // Use absolute path since temp file is outside project directory
+    const pageScriptsPath = path.join(process.cwd(), 'src/browser/pageScripts.ts');
+
     // Write test script to file to avoid shell escaping issues
     const script = `
 import {
   isHeroshotInitialized,
   updatePendingJob,
   dispatchHighlightJob
-} from '../../src/browser/pageScripts.ts';
+} from '${pageScriptsPath}';
 
 const fns = { isHeroshotInitialized, updatePendingJob, dispatchHighlightJob };
 const results: Record<string, { hasName: boolean; snippet: string }> = {};
