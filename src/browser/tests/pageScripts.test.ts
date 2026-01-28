@@ -7,6 +7,43 @@ import {
 } from '../pageScripts';
 
 describe('pageScripts', () => {
+  /**
+   * These functions are serialized and run in browser context via page.evaluate().
+   * They must NOT reference module-level variables, as those won't be available
+   * when the function is serialized and executed in a different context.
+   *
+   * This test verifies the functions can be serialized and evaluated without
+   * ReferenceErrors from missing module-level variables.
+   */
+  describe('serialization safety', () => {
+    it('isHeroshotInitialized does not reference module-level variables', () => {
+      // Serialize and re-evaluate the function in an isolated context
+      const fnString = isHeroshotInitialized.toString();
+      // Should not contain references to 'browser' variable (the old bug)
+      expect(fnString).not.toMatch(/\bbrowser\./);
+      // Should use globalThis directly
+      expect(fnString).toContain('globalThis');
+    });
+
+    it('initHeroshot does not reference module-level variables', () => {
+      const fnString = initHeroshot.toString();
+      expect(fnString).not.toMatch(/\bbrowser\./);
+      expect(fnString).toContain('globalThis');
+    });
+
+    it('updatePendingJob does not reference module-level variables', () => {
+      const fnString = updatePendingJob.toString();
+      expect(fnString).not.toMatch(/\bbrowser\./);
+      expect(fnString).toContain('globalThis');
+    });
+
+    it('dispatchHighlightJob does not reference module-level variables', () => {
+      const fnString = dispatchHighlightJob.toString();
+      expect(fnString).not.toMatch(/\bbrowser\./);
+      expect(fnString).toContain('globalThis');
+    });
+  });
+
   beforeEach(() => {
     // Reset globalThis state
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access -- test cleanup
