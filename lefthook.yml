@@ -1,0 +1,41 @@
+# Lefthook config - https://lefthook.dev/configuration/
+#
+# Runs checks sequentially (piped mode) to ensure format completes
+# before quality checks. All tools use caching so this is still fast.
+
+pre-commit:
+  piped: true
+  jobs:
+    - name: block-ai-dirs
+      run: |
+        if git diff --cached --name-only | grep -qE '^\.(claude|opencode|cursor|aider|copilot)/'; then
+          echo "AI config directories are gitignored"
+          exit 1
+        fi
+
+    - name: format
+      run: pnpm format
+      stage_fixed: true
+
+    - name: lint
+      run: pnpm lint
+
+    - name: lint-editor
+      run: pnpm lint:editor
+
+    - name: typecheck
+      run: pnpm typecheck
+
+    - name: knip
+      run: pnpm knip
+
+    - name: tests
+      run: pnpm test:run
+
+    - name: svelte
+      run: pnpm check:svelte
+
+commit-msg:
+  jobs:
+    - name: block-ai-authors
+      run: ./scripts/commit-msg.sh {1}
