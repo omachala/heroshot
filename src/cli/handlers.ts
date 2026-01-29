@@ -140,7 +140,7 @@ export async function shotAction(
   return handleDefaultCommand({
     configPath,
     sessionKey: globalOptions.sessionKey,
-    hasExplicitConfig: !!globalOptions.config,
+    hasExplicitConfig: Boolean(globalOptions.config),
     clean: options?.clean,
     workers: options?.workers,
     headed: options?.headed,

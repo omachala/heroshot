@@ -89,6 +89,12 @@ export default tseslint.config(
             'ArrowFunctionExpression[params.length=1][params.0.type=Identifier][body.type=MemberExpression][body.computed=false]',
           message: 'Use destructuring in callback: prefer ({ prop }) => prop over f => f.prop',
         },
+        {
+          // bans `!!x` - prefer `Boolean(x)` for clarity
+          selector:
+            "UnaryExpression[operator='!'][argument.type='UnaryExpression'][argument.operator='!']",
+          message: 'Use Boolean(x) instead of !!x for explicit type coercion.',
+        },
       ],
 
       // Let TypeScript infer return types
