@@ -32,6 +32,7 @@ type CaptureContext = {
     bypassCSP?: boolean;
     reducedMotion?: 'reduce' | 'no-preference';
     userAgent?: string;
+    headed?: boolean;
   };
   schemes: ('light' | 'dark')[];
   workers: number;
@@ -130,6 +131,7 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   const browserOptions = {
     ...buildBrowserOptions(config),
     storageState,
+    headed: options.headed,
   };
 
   // Start capture

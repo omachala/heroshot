@@ -178,6 +178,8 @@ export const shotCommandOptionsSchema = shotCliOptionsSchema.extend({
   clean: z.boolean().optional(),
   /** Number of parallel capture workers */
   workers: z.number().int().min(1).optional(),
+  /** Run browser in headed mode (visible window) for debugging */
+  headed: z.boolean().optional(),
 });
 
 /** Global config */

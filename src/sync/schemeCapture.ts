@@ -22,6 +22,7 @@ export type CaptureSchemeOptions = {
     bypassCSP?: boolean;
     reducedMotion?: 'reduce' | 'no-preference';
     userAgent?: string;
+    headed?: boolean;
   };
   colorScheme: 'light' | 'dark' | undefined;
   schemes: ('light' | 'dark')[];
@@ -49,7 +50,7 @@ export async function captureWithScheme(
   const results: ScreenshotResult[] = [];
 
   const { browser, context } = await launchBrowser({
-    headless: true,
+    headless: !browserOptions.headed,
     viewport: browserOptions.viewport,
     deviceScaleFactor: browserOptions.deviceScaleFactor,
     storageState: browserOptions.storageState,
