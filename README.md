@@ -6,7 +6,7 @@
     </picture>
   </a>
 </p>
-<p align="center"><em>👆 This hero shot of <a href="https://heroshot.sh">heroshot.sh</a> is taken by heroshot ⚡️</em></p>
+<p align="center"><em>👆 This hero shot of <a href="https://heroshot.sh">heroshot.sh</a> is <a href="https://github.com/omachala/heroshot/blob/main/.github/workflows/update-screenshots.yml">taken</a> by heroshot ⚡️</em></p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/v/heroshot?style=for-the-badge&logo=npm" alt="npm version"></a>
