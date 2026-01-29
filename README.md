@@ -1,8 +1,9 @@
 <p align="center">
-  <img src="https://github.com/omachala/heroshot/blob/main/assets/logo.svg?raw=true" alt="heroshot logo" height="80">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/omachala/heroshot/refs/heads/main/docs/public/screenshots/hero-desktop-dark.png">
+    <img src="https://raw.githubusercontent.com/omachala/heroshot/refs/heads/main/docs/public/screenshots/hero-desktop-light.png" alt="heroshot">
+  </picture>
 </p>
-
-<h1 align="center">heroshot</h1>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/v/heroshot?style=for-the-badge&logo=npm" alt="npm version"></a>
