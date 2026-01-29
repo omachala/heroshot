@@ -10,35 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build heroshot
-        run: pnpm build
-
-      - name: Build editor
-        run: pnpm build:editor
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: v1-playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install chromium
 
       - name: Run heroshot
-        run: node ../dist/cli/cli.js
+        run: npx heroshot
         working-directory: docs
         env:
           HEROSHOT_SESSION_KEY: ${{ secrets.HEROSHOT_SESSION_KEY }}
