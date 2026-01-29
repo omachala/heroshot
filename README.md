@@ -1,8 +1,10 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/omachala/heroshot/refs/heads/main/docs/public/screenshots/hero-desktop-dark.png">
-    <img src="https://raw.githubusercontent.com/omachala/heroshot/refs/heads/main/docs/public/screenshots/hero-desktop-light.png" alt="heroshot">
-  </picture>
+  <a href="https://heroshot.sh">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/omachala/heroshot/refs/heads/main/docs/public/screenshots/hero-desktop-dark.png">
+      <img src="https://raw.githubusercontent.com/omachala/heroshot/refs/heads/main/docs/public/screenshots/hero-desktop-light.png" alt="heroshot">
+    </picture>
+  </a>
 </p>
 
 <p align="center">
