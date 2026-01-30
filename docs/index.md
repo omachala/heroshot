@@ -42,7 +42,7 @@ head:
             "name": "How do I capture screenshots of pages that require login?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Heroshot supports persistent authentication. Run 'npx heroshot --login' to open a browser, log into your site manually, then Heroshot encrypts and saves your session. Future captures will use this session automatically, even in headless CI environments."
+              "text": "Heroshot supports persistent authentication. Run 'npx heroshot config' to open a browser, log into your site manually, then Heroshot encrypts and saves your session. Future captures will use this session automatically, even in headless CI environments."
             }
           },
           {
@@ -195,7 +195,7 @@ features:
 </details>
 <details class="faq-item">
 <summary>How do I capture screenshots of pages that require login?</summary>
-<p>Heroshot supports persistent authentication. Run <code>npx heroshot --login</code> to open a browser, log into your site manually, then Heroshot encrypts and saves your session. Future captures will use this session automatically, even in headless CI environments. <a href="/docs/getting-started#sites-that-need-login">Learn more</a>.</p>
+<p>Heroshot supports persistent authentication. Run <code>npx heroshot config</code> to open a browser, log into your site manually, then Heroshot encrypts and saves your session. Future captures will use this session automatically, even in headless CI environments. <a href="/docs/getting-started#sites-that-need-login">Learn more</a>.</p>
 </details>
 <details class="faq-item">
 <summary>Can I capture both light and dark mode screenshots?</summary>
