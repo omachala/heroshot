@@ -37,15 +37,12 @@ jobs:
       - name: Run demo screenshot tests
         run: pnpm test:editor:demo
 
-      - name: Copy demo screenshots to docs
-        run: cp editor/tests/demo/snapshots/screenshots.test.ts/*.png docs/public/demo-screenshots/
-
       - name: Commit updated screenshots
         run: |
-          if [ -n "$(git status --porcelain editor/tests/demo/snapshots/ docs/public/demo-screenshots/)" ]; then
+          if [ -n "$(git status --porcelain editor/tests/demo/snapshots/)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add editor/tests/demo/snapshots/ docs/public/demo-screenshots/
+            git add editor/tests/demo/snapshots/
             git commit -m "chore: update demo screenshots"
             git push
           else
