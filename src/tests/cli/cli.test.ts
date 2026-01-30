@@ -117,6 +117,40 @@ describe.concurrent('CLI URL capture', () => {
       expect(dimensions.height).toBeLessThan(800);
     }, 60_000);
 
+    it('captures element by text selector (Playwright format)', async () => {
+      const output = 'text-selector.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = await runCli(
+        `${TEST_URL} -o ${output} --selector "text=Call to Action" --light`
+      );
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      // Button should be smaller than full page
+      const dimensions = await getImageDimensions(outputPath);
+      expect(dimensions.width).toBeLessThan(300);
+      expect(dimensions.height).toBeLessThan(100);
+    }, 60_000);
+
+    it('captures element by role selector (Playwright format)', async () => {
+      const output = 'role-selector.png';
+      const outputPath = path.join(TEST_OUTPUT_DIR, output);
+
+      const result = await runCli(
+        `${TEST_URL} -o ${output} --selector "role=button[name='Primary Button']" --light`
+      );
+
+      expect(result.success).toBe(true);
+      expect(existsSync(outputPath)).toBe(true);
+
+      // Button should be smaller than full page
+      const dimensions = await getImageDimensions(outputPath);
+      expect(dimensions.width).toBeLessThan(300);
+      expect(dimensions.height).toBeLessThan(100);
+    }, 60_000);
+
     it('captures element with padding', async () => {
       const testId = Date.now() + '-' + Math.random().toString(36).slice(2);
       const outputNoPad = `element-no-padding-${testId}.png`;
