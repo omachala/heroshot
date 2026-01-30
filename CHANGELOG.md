@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.11.0
+
+### Minor Changes
+
+- 02e4379: Add `--headed` flag to run browser in visible mode for debugging slow captures or timeout issues
+
 ## 0.10.1
 
 ### Patch Changes
