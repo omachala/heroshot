@@ -1,10 +1,10 @@
 ---
-'heroshot': major
+'heroshot': minor
 ---
 
 Switch to Playwright locator API for full selector format support
 
-**Breaking Change:** Shadow DOM piercing syntax is now `>>` (Playwright standard). Legacy `>>>` syntax still works and is auto-converted.
+Shadow DOM piercing now uses `>>` (Playwright standard). Legacy `>>>` syntax still works and is auto-converted.
 
 **New selector formats supported:**
 
