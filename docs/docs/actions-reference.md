@@ -10,13 +10,13 @@ Back to [Configuration overview](./config#actions).
 
 Click an element. Use to dismiss cookie banners, open menus, expand dropdowns.
 
-| Property      | Type                                                                     | Required | Description                          |
-| ------------- | ------------------------------------------------------------------------ | -------- | ------------------------------------ |
-| `selector`    | string                                                                   | yes      | CSS selector of the element to click |
-| `doubleClick` | boolean                                                                  | no       | Whether to perform a double click    |
-| `button`      | `"left"` \| `"right"` \| `"middle"`                                      | no       | Mouse button to click                |
-| `modifiers`   | (`"Alt"` \| `"Control"` \| `"ControlOrMeta"` \| `"Meta"` \| `"Shift"`)[] | no       | Modifier keys to hold during click   |
-| `timeout`     | number                                                                   | no       | Timeout in milliseconds              |
+| Property      | Type                                                                     | Required | Description                                              |
+| ------------- | ------------------------------------------------------------------------ | -------- | -------------------------------------------------------- |
+| `selector`    | string                                                                   | yes      | Element selector (CSS, XPath, text, role, or shadow DOM) |
+| `doubleClick` | boolean                                                                  | no       | Whether to perform a double click                        |
+| `button`      | `"left"` \| `"right"` \| `"middle"`                                      | no       | Mouse button to click                                    |
+| `modifiers`   | (`"Alt"` \| `"Control"` \| `"ControlOrMeta"` \| `"Meta"` \| `"Shift"`)[] | no       | Modifier keys to hold during click                       |
+| `timeout`     | number                                                                   | no       | Timeout in milliseconds                                  |
 
 ```json
 // minimal
@@ -42,13 +42,13 @@ Click an element. Use to dismiss cookie banners, open menus, expand dropdowns.
 
 Type text into an input, textarea, or contenteditable element.
 
-| Property   | Type    | Required | Description                                       |
-| ---------- | ------- | -------- | ------------------------------------------------- |
-| `selector` | string  | yes      | CSS selector of the input element                 |
-| `text`     | string  | yes      | Text to type into the element                     |
-| `submit`   | boolean | no       | Whether to press Enter after typing (submit form) |
-| `slowly`   | boolean | no       | Type one character at a time for key handlers     |
-| `timeout`  | number  | no       | Timeout in milliseconds                           |
+| Property   | Type    | Required | Description                                                    |
+| ---------- | ------- | -------- | -------------------------------------------------------------- |
+| `selector` | string  | yes      | Input element selector (CSS, XPath, text, role, or shadow DOM) |
+| `text`     | string  | yes      | Text to type into the element                                  |
+| `submit`   | boolean | no       | Whether to press Enter after typing (submit form)              |
+| `slowly`   | boolean | no       | Type one character at a time for key handlers                  |
+| `timeout`  | number  | no       | Timeout in milliseconds                                        |
 
 ```json
 // minimal
@@ -73,10 +73,10 @@ Type text into an input, textarea, or contenteditable element.
 
 Hover over an element to trigger :hover states, show tooltips, or reveal menus.
 
-| Property   | Type   | Required | Description                               |
-| ---------- | ------ | -------- | ----------------------------------------- |
-| `selector` | string | yes      | CSS selector of the element to hover over |
-| `timeout`  | number | no       | Timeout in milliseconds                   |
+| Property   | Type   | Required | Description                                              |
+| ---------- | ------ | -------- | -------------------------------------------------------- |
+| `selector` | string | yes      | Element selector (CSS, XPath, text, role, or shadow DOM) |
+| `timeout`  | number | no       | Timeout in milliseconds                                  |
 
 ```json
 // minimal
@@ -97,11 +97,11 @@ Hover over an element to trigger :hover states, show tooltips, or reveal menus.
 
 Select one or more options in a native &lt;select&gt; dropdown.
 
-| Property   | Type     | Required | Description                                 |
-| ---------- | -------- | -------- | ------------------------------------------- |
-| `selector` | string   | yes      | CSS selector of the &lt;select&gt; element  |
-| `values`   | string[] | yes      | Option values to select. Supports multiple. |
-| `timeout`  | number   | no       | Timeout in milliseconds                     |
+| Property   | Type     | Required | Description                                                     |
+| ---------- | -------- | -------- | --------------------------------------------------------------- |
+| `selector` | string   | yes      | Select element selector (CSS, XPath, text, role, or shadow DOM) |
+| `values`   | string[] | yes      | Option values to select. Supports multiple.                     |
+| `timeout`  | number   | no       | Timeout in milliseconds                                         |
 
 ```json
 // minimal
@@ -145,11 +145,11 @@ Press a keyboard key or combination. Use to close modals, submit forms, etc.
 
 Drag an element and drop it onto another.
 
-| Property  | Type   | Required | Description                         |
-| --------- | ------ | -------- | ----------------------------------- |
-| `from`    | string | yes      | CSS selector of the element to drag |
-| `to`      | string | yes      | CSS selector of the drop target     |
-| `timeout` | number | no       | Timeout in milliseconds             |
+| Property  | Type   | Required | Description                     |
+| --------- | ------ | -------- | ------------------------------- |
+| `from`    | string | yes      | Selector of the element to drag |
+| `to`      | string | yes      | Selector of the drop target     |
+| `timeout` | number | no       | Timeout in milliseconds         |
 
 ```json
 // minimal
@@ -223,7 +223,7 @@ Run arbitrary JavaScript in the browser context. Escape hatch for DOM manipulati
 | Property   | Type   | Required | Description                                                 |
 | ---------- | ------ | -------- | ----------------------------------------------------------- |
 | `function` | string | yes      | JavaScript function: () =&gt; { ... } or (el) =&gt; { ... } |
-| `selector` | string | no       | CSS selector of element to pass to function                 |
+| `selector` | string | no       | Element selector to pass to function                        |
 
 ```json
 // minimal
@@ -247,7 +247,7 @@ Fill multiple form fields in one action.
 | Property               | Type                                                                   | Required | Description                               |
 | ---------------------- | ---------------------------------------------------------------------- | -------- | ----------------------------------------- |
 | `fields`               | object[]                                                               | yes      | Array of fields to fill                   |
-| ↳ `fields[].selector`  | string                                                                 | yes      | CSS selector of the form field            |
+| ↳ `fields[].selector`  | string                                                                 | yes      | Form field selector                       |
 | ↳ `fields[].value`     | string                                                                 | yes      | Value to fill. Checkboxes: "true"/"false" |
 | ↳ `fields[].fieldType` | `"textbox"` \| `"checkbox"` \| `"radio"` \| `"combobox"` \| `"slider"` | yes      | Type of the form field                    |
 | `timeout`              | number                                                                 | no       | Timeout in milliseconds per field         |
@@ -309,7 +309,7 @@ Upload one or more files through a file input element.
 
 | Property   | Type     | Required | Description                                           |
 | ---------- | -------- | -------- | ----------------------------------------------------- |
-| `selector` | string   | yes      | CSS selector of the file input element                |
+| `selector` | string   | yes      | File input element selector                           |
 | `paths`    | string[] | yes      | File paths to upload (absolute or relative to config) |
 
 ```json
@@ -341,9 +341,9 @@ Resize the browser viewport mid-flow.
 
 Hide elements from screenshot. Use to remove cookie banners, chat widgets, ads.
 
-| Property    | Type     | Required | Description                                       |
-| ----------- | -------- | -------- | ------------------------------------------------- |
-| `selectors` | string[] | yes      | CSS selectors of elements to hide (display: none) |
+| Property    | Type     | Required | Description                               |
+| ----------- | -------- | -------- | ----------------------------------------- |
+| `selectors` | string[] | yes      | Element selectors to hide (display: none) |
 
 ```json
 {

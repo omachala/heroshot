@@ -42,6 +42,8 @@ interface PageConfig {
   mode: 'object' | 'discriminated-union';
   /** Link back to the hand-written overview */
   backLink?: string;
+  /** Additional content to append after the generated content */
+  suffix?: string;
 }
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
@@ -327,12 +329,79 @@ function generatePage(config: PageConfig): void {
     }
   }
 
+  // Add optional suffix content
+  if (config.suffix) {
+    lines.push(config.suffix);
+  }
+
   const outPath = resolve(import.meta.dirname, '..', config.outFile);
   writeFileSync(outPath, lines.join('\n'));
   console.log(`Generated: ${outPath}`);
 }
 
 // ─── Config ──────────────────────────────────────────────────────────────────
+
+// Static content appended to screenshot-reference.md
+const SELECTOR_FORMATS_SECTION = `
+## Selector Formats
+
+Heroshot uses Playwright's locator API under the hood, giving you access to powerful selector options beyond basic CSS.
+
+| Format | Syntax | Example | Use Case |
+|--------|--------|---------|----------|
+| CSS | \`.class\`, \`#id\` | \`".submit-button"\` | Default, most common |
+| Shadow DOM | \`host >> child\` | \`"my-component >> .inner"\` | Web components |
+| XPath | \`xpath=...\` | \`"xpath=//button[@data-testid='submit']"\` | Complex DOM traversal |
+| Text | \`text=...\` | \`"text=Submit"\` | Select by visible text |
+| Role | \`role=...\` | \`"role=button[name='OK']"\` | ARIA-based selection |
+| Chained | \`a >> b\` | \`".modal >> role=button[name='Close']"\` | Combine selectors |
+
+### Shadow DOM
+
+Use \`>>\` to pierce shadow DOM boundaries:
+
+\`\`\`json
+"selector": "my-custom-element >> .inner-content"
+\`\`\`
+
+For deeply nested shadow DOM:
+
+\`\`\`json
+"selector": "outer-host >> inner-host >> .target"
+\`\`\`
+
+::: tip Legacy Syntax
+The \`>>>\` syntax still works and is auto-converted to \`>>\`.
+:::
+
+### XPath
+
+For complex DOM traversal where CSS selectors fall short:
+
+\`\`\`json
+"selector": "xpath=//div[@class='container']//button[contains(text(), 'Save')]"
+\`\`\`
+
+### Text Selectors
+
+Select elements by their visible text content:
+
+\`\`\`json
+"selector": "text=Sign In"
+\`\`\`
+
+### Role Selectors
+
+Select by ARIA role for accessibility-focused selection:
+
+\`\`\`json
+"selector": "role=button[name='Submit']"
+\`\`\`
+
+::: info Playwright Documentation
+For the complete selector syntax reference, see the [Playwright Locators documentation](https://playwright.dev/docs/locators).
+:::
+`;
 
 const pages: PageConfig[] = [
   {
@@ -350,6 +419,7 @@ const pages: PageConfig[] = [
     description: 'All properties available in a screenshot definition object.',
     mode: 'object',
     backLink: './config#screenshot-definition',
+    suffix: SELECTOR_FORMATS_SECTION,
   },
   {
     schema: browserSchema,

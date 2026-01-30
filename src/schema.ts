@@ -89,7 +89,7 @@ export const screenshotSchema = z.object({
     .string()
     .optional()
     .describe(
-      'Element selector for capture (omit for full-page). Supports [Playwright selector formats](#selector-formats)'
+      'Element selector for capture (omit for full-page). Supports Playwright selector formats: CSS (.class, #id), shadow DOM (host >> child), XPath (xpath=...), text (text=...), role (role=button[name="OK"]), and chained selectors.'
     ),
   padding: paddingSchema.optional().describe('Expand capture area beyond element bounds'),
   scroll: scrollPositionSchema.optional().describe('Scroll position to restore before capturing'),
