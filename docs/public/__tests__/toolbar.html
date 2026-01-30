@@ -160,6 +160,106 @@
         font-size: 1.2rem;
         opacity: 0.9;
       }
+
+      /* Dark mode support */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #1a1a2e;
+          color: #e5e5e5;
+        }
+        h1,
+        h2 {
+          color: #e5e5e5;
+        }
+        .section {
+          background: #16213e;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .card {
+          background: #0f3460;
+        }
+        .card-body {
+          color: #a5a5a5;
+        }
+        .grid-item {
+          background: #4a3f6b;
+        }
+        .nested-outer {
+          background: #3d2c29;
+        }
+        .nested-inner {
+          background: #5c3d2e;
+        }
+        .nested-deep {
+          background: #7a4f3a;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+          background: #0f3460;
+          border-color: #1a4a7a;
+          color: #e5e5e5;
+        }
+        th {
+          background: #0f3460;
+        }
+        th,
+        td {
+          border-color: #1a4a7a;
+        }
+        tr:hover {
+          background: #0f3460;
+        }
+      }
+
+      /* Also support .dark class on html element */
+      html.dark body {
+        background: #1a1a2e;
+        color: #e5e5e5;
+      }
+      html.dark h1,
+      html.dark h2 {
+        color: #e5e5e5;
+      }
+      html.dark .section {
+        background: #16213e;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      html.dark .card {
+        background: #0f3460;
+      }
+      html.dark .card-body {
+        color: #a5a5a5;
+      }
+      html.dark .grid-item {
+        background: #4a3f6b;
+      }
+      html.dark .nested-outer {
+        background: #3d2c29;
+      }
+      html.dark .nested-inner {
+        background: #5c3d2e;
+      }
+      html.dark .nested-deep {
+        background: #7a4f3a;
+      }
+      html.dark .form-group input,
+      html.dark .form-group textarea,
+      html.dark .form-group select {
+        background: #0f3460;
+        border-color: #1a4a7a;
+        color: #e5e5e5;
+      }
+      html.dark th {
+        background: #0f3460;
+      }
+      html.dark th,
+      html.dark td {
+        border-color: #1a4a7a;
+      }
+      html.dark tr:hover {
+        background: #0f3460;
+      }
     </style>
   </head>
   <body>
