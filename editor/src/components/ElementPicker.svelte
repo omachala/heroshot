@@ -483,6 +483,12 @@
       return;
     }
 
+    // In picker mode, ALWAYS prevent default and stop propagation first to avoid link navigation
+    if (active) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }
+
     // If we have a selected element (not in picker mode), handle element/padding clicks
     if (selectedElement && !active) {
       // Check if clicking on a text element (has its own handlers via overlay)
@@ -493,7 +499,7 @@
       // Check if clicking in element area (not padding)
       if (isPointInElement(event.clientX, event.clientY)) {
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
 
         // Cycle element fill mode
         elementFill = cycleNextElementFill(elementFill);
@@ -512,9 +518,6 @@
 
     // Picker mode - select element
     if (!active) return;
-
-    event.preventDefault();
-    event.stopPropagation();
 
     if (currentElement) {
       const selector = getSelector(currentElement);
@@ -566,6 +569,12 @@
   $effect(() => {
     globalThis.addEventListener('keydown', handleKeyDown, true); // capture phase
     return () => globalThis.removeEventListener('keydown', handleKeyDown, true);
+  });
+
+  // Use capture phase for click handling so we can intercept clicks before they reach links
+  $effect(() => {
+    document.addEventListener('click', handleClick, true); // capture phase
+    return () => document.removeEventListener('click', handleClick, true);
   });
 
   /**
@@ -1133,7 +1142,6 @@
 
 <svelte:document
   onmousemove={handleMouseMove}
-  onclick={handleClick}
 />
 
 <!-- Overlay for element highlighting -->

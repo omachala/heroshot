@@ -29,12 +29,15 @@ test('demo: pick element on heroshot.sh landing page with padding', async ({ pag
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(300);
 
-  // Create a mock screenshot that targets the feature element
+  // Create a mock screenshot that targets the feature element with text override
   const demoScreenshot = createMockScreenshot({
     id: 'demo-shot',
     name: 'Heroshot Feature Card',
     url: HEROSHOT_URL,
     selector: FEATURE_SELECTOR,
+    textOverrides: {
+      '.title': 'Custom Text',
+    },
   });
 
   // Inject toolbar with pending highlight job - this will automatically select and highlight the element
@@ -43,6 +46,7 @@ test('demo: pick element on heroshot.sh landing page with padding', async ({ pag
     pendingJob: {
       type: 'highlight',
       selector: FEATURE_SELECTOR,
+      screenshotId: 'demo-shot',
     },
     selectedId: 'demo-shot',
     sidebarVisible: true,
@@ -80,10 +84,18 @@ test('demo: pick element on heroshot.sh landing page with padding', async ({ pag
   await page.mouse.click(paddingClickX, paddingClickY);
   await page.waitForTimeout(300);
 
-  // Move mouse outside the padding area to hide the tooltip
-  await page.mouse.move(0, 0);
-  await page.waitForTimeout(300);
+  // Step 4: Hover over title text to show pink border and "Click to edit" tooltip
+  const titleElement = page.locator(`${FEATURE_SELECTOR} .title`).first();
+  const titleRect = await titleElement.boundingBox();
+  if (!titleRect) throw new Error('Could not get title bounding box');
 
-  // Screenshot 3: Element with white mask visible
+  // Hover over title to show the pink border overlay
+  await page.mouse.move(titleRect.x + titleRect.width / 2, titleRect.y + titleRect.height / 2);
+
+  // Wait for the overlay to appear (has data-heroshot-overlay attribute)
+  await page.waitForSelector('[data-heroshot-overlay]', { timeout: 2000 });
+  await page.waitForTimeout(200);
+
+  // Screenshot 3: Element with mask, text override, and "Click to edit" tooltip
   await expect(page).toHaveScreenshot('demo-element-with-mask.png', { fullPage: false });
 });

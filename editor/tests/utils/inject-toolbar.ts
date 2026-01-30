@@ -34,6 +34,9 @@ export interface ScreenshotItem {
     x: number;
     y: number;
   };
+  paddingFill?: 'inherit' | 'solid' | 'transparent';
+  elementFill?: 'original' | 'solid' | 'transparent';
+  textOverrides?: Record<string, string>;
 }
 
 /**
@@ -61,7 +64,7 @@ export type ToolbarEvent =
  */
 export interface InjectOptions {
   screenshots?: ScreenshotItem[];
-  pendingJob?: { type: string; selector: string; url?: string } | null;
+  pendingJob?: { type: string; selector: string; url?: string; screenshotId?: string } | null;
   /** ID of the selected screenshot (for cross-URL navigation) */
   selectedId?: string | null;
   /** Whether sidebar should be open on init */
