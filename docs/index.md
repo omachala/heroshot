@@ -15,6 +15,14 @@ head:
         "mainEntity": [
           {
             "@type": "Question",
+            "name": "What is Heroshot and how does it work?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Heroshot is a CLI tool that automates documentation screenshots. You define what to capture once using a visual picker, then regenerate all screenshots with one command. You need a browser installed (Chrome or Firefox) to run captures."
+            }
+          },
+          {
+            "@type": "Question",
             "name": "How do I automate documentation screenshots?",
             "acceptedAnswer": {
               "@type": "Answer",
@@ -50,7 +58,7 @@ head:
             "name": "Can I capture both light and dark mode screenshots?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes, Heroshot can capture both color schemes in a single run. Set 'colorScheme' to 'both' in your config, and Heroshot generates separate light and dark variants. The React/Vue components automatically show the right variant based on the user's theme preference."
+              "text": "Yes, Heroshot captures both color schemes by default. Simply omit the colorScheme option in your config, and Heroshot generates separate light and dark variants with `-light` and `-dark` suffixes automatically."
             }
           },
           {
@@ -90,7 +98,7 @@ head:
             "name": "What is Heroshot and how does it work?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Heroshot is a CLI tool that automates documentation screenshots. You define what to capture once using a visual picker, then regenerate all screenshots with one command. It uses Playwright under the hood for reliable, cross-browser captures."
+              "text": "Heroshot is a CLI tool that automates documentation screenshots. You define what to capture once using a visual picker, then regenerate all screenshots with one command. You need a browser installed (Chrome or Firefox) to run captures."
             }
           }
         ]
@@ -182,6 +190,10 @@ features:
 <h2>Frequently Asked Questions</h2>
 <div class="faq-list">
 <details class="faq-item">
+<summary>What is Heroshot and how does it work?</summary>
+<p>Heroshot is a CLI tool that automates documentation screenshots. You define what to capture once using a <a href="/docs/getting-started">visual picker</a>, then regenerate all screenshots with one command. You need a browser installed (Chrome or Firefox) to run captures.</p>
+</details>
+<details class="faq-item">
 <summary>How do I automate documentation screenshots?</summary>
 <p>Install Heroshot with <code>npx heroshot</code>, use the visual picker to select elements you want to capture, and run <code>npx heroshot</code> anytime to regenerate all screenshots. You can also <a href="/docs/guide/automated-updates">set it up in CI/CD</a> to update screenshots automatically on every deploy.</p>
 </details>
@@ -199,7 +211,7 @@ features:
 </details>
 <details class="faq-item">
 <summary>Can I capture both light and dark mode screenshots?</summary>
-<p>Yes, set <code>colorScheme</code> to <code>"both"</code> in your config, and Heroshot generates separate light and dark variants in a single run. The React/Vue components automatically show the right variant based on the user's theme preference. <a href="/docs/config#color-scheme-values">See color scheme options</a>.</p>
+<p>Yes, Heroshot captures both color schemes by default. Simply omit the <code>colorScheme</code> option in your config, and Heroshot generates separate light and dark variants with `-light` and `-dark` suffixes automatically. <a href="/docs/config#color-scheme-values">See color scheme options</a>.</p>
 </details>
 <details class="faq-item">
 <summary>How do I set up screenshot automation in GitHub Actions?</summary>
@@ -216,10 +228,6 @@ features:
 <details class="faq-item">
 <summary>How do I keep screenshots up to date when my UI changes?</summary>
 <p>Run <code>npx heroshot</code> locally to regenerate all screenshots, or <a href="/docs/guide/automated-updates">set up CI automation</a> to update them on every deploy. Screenshots are stored as regular image files in your project, so changes show up in git diffs for easy review.</p>
-</details>
-<details class="faq-item">
-<summary>What is Heroshot and how does it work?</summary>
-<p>Heroshot is a CLI tool that automates documentation screenshots. You define what to capture once using a <a href="/docs/getting-started">visual picker</a>, then regenerate all screenshots with one command. It uses Playwright under the hood for reliable, cross-browser captures.</p>
 </details>
 </div>
 </div>
