@@ -37,6 +37,32 @@ async function runCli(args: string): Promise<{ success: boolean; output: string 
   }
 }
 
+/** Assert visual comparison result */
+function assertComparison(
+  comparison: ReturnType<typeof compareToBaseline>,
+  baselineName: string
+): void {
+  if (comparison.baselineMissing) {
+    throw new Error(
+      `Baseline missing: ${comparison.baselinePath}\n` +
+        `Run the "Update Visual Baselines" workflow to generate the "${baselineName}" baseline.`
+    );
+  }
+
+  if (comparison.isNewBaseline) {
+    console.log(`Updated baseline: ${comparison.baselinePath}`);
+  }
+
+  if (!comparison.match) {
+    console.log(`Diff pixels: ${comparison.diffPixels}`);
+    if (comparison.diffPath) {
+      console.log(`Diff saved to: ${comparison.diffPath}`);
+    }
+  }
+
+  expect(comparison.match).toBe(true);
+}
+
 describe('Visual regression tests', () => {
   beforeAll(() => {
     if (!existsSync(TEST_OUTPUT_DIR)) {
@@ -61,18 +87,7 @@ describe('Visual regression tests', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       const comparison = compareToBaseline(outputPath, 'fullpage-light');
-
-      if (comparison.isNewBaseline) {
-        console.log(`Created new baseline: ${comparison.baselinePath}`);
-      }
-
-      expect(comparison.match).toBe(true);
-      if (!comparison.match) {
-        console.log(`Diff pixels: ${comparison.diffPixels}`);
-        if (comparison.diffPath) {
-          console.log(`Diff saved to: ${comparison.diffPath}`);
-        }
-      }
+      assertComparison(comparison, 'fullpage-light');
     },
     60_000
   );
@@ -88,18 +103,7 @@ describe('Visual regression tests', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       const comparison = compareToBaseline(outputPath, 'element-form');
-
-      if (comparison.isNewBaseline) {
-        console.log(`Created new baseline: ${comparison.baselinePath}`);
-      }
-
-      expect(comparison.match).toBe(true);
-      if (!comparison.match) {
-        console.log(`Diff pixels: ${comparison.diffPixels}`);
-        if (comparison.diffPath) {
-          console.log(`Diff saved to: ${comparison.diffPath}`);
-        }
-      }
+      assertComparison(comparison, 'element-form');
     },
     60_000
   );
@@ -115,18 +119,7 @@ describe('Visual regression tests', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       const comparison = compareToBaseline(outputPath, 'mobile-light');
-
-      if (comparison.isNewBaseline) {
-        console.log(`Created new baseline: ${comparison.baselinePath}`);
-      }
-
-      expect(comparison.match).toBe(true);
-      if (!comparison.match) {
-        console.log(`Diff pixels: ${comparison.diffPixels}`);
-        if (comparison.diffPath) {
-          console.log(`Diff saved to: ${comparison.diffPath}`);
-        }
-      }
+      assertComparison(comparison, 'mobile-light');
     },
     60_000
   );
