@@ -32,7 +32,7 @@ jobs:
         run: pnpm exec playwright install chromium
 
       - name: Generate screenshots with heroshot
-        run: node dist/cli/cli.js
+        run: node ${{ github.workspace }}/dist/cli/cli.js
         working-directory: src/tests/cli
 
       - name: Copy heroshots to baselines
