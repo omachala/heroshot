@@ -11,8 +11,11 @@ __pycache__/
 !docs/.gitignore
 !docs/.heroshot
 !integrations/examples/*/.heroshot
+!src/tests/cli/.heroshot
 ha-dashboard.png
 heroshots/
 toolbar/test-results/
 test-results/
 *.heroshot-binary
+src/tests/cli/heroshots/
+src/tests/cli/diffs/

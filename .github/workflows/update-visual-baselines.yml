@@ -31,11 +31,14 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install chromium
 
-      - name: Run visual tests (generate/update baselines)
-        run: pnpm test:cli
-        env:
-          CI: true
-          UPDATE_BASELINES: true
+      - name: Generate screenshots with heroshot
+        run: node dist/cli/cli.js
+        working-directory: src/tests/cli
+
+      - name: Copy heroshots to baselines
+        run: |
+          mkdir -p src/tests/cli/baselines
+          cp src/tests/cli/heroshots/*.png src/tests/cli/baselines/
 
       - name: Check for baseline changes
         id: changes

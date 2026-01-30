@@ -1,12 +1,12 @@
 /**
  * Visual regression tests for CLI screenshots
- * Compares captured screenshots against stored baselines using pixelmatch
+ * Runs heroshot with test config and compares output against baselines.
  *
- * Note: These tests run only on CI to ensure consistent font rendering.
- * Baselines are generated on CI and committed to the repo.
+ * Note: These tests run only on CI for consistent font rendering.
+ * Baselines are generated via the "Update Visual Baselines" workflow.
  */
 import { exec } from 'node:child_process';
-import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -17,18 +17,18 @@ const execAsync = promisify(exec);
 /** Visual tests only run on CI for consistent font rendering */
 const isCI = process.env['CI'] === 'true';
 
-const TEST_URL = 'https://heroshot.sh/__tests__/toolbar.html';
-const TEST_OUTPUT_DIR = path.join(import.meta.dirname, '../../../.test-output-visual');
-const CLI_PATH = path.join(import.meta.dirname, '../../../dist/cli/cli.js');
+const TEST_DIR = import.meta.dirname;
+const HEROSHOTS_DIR = path.join(TEST_DIR, 'heroshots');
+const CLI_PATH = path.join(TEST_DIR, '../../../dist/cli/cli.js');
 
-/** Run CLI command and return result */
-async function runCli(args: string): Promise<{ success: boolean; output: string }> {
+/** Run heroshot CLI with test config */
+async function runHeroshot(): Promise<{ success: boolean; output: string }> {
   try {
     // eslint-disable-next-line sonarjs/os-command -- Test file with controlled inputs
-    const { stdout } = await execAsync(`node ${CLI_PATH} ${args}`, {
+    const { stdout } = await execAsync(`node ${CLI_PATH}`, {
       encoding: 'utf8',
-      timeout: 60_000,
-      cwd: TEST_OUTPUT_DIR,
+      timeout: 120_000,
+      cwd: TEST_DIR,
     });
     return { success: true, output: stdout };
   } catch (error) {
@@ -64,63 +64,40 @@ function assertComparison(
 }
 
 describe('Visual regression tests', () => {
-  beforeAll(() => {
-    if (!existsSync(TEST_OUTPUT_DIR)) {
-      mkdirSync(TEST_OUTPUT_DIR, { recursive: true });
+  beforeAll(async () => {
+    // Clean up previous heroshots
+    if (existsSync(HEROSHOTS_DIR)) {
+      rmSync(HEROSHOTS_DIR, { recursive: true });
     }
   });
 
   afterAll(() => {
-    if (existsSync(TEST_OUTPUT_DIR)) {
-      rmSync(TEST_OUTPUT_DIR, { recursive: true });
-    }
+    // Clean up heroshots after tests (keep for debugging if needed)
+    // if (existsSync(HEROSHOTS_DIR)) {
+    //   rmSync(HEROSHOTS_DIR, { recursive: true });
+    // }
   });
 
   it.skipIf(!isCI)(
-    'full page screenshot matches baseline',
+    'heroshot generates screenshots matching baselines',
     async () => {
-      const output = 'visual-fullpage.png';
-      const outputPath = path.join(TEST_OUTPUT_DIR, output);
-
-      const result = await runCli(`${TEST_URL} -o ${output} --light`);
+      // Run heroshot with test config
+      const result = await runHeroshot();
       expect(result.success).toBe(true);
-      expect(existsSync(outputPath)).toBe(true);
+      expect(existsSync(HEROSHOTS_DIR)).toBe(true);
 
-      const comparison = compareToBaseline(outputPath, 'fullpage-light');
-      assertComparison(comparison, 'fullpage-light');
+      // Get all generated screenshots
+      const screenshots = readdirSync(HEROSHOTS_DIR).filter(f => f.endsWith('.png'));
+      expect(screenshots.length).toBeGreaterThan(0);
+
+      // Compare each screenshot against its baseline
+      for (const screenshot of screenshots) {
+        const screenshotPath = path.join(HEROSHOTS_DIR, screenshot);
+        const baselineName = screenshot.replace('.png', '');
+        const comparison = compareToBaseline(screenshotPath, baselineName);
+        assertComparison(comparison, baselineName);
+      }
     },
-    60_000
-  );
-
-  it.skipIf(!isCI)(
-    'element screenshot matches baseline',
-    async () => {
-      const output = 'visual-element.png';
-      const outputPath = path.join(TEST_OUTPUT_DIR, output);
-
-      const result = await runCli(`${TEST_URL} -o ${output} --selector "#test-form" --light`);
-      expect(result.success).toBe(true);
-      expect(existsSync(outputPath)).toBe(true);
-
-      const comparison = compareToBaseline(outputPath, 'element-form');
-      assertComparison(comparison, 'element-form');
-    },
-    60_000
-  );
-
-  it.skipIf(!isCI)(
-    'mobile viewport matches baseline',
-    async () => {
-      const output = 'visual-mobile.png';
-      const outputPath = path.join(TEST_OUTPUT_DIR, output);
-
-      const result = await runCli(`${TEST_URL} -o ${output} --mobile --light`);
-      expect(result.success).toBe(true);
-      expect(existsSync(outputPath)).toBe(true);
-
-      const comparison = compareToBaseline(outputPath, 'mobile-light');
-      assertComparison(comparison, 'mobile-light');
-    },
-    60_000
+    120_000
   );
 });
