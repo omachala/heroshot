@@ -62,6 +62,7 @@ export async function handleUrlCapture(
     sessionKey,
     skipStaleCheck: true, // Don't check for stale files in oneshot mode
     viewportOnly: options?.viewportOnly,
+    headed: options?.headed,
   });
 
   if (options?.save && result.failed === 0) {
@@ -75,18 +76,23 @@ export async function handleUrlCapture(
   return result.failed === 0;
 }
 
+type DefaultCommandOptions = {
+  configPath: string;
+  sessionKey: string | undefined;
+  hasExplicitConfig: boolean;
+  clean?: boolean;
+  workers?: number;
+  headed?: boolean;
+};
+
 /**
  * Handle default command (setup or sync).
  */
-export async function handleDefaultCommand(
-  configPath: string,
-  sessionKey: string | undefined,
-  hasExplicitConfig: boolean,
-  clean?: boolean,
-  workers?: number
-): Promise<boolean> {
+export async function handleDefaultCommand(options: DefaultCommandOptions): Promise<boolean> {
+  const { configPath, sessionKey, hasExplicitConfig, clean, workers, headed } = options;
+
   if (existsSync(configPath)) {
-    const result = await sync({ configPath, sessionKey, clean, workers });
+    const result = await sync({ configPath, sessionKey, clean, workers, headed });
     return result.failed === 0;
   }
 
@@ -97,7 +103,7 @@ export async function handleDefaultCommand(
 
   const { hasScreenshots } = await setup();
   if (hasScreenshots) {
-    const result = await sync({ clean, workers });
+    const result = await sync({ clean, workers, headed });
     return result.failed === 0;
   }
   return true;
@@ -126,17 +132,19 @@ export async function shotAction(
       filter: url,
       clean: options?.clean,
       workers: options?.workers,
+      headed: options?.headed,
     });
     return result.failed === 0;
   }
 
-  return handleDefaultCommand(
+  return handleDefaultCommand({
     configPath,
-    globalOptions.sessionKey,
-    !!globalOptions.config,
-    options?.clean,
-    options?.workers
-  );
+    sessionKey: globalOptions.sessionKey,
+    hasExplicitConfig: Boolean(globalOptions.config),
+    clean: options?.clean,
+    workers: options?.workers,
+    headed: options?.headed,
+  });
 }
 
 /**

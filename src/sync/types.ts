@@ -84,6 +84,8 @@ export type SyncOptions = {
   viewportOnly?: boolean;
   /** Number of parallel capture workers (default: 1) */
   workers?: number;
+  /** Run browser in headed mode (visible window) for debugging */
+  headed?: boolean;
 };
 
 /** Padding dimensions */

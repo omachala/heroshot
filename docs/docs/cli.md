@@ -177,6 +177,7 @@ heroshot --workers 4        # Capture with 4 parallel workers
 | ------------------- | --------------------------------------------------------------------- |
 | `--clean`           | Delete stale files from output directory (only works without pattern) |
 | `--workers <count>` | Number of parallel capture workers (default: 1)                       |
+| `--headed`          | Show browser window (for debugging slow captures or timeouts)         |
 
 The pattern matches against:
 
@@ -344,4 +345,8 @@ heroshot list --json
 # Verbose output (works with any command)
 heroshot -v
 heroshot config -v
+
+# Debug slow captures with visible browser window
+heroshot --headed
+heroshot dashboard --headed
 ```

@@ -32,6 +32,7 @@ export type ParallelCaptureOptions = {
     bypassCSP?: boolean;
     reducedMotion?: 'reduce' | 'no-preference';
     userAgent?: string;
+    headed?: boolean;
   };
   workers: number;
   captureSpinner: ReturnType<typeof spinner>;
@@ -96,7 +97,7 @@ async function executeBatch(
 
   // Launch browser for this batch
   const { browser, context } = await launchBrowser({
-    headless: true,
+    headless: !browserOptions.headed,
     viewport: browserOptions.viewport,
     deviceScaleFactor: browserOptions.deviceScaleFactor,
     storageState: browserOptions.storageState,
