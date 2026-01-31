@@ -8,7 +8,7 @@
   "dependencies": {
     "@docusaurus/core": "^3.7.0",
     "@docusaurus/preset-classic": "^3.7.0",
-    "heroshot": "latest",
+    "heroshot": "^0.11.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }
