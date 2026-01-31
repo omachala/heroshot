@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.11.3
+
+### Patch Changes
+
+- Export setManifest from heroshot/docusaurus for Docusaurus plugin client code
+
 ## 0.11.2
 
 ### Patch Changes
