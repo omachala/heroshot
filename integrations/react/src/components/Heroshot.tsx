@@ -41,42 +41,48 @@ interface HeroshotProps {
  * 2. System preference (prefers-color-scheme) - for sites without framework theme handling
  * 3. Default to light
  */
+function detectInitialTheme(): { isDark: boolean; hasThemeHandling: boolean } {
+  if (globalThis.window === undefined) return { isDark: false, hasThemeHandling: false };
+
+  // 1. Check Docusaurus data-theme attribute (explicit theme state)
+  const { theme: dataTheme } = document.documentElement.dataset;
+  if (dataTheme) {
+    return { isDark: dataTheme === 'dark', hasThemeHandling: true };
+  }
+
+  // 2. Check .dark class (VitePress and other frameworks)
+  if (document.documentElement.classList.contains('dark')) {
+    return { isDark: true, hasThemeHandling: true };
+  }
+
+  // Check if site has theme handling (e.g., VitePress sets classes on html)
+  if (document.documentElement.classList.length > 0) {
+    return { isDark: false, hasThemeHandling: true }; // Site has theme handling, no .dark = light mode
+  }
+
+  // 3. Fall back to system preference for sites without theme handling
+  if (globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+    return { isDark: true, hasThemeHandling: false };
+  }
+
+  // 4. Default to light
+  return { isDark: false, hasThemeHandling: false };
+}
+
 function useIsDark(): boolean {
   // Track if site has explicit theme handling
   const siteHasThemeHandling = React.useRef(false);
 
   const [isDark, setIsDark] = useState(() => {
-    if (globalThis.window === undefined) return false;
-
-    // 1. Check Docusaurus data-theme attribute (explicit theme state)
-    const { theme: dataTheme } = document.documentElement.dataset;
-    if (dataTheme) {
-      siteHasThemeHandling.current = true;
-      return dataTheme === 'dark';
-    }
-
-    // 2. Check .dark class (VitePress and other frameworks)
-    if (document.documentElement.classList.contains('dark')) {
-      siteHasThemeHandling.current = true;
-      return true;
-    }
-
-    // Check if site has theme handling (e.g., VitePress sets classes on html)
-    if (document.documentElement.classList.length > 0) {
-      siteHasThemeHandling.current = true;
-      return false; // Site has theme handling, no .dark = light mode
-    }
-
-    // 3. Fall back to system preference for sites without theme handling
-    if (globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches) {
-      return true;
-    }
-
-    // 4. Default to light
-    return false;
+    const initial = detectInitialTheme();
+    return initial.isDark;
   });
 
   useEffect(() => {
+    // Set initial theme handling state
+    const initial = detectInitialTheme();
+    siteHasThemeHandling.current = initial.hasThemeHandling;
+
     // Detect current theme state from DOM
     const detectTheme = () => {
       const { theme: dataTheme } = document.documentElement.dataset;
