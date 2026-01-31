@@ -29,34 +29,70 @@ const activeManifest = computed(() => props.manifest ?? getManifest());
 // Dark mode detection
 const isDark = ref(false);
 
+// Track if site has explicit theme handling (detected on mount)
+let siteHasThemeHandling = false;
+
+/**
+ * Dark mode detection priority:
+ * 1. Site theme (.dark class) - VitePress/frameworks set this based on user choice
+ * 2. System preference (prefers-color-scheme) - for sites without framework theme handling
+ * 3. Default to light
+ */
 function detectDarkMode(): boolean {
   if (globalThis.window === undefined) return false;
-  if (document.documentElement.classList.contains('dark')) return true;
-  return globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  // 1. Check site theme (.dark class) - explicit user/framework choice
+  if (document.documentElement.classList.contains('dark')) {
+    return true;
+  }
+
+  // If site has theme handling (detected previously), absence of .dark = light mode
+  if (siteHasThemeHandling) {
+    return false;
+  }
+
+  // 2. Fall back to system preference for sites without theme handling
+  if (globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+    return true;
+  }
+
+  // 3. Default to light
+  return false;
 }
 
 onMounted(() => {
+  // Detect if site has theme handling by checking for VitePress-style class management
+  // VitePress sets .dark class immediately on load based on saved/system preference
+  // If we're in a VitePress site and there's no .dark class, it means light mode
+  siteHasThemeHandling =
+    document.documentElement.classList.length > 0 ||
+    document.documentElement.dataset.theme !== undefined;
+
   isDark.value = detectDarkMode();
 
+  // Watch for class changes on documentElement (site theme toggle)
   const observer = new MutationObserver(() => {
-    isDark.value = detectDarkMode();
+    // Once we see a class change, we know the site has theme handling
+    siteHasThemeHandling = true;
+    isDark.value = document.documentElement.classList.contains('dark');
   });
   observer.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['class'],
   });
 
-  const mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
+  // Listen for system preference changes
+  const mediaQuery = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
   const handleMediaChange = () => {
-    if (!document.documentElement.classList.contains('dark')) {
-      isDark.value = mediaQuery.matches;
-    }
+    // If site has theme handling, it will update the class - just re-detect
+    // If not, we use the system preference directly
+    isDark.value = detectDarkMode();
   };
-  mediaQuery.addEventListener('change', handleMediaChange);
+  mediaQuery?.addEventListener('change', handleMediaChange);
 
   onUnmounted(() => {
     observer.disconnect();
-    mediaQuery.removeEventListener('change', handleMediaChange);
+    mediaQuery?.removeEventListener('change', handleMediaChange);
   });
 });
 
