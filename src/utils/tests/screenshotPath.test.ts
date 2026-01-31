@@ -47,4 +47,29 @@ describe('generateScreenshotFilename', () => {
       'hero-1024x768.png'
     );
   });
+
+  it('handles very long screenshot names', () => {
+    const longName = 'A'.repeat(300);
+    const result = generateScreenshotFilename({ name: longName });
+    // Should not crash, produces a valid filename
+    expect(result).toMatch(/\.png$/);
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('handles unicode characters in name', () => {
+    expect(generateScreenshotFilename({ name: '日本語 Test' })).toBe('test.png');
+    expect(generateScreenshotFilename({ name: 'Café Menu' })).toBe('caf-menu.png');
+  });
+
+  it('handles empty name gracefully', () => {
+    expect(generateScreenshotFilename({ name: '' })).toBe('.png');
+  });
+
+  it('handles name with only special characters', () => {
+    expect(generateScreenshotFilename({ name: '!@#$%' })).toBe('.png');
+  });
+
+  it('handles name with numbers', () => {
+    expect(generateScreenshotFilename({ name: 'Page 123' })).toBe('page-123.png');
+  });
 });

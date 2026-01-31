@@ -63,7 +63,21 @@ describe('extractSelectorName', () => {
     });
   });
 
-  describe('shadow DOM selectors (>>>)', () => {
+  describe('shadow DOM selectors (>> Playwright-style)', () => {
+    it('extracts from last part after >>', () => {
+      expect(extractSelectorName('host-element >> .inner-class')).toBe('inner class');
+    });
+
+    it('extracts from deeply nested shadow selector', () => {
+      expect(extractSelectorName('host >> inner >> #deep-element')).toBe('deep element');
+    });
+
+    it('handles >> with spaces', () => {
+      expect(extractSelectorName('host >> .target')).toBe('target');
+    });
+  });
+
+  describe('shadow DOM selectors (>>> legacy)', () => {
     it('extracts from last part after >>>', () => {
       expect(extractSelectorName('host-element >>> .inner-class')).toBe('inner class');
     });

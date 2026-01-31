@@ -1,6 +1,6 @@
 /**
  * Action Schemas — Pre-screenshot actions that run before capturing.
- * Vocabulary aligned with Playwright MCP but uses CSS selectors instead of ephemeral accessibility refs.
+ * Uses Playwright locator API, supporting all selector formats: CSS, XPath, text, role, shadow DOM.
  * Reference: https://github.com/microsoft/playwright-mcp
  *
  * ROADMAP extensions (not in Playwright MCP):
@@ -12,7 +12,7 @@ import { z } from 'zod';
 export const clickActionSchema = z
   .object({
     type: z.literal('click'),
-    selector: z.string().describe('CSS selector of the element to click'),
+    selector: z.string().describe('Element selector (CSS, XPath, text, role, or shadow DOM)'),
     doubleClick: z.boolean().optional().describe('Whether to perform a double click'),
     button: z.enum(['left', 'right', 'middle']).optional().describe('Mouse button to click'),
     modifiers: z
@@ -26,7 +26,7 @@ export const clickActionSchema = z
 export const typeActionSchema = z
   .object({
     type: z.literal('type'),
-    selector: z.string().describe('CSS selector of the input element'),
+    selector: z.string().describe('Input element selector (CSS, XPath, text, role, or shadow DOM)'),
     text: z.string().describe('Text to type into the element'),
     submit: z.boolean().optional().describe('Whether to press Enter after typing (submit form)'),
     slowly: z.boolean().optional().describe('Type one character at a time for key handlers'),
@@ -37,7 +37,7 @@ export const typeActionSchema = z
 export const hoverActionSchema = z
   .object({
     type: z.literal('hover'),
-    selector: z.string().describe('CSS selector of the element to hover over'),
+    selector: z.string().describe('Element selector (CSS, XPath, text, role, or shadow DOM)'),
     timeout: z.number().int().positive().optional().describe('Timeout in milliseconds'),
   })
   .describe('Hover over an element to trigger :hover states, show tooltips, or reveal menus.');
@@ -45,7 +45,9 @@ export const hoverActionSchema = z
 export const selectOptionActionSchema = z
   .object({
     type: z.literal('select_option'),
-    selector: z.string().describe('CSS selector of the <select> element'),
+    selector: z
+      .string()
+      .describe('Select element selector (CSS, XPath, text, role, or shadow DOM)'),
     values: z.array(z.string()).describe('Option values to select. Supports multiple.'),
     timeout: z.number().int().positive().optional().describe('Timeout in milliseconds'),
   })
@@ -61,8 +63,8 @@ export const pressKeyActionSchema = z
 export const dragActionSchema = z
   .object({
     type: z.literal('drag'),
-    from: z.string().describe('CSS selector of the element to drag'),
-    to: z.string().describe('CSS selector of the drop target'),
+    from: z.string().describe('Selector of the element to drag'),
+    to: z.string().describe('Selector of the drop target'),
     timeout: z.number().int().positive().optional().describe('Timeout in milliseconds'),
   })
   .describe('Drag an element and drop it onto another.');
@@ -88,7 +90,7 @@ export const evaluateActionSchema = z
   .object({
     type: z.literal('evaluate'),
     function: z.string().describe('JavaScript function: () => { ... } or (el) => { ... }'),
-    selector: z.string().optional().describe('CSS selector of element to pass to function'),
+    selector: z.string().optional().describe('Element selector to pass to function'),
   })
   .describe('Run arbitrary JavaScript in the browser context. Escape hatch for DOM manipulation.');
 
@@ -98,7 +100,7 @@ export const fillFormActionSchema = z
     fields: z
       .array(
         z.object({
-          selector: z.string().describe('CSS selector of the form field'),
+          selector: z.string().describe('Form field selector'),
           value: z.string().describe('Value to fill. Checkboxes: "true"/"false"'),
           fieldType: z
             .enum(['textbox', 'checkbox', 'radio', 'combobox', 'slider'])
@@ -121,7 +123,7 @@ export const handleDialogActionSchema = z
 export const fileUploadActionSchema = z
   .object({
     type: z.literal('file_upload'),
-    selector: z.string().describe('CSS selector of the file input element'),
+    selector: z.string().describe('File input element selector'),
     paths: z.array(z.string()).describe('File paths to upload (absolute or relative to config)'),
   })
   .describe('Upload one or more files through a file input element.');
@@ -137,7 +139,7 @@ export const resizeActionSchema = z
 export const hideActionSchema = z
   .object({
     type: z.literal('hide'),
-    selectors: z.array(z.string()).describe('CSS selectors of elements to hide (display: none)'),
+    selectors: z.array(z.string()).describe('Element selectors to hide (display: none)'),
   })
   .describe('Hide elements from screenshot. Use to remove cookie banners, chat widgets, ads.');
 

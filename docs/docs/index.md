@@ -46,7 +46,7 @@ Heroshot does the opposite. When your UI changes, that's expected - you _want_ n
 
 **Light and dark mode in one run.** If your site has themes, heroshot captures both variants automatically. No duplicate config, no manual switching.
 
-**Web components work too.** Shadow DOM piercing with `>>> .inner` syntax if you need it.
+**Web components work too.** Shadow DOM piercing with `>> .inner` syntax. Plus XPath, text, and role selectors when CSS isn't enough.
 
 **Log in once, capture forever.** Heroshot saves your browser session (encrypted). Next time you run headlessly, it's already authenticated - no flaky login scripts.
 

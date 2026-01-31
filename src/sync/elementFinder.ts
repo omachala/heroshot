@@ -1,13 +1,30 @@
 /**
- * Element finding with shadow DOM support.
- * Uses >>> syntax to pierce shadow DOM boundaries.
+ * Element finding using Playwright's native locator API.
+ * Supports all Playwright selector formats:
+ * - CSS: `.class`, `#id`, `div > span` (default)
+ * - XPath: `xpath=//button[@id="submit"]`
+ * - Text: `text=Submit`
+ * - Role: `role=button[name="Submit"]`
+ * - Chaining: `div >> span` (pierces shadow DOM)
+ *
+ * Legacy `>>>` syntax is automatically converted to `>>` for backward compatibility.
  */
 
 import type { ElementHandle, Page } from 'playwright';
 
 /**
- * Find element using shadow-piercing selector with retries.
- * The >>> syntax pierces shadow DOM boundaries.
+ * Normalize selector for Playwright compatibility.
+ * Converts legacy `>>>` shadow-piercing syntax to Playwright's `>>`.
+ */
+export function normalizeSelector(selector: string): string {
+  // Convert our legacy >>> to Playwright's >>
+  // First normalize whitespace around >>>, then replace with >>
+  return selector.replaceAll('>>>', '>>').replaceAll('  ', ' ').trim();
+}
+
+/**
+ * Find element using Playwright's locator API with retries.
+ * Supports all Playwright selector formats including shadow DOM piercing.
  */
 export async function findElement(
   page: Page,
@@ -15,36 +32,19 @@ export async function findElement(
   maxAttempts = 10,
   intervalMs = 500
 ): Promise<ElementHandle | null> {
+  const normalizedSelector = normalizeSelector(selector);
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const handle = await page.evaluateHandle(`
-      (() => {
-        const selector = ${JSON.stringify(selector)};
-        const parts = selector.split('>>>').map((part) => part.trim());
-        let current = document;
+    try {
+      const locator = page.locator(normalizedSelector);
+      const element = await locator.elementHandle({ timeout: intervalMs });
 
-        for (const part of parts) {
-          if (!part) continue;
-
-          const root = current instanceof Element
-            ? (current.shadowRoot ?? current)
-            : current;
-
-          const found = root.querySelector(part);
-          if (!found) return null;
-
-          current = found;
-        }
-
-        return current instanceof Element ? current : null;
-      })()
-    `);
-
-    const element = handle.asElement();
-    if (element) {
-      return element;
+      if (element) {
+        return element;
+      }
+    } catch {
+      // Element not found, retry
     }
-
-    await handle.dispose();
 
     if (attempt < maxAttempts) {
       await page.waitForTimeout(intervalMs);

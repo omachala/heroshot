@@ -3,11 +3,18 @@
  */
 
 /**
- * Query selector that pierces shadow DOM using >>> syntax
+ * Query selector that pierces shadow DOM using >>> or >> syntax
  * e.g., "host-element >>> .inner-class >>> span"
+ * e.g., "host-element >> .inner-class >> span" (Playwright-style)
  */
 export function querySelectorPiercing(selector: string): Element | null {
-  const parts = selector.split('>>>').map(selectorPart => selectorPart.trim());
+  // Normalize >>> to >> then split on >>
+  // This supports both legacy >>> and Playwright-style >> syntax
+  const normalized = selector.replaceAll('>>>', '>>');
+  const parts = normalized
+    .split('>>')
+    .map(p => p.trim())
+    .filter(Boolean);
   let foundElement: Element | null = null;
 
   for (const part of parts) {
@@ -38,7 +45,7 @@ export function querySelectorPiercing(selector: string): Element | null {
  * Find element by selector, with shadow DOM support
  */
 export function findElementBySelector(selector: string): Element | null {
-  return selector.includes('>>>')
+  return selector.includes('>>>') || selector.includes('>>')
     ? querySelectorPiercing(selector)
     : document.querySelector(selector);
 }

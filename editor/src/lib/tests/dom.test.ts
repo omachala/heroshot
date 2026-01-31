@@ -235,7 +235,8 @@ describe('getSelector', () => {
     document.body.append(host);
 
     const result = getSelector(inner);
-    expect(result).toContain('>>>');
+    expect(result).toContain('>>');
+    expect(result).not.toContain('>>>'); // Should use Playwright-style >> not legacy >>>
     expect(result).toContain('#host');
     expect(result).toContain('span.inner');
   });
@@ -251,6 +252,54 @@ describe('getSelector', () => {
     const result = getSelector(current);
     const parts = result.split(' > ');
     expect(parts.length).toBeLessThanOrEqual(20);
+  });
+
+  it('should handle class names with special characters', () => {
+    const div = document.createElement('div');
+    // CSS escaping: classes with special chars like : and [ are filtered or escaped
+    div.className = 'btn:primary flex-[1]';
+    document.body.append(div);
+
+    const result = getSelector(div);
+    // Should produce a valid selector (doesn't crash)
+    expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('should handle SVG elements inside shadow DOM', () => {
+    const host = document.createElement('div');
+    host.id = 'svg-host';
+    const shadow = host.attachShadow({ mode: 'open' });
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    svg.append(rect);
+    shadow.append(svg);
+    document.body.append(host);
+
+    const result = getSelector(rect);
+    expect(result).toContain('>>');
+    expect(result).toContain('#svg-host');
+  });
+
+  it('should handle deeply nested shadow DOM', () => {
+    // Create nested shadow DOM: host1 >> host2 >> element
+    const host1 = document.createElement('div');
+    host1.id = 'outer-host';
+    const shadow1 = host1.attachShadow({ mode: 'open' });
+
+    const host2 = document.createElement('div');
+    host2.className = 'inner-host';
+    const shadow2 = host2.attachShadow({ mode: 'open' });
+
+    const inner = document.createElement('span');
+    inner.className = 'deep-element';
+    shadow2.append(inner);
+    shadow1.append(host2);
+    document.body.append(host1);
+
+    const result = getSelector(inner);
+    // Should contain multiple >> for nested shadow DOM
+    expect(result).toContain('>>');
   });
 });
 

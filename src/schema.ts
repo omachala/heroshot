@@ -85,7 +85,12 @@ export const screenshotSchema = z.object({
     .describe('Unique identifier (auto-generated if omitted)'),
   name: z.string().min(1).describe('Display name, also used to derive the output filename'),
   url: z.url().describe('Full URL of the page to capture'),
-  selector: z.string().optional().describe('CSS selector for element capture (omit for full-page)'),
+  selector: z
+    .string()
+    .optional()
+    .describe(
+      'Element selector for capture (omit for full-page). Supports Playwright selector formats: CSS (.class, #id), shadow DOM (host >> child), XPath (xpath=...), text (text=...), role (role=button[name="OK"]), and chained selectors.'
+    ),
   padding: paddingSchema.optional().describe('Expand capture area beyond element bounds'),
   scroll: scrollPositionSchema.optional().describe('Scroll position to restore before capturing'),
   paddingFill: paddingFillSchema

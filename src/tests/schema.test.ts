@@ -287,4 +287,42 @@ describe('configSchema', () => {
       })
     ).toThrow();
   });
+
+  it('accepts URLs with special characters (encoded)', () => {
+    const result = configSchema.parse({
+      screenshots: [{ name: 'Search', url: 'https://example.com/search?q=hello%20world&lang=en' }],
+    });
+    expect(result.screenshots[0]?.url).toBe('https://example.com/search?q=hello%20world&lang=en');
+  });
+
+  it('accepts URLs with unicode (IDN domains)', () => {
+    const result = configSchema.parse({
+      screenshots: [{ name: 'IDN', url: 'https://例え.jp/page' }],
+    });
+    expect(result.screenshots[0]?.url).toBe('https://例え.jp/page');
+  });
+
+  it('accepts URLs with fragments', () => {
+    const result = configSchema.parse({
+      screenshots: [{ name: 'Fragment', url: 'https://example.com/page#section-1' }],
+    });
+    expect(result.screenshots[0]?.url).toBe('https://example.com/page#section-1');
+  });
+
+  it('accepts URLs with ports', () => {
+    const result = configSchema.parse({
+      screenshots: [{ name: 'Dev', url: 'http://localhost:3000/dashboard' }],
+    });
+    expect(result.screenshots[0]?.url).toBe('http://localhost:3000/dashboard');
+  });
+
+  it('handles config with many screenshots', () => {
+    const screenshots = Array.from({ length: 100 }, (_, i) => ({
+      name: `Screenshot ${i}`,
+      url: `https://example.com/page/${i}`,
+    }));
+
+    const result = configSchema.parse({ screenshots });
+    expect(result.screenshots.length).toBe(100);
+  });
 });

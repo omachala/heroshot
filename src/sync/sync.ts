@@ -3,6 +3,7 @@
  * Main entry point for capturing screenshots based on config definitions.
  */
 
+import { existsSync } from 'node:fs';
 import { getConfigPath, loadConfig } from '../configFile';
 import type { Config, Screenshot } from '../types';
 import { error as logError, outro, spinner, verbose, warn } from '../ui';
@@ -95,6 +96,12 @@ async function executeCapture(context: CaptureContext): Promise<ScreenshotResult
 export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   // Load config
   const configPath = options.configPath ?? getConfigPath();
+
+  // Throw if user explicitly provided a config path that doesn't exist
+  if (options.configPath && !existsSync(options.configPath)) {
+    throw new Error(`Config file not found: ${options.configPath}`);
+  }
+
   const config: Config = options.config ?? loadConfig(configPath);
 
   if (config.screenshots.length === 0) {
