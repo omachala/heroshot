@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.11.2
+
+### Patch Changes
+
+- 80582ae: Fix npm publish to include integrations (Vue, React, VitePress, Docusaurus)
+
 ## 0.11.1
 
 ### Patch Changes
