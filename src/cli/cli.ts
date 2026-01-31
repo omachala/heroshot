@@ -58,7 +58,7 @@ program
   .option('-p, --padding <pixels>', 'Padding around element', Number.parseInt)
   .option('-w, --width <pixels>', 'Viewport width', Number.parseInt)
   .option('--height <pixels>', 'Viewport height', Number.parseInt)
-  .option('--mobile', 'Use mobile viewport (375x667)')
+  .option('--mobile', 'Use mobile viewport (430x932)')
   .option('--tablet', 'Use tablet viewport (768x1024)')
   .option('--desktop', 'Use desktop viewport (1280x800)')
   .option('--dark', 'Force dark color scheme')

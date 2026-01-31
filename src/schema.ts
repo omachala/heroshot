@@ -16,7 +16,7 @@ export type ViewportPreset = 'desktop' | 'tablet' | 'mobile';
 export const VIEWPORT_PRESETS: Record<ViewportPreset, { width: number; height: number }> = {
   desktop: { width: 1280, height: 800 },
   tablet: { width: 768, height: 1024 },
-  mobile: { width: 375, height: 667 },
+  mobile: { width: 430, height: 932 }, // iPhone 15/16 Pro Max viewport
 };
 
 /** Browser viewport settings */
@@ -150,7 +150,7 @@ const shotCliOptionsSchema = z.object({
   width: z.number().int().positive().optional(),
   /** Viewport height */
   height: z.number().int().positive().optional(),
-  /** Use mobile viewport preset (375x667) */
+  /** Use mobile viewport preset (430x932) */
   mobile: z.boolean().optional(),
   /** Use tablet viewport preset (768x1024) */
   tablet: z.boolean().optional(),

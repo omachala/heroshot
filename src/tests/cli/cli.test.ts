@@ -83,9 +83,9 @@ describe.concurrent('CLI URL capture', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       const dimensions = await getImageDimensions(outputPath);
-      // Mobile viewport is 375, but scrollbar width varies by platform
-      expect(dimensions.width).toBeGreaterThanOrEqual(375);
-      expect(dimensions.width).toBeLessThan(420);
+      // Mobile viewport is 430, but scrollbar width varies by platform
+      expect(dimensions.width).toBeGreaterThanOrEqual(430);
+      expect(dimensions.width).toBeLessThan(475);
     }, 60_000);
 
     it('captures with custom dimensions', async () => {
@@ -153,9 +153,9 @@ describe.concurrent('CLI URL capture', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       const dimensions = await getImageDimensions(outputPath);
-      // Mobile (375) at 2x = 750, but scrollbar width varies by platform
-      expect(dimensions.width).toBeGreaterThanOrEqual(750);
-      expect(dimensions.width).toBeLessThan(840);
+      // Mobile (430) at 2x = 860, but scrollbar width varies by platform
+      expect(dimensions.width).toBeGreaterThanOrEqual(860);
+      expect(dimensions.width).toBeLessThan(950);
     }, 60_000);
   });
 
@@ -250,9 +250,9 @@ describe.concurrent('CLI URL capture', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       const dimensions = await getImageDimensions(outputPath);
-      // Mobile (375) at 1x
-      expect(dimensions.width).toBeGreaterThanOrEqual(375);
-      expect(dimensions.width).toBeLessThan(420);
+      // Mobile (430) at 1x
+      expect(dimensions.width).toBeGreaterThanOrEqual(430);
+      expect(dimensions.width).toBeLessThan(475);
     }, 60_000);
 
     it('captures with --scale 3 (high DPI)', async () => {
@@ -265,9 +265,9 @@ describe.concurrent('CLI URL capture', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       const dimensions = await getImageDimensions(outputPath);
-      // Mobile (375) at 3x = 1125
-      expect(dimensions.width).toBeGreaterThanOrEqual(1125);
-      expect(dimensions.width).toBeLessThan(1260);
+      // Mobile (430) at 3x = 1290
+      expect(dimensions.width).toBeGreaterThanOrEqual(1290);
+      expect(dimensions.width).toBeLessThan(1425);
     }, 60_000);
   });
 
@@ -351,7 +351,7 @@ describe.concurrent('CLI URL capture', () => {
 
       // Element should be captured with padding on mobile viewport
       const dimensions = await getImageDimensions(outputPath);
-      expect(dimensions.width).toBeLessThanOrEqual(395); // 375 + 20 padding
+      expect(dimensions.width).toBeLessThanOrEqual(450); // 430 + 20 padding
     }, 60_000);
 
     it('combines viewport-only + custom dimensions', async () => {

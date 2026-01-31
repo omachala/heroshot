@@ -120,7 +120,7 @@ describe('buildCaptureJobs', () => {
       expect(jobs[1]).toMatchObject({
         screenshot: screenshots[0],
         colorScheme: undefined,
-        viewport: { name: 'mobile', width: 375, height: 667 },
+        viewport: { name: 'mobile', width: 430, height: 932 },
         hasMultipleViewports: true,
       });
     });
