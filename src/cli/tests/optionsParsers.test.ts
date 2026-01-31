@@ -79,7 +79,7 @@ describe('getDeviceScaleFactor', () => {
 describe('getViewport', () => {
   it('returns mobile preset', () => {
     const result = getViewport({ mobile: true }, undefined);
-    expect(result).toEqual({ width: 375, height: 667 });
+    expect(result).toEqual({ width: 430, height: 932 });
   });
 
   it('returns tablet preset', () => {
@@ -135,6 +135,6 @@ describe('getViewport', () => {
 
   it('prefers preset over custom dimensions', () => {
     const result = getViewport({ mobile: true, width: 1920 }, undefined);
-    expect(result).toEqual({ width: 375, height: 667 });
+    expect(result).toEqual({ width: 430, height: 932 });
   });
 });

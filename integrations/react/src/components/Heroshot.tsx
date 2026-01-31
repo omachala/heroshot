@@ -135,7 +135,7 @@ function useIsDark(): boolean {
 
 /** Viewport width mapping */
 const VIEWPORT_WIDTHS: Record<string, number> = {
-  mobile: 375,
+  mobile: 430, // iPhone 15/16 Pro Max viewport
   tablet: 768,
   desktop: 1280,
 };

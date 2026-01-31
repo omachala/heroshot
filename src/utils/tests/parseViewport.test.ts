@@ -21,8 +21,8 @@ describe('parseViewport', () => {
   it('parses mobile preset', () => {
     expect(parseViewport('mobile')).toEqual({
       name: 'mobile',
-      width: 375,
-      height: 667,
+      width: 430,
+      height: 932,
     });
   });
 

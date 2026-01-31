@@ -58,7 +58,7 @@ describe('buildShotConfig', () => {
 
   it('uses viewport from options', () => {
     const result = buildShotConfig('https://example.com', { mobile: true }, undefined);
-    expect(result.browser?.viewport).toEqual({ width: 375, height: 667 });
+    expect(result.browser?.viewport).toEqual({ width: 430, height: 932 });
   });
 
   it('uses viewport from existing config', () => {
