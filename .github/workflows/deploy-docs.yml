@@ -46,4 +46,4 @@ jobs:
           rsync -avz --delete \
             -e "ssh -p ${SSH_PORT} -i ~/.ssh/deploy_key" \
             .vitepress/dist/ \
-            root@${SSH_HOST}:~/dockers/swag/swag/config/www/heroshot/
+            root@${SSH_HOST}:~/dockers/caddy/www/heroshot/
