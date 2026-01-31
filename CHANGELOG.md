@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.11.4
+
+### Patch Changes
+
+- adc1e79: Update mobile viewport preset from 375x667 to 430x932 to support modern iPhone 15/16 devices
+
 ## 0.11.3
 
 ### Patch Changes
