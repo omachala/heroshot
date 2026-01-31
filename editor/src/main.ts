@@ -8,12 +8,17 @@
 import { mount, unmount } from 'svelte';
 import Toolbar from './components/Toolbar.svelte';
 import { getBackgroundColor } from './lib/dom';
+import { eventInterceptor } from './lib/eventInterceptor';
 import styles from './styles.css?inline';
 
 /**
  * Initialize the toolbar
  */
 export function initToolbar(): (() => void) | null {
+  // Initialize event interceptor FIRST - before any DOM changes
+  // This ensures toolbar events are blocked from reaching page handlers
+  eventInterceptor.init();
+
   // Ensure __heroshot namespace exists
   if (globalThis.__heroshot) {
     // Ensure utils is always available
@@ -96,6 +101,7 @@ export function initToolbar(): (() => void) | null {
   function cleanup(): void {
     void unmount(component);
     host.remove();
+    eventInterceptor.destroy();
 
     if (globalThis.__heroshot) {
       globalThis.__heroshot.initialized = false;

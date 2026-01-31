@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { eventInterceptor } from '../lib/eventInterceptor';
   import { generateSmartName, generateUid } from '../lib/naming';
   import type { BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, ToolbarJob } from '../types';
   import EditorBar from './EditorBar.svelte';
@@ -63,6 +64,9 @@
       elementPicker.clearSelection();
     }
     isPickerActive = !isPickerActive;
+
+    // Sync with EventInterceptor - picker mode blocks all page events
+    eventInterceptor.setMode(isPickerActive ? 'picker' : 'idle');
   }
 
   /**
