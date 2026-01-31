@@ -36,42 +36,73 @@ interface HeroshotProps {
 }
 
 /**
- * Hook to detect dark mode
+ * Dark mode detection priority:
+ * 1. Site theme (data-theme attribute for Docusaurus, .dark class for VitePress)
+ * 2. System preference (prefers-color-scheme) - for sites without framework theme handling
+ * 3. Default to light
  */
 function useIsDark(): boolean {
+  // Track if site has explicit theme handling
+  const siteHasThemeHandling = React.useRef(false);
+
   const [isDark, setIsDark] = useState(() => {
     if (globalThis.window === undefined) return false;
 
-    // Check Docusaurus data-theme attribute
+    // 1. Check Docusaurus data-theme attribute (explicit theme state)
     const { theme: dataTheme } = document.documentElement.dataset;
-    if (dataTheme) return dataTheme === 'dark';
+    if (dataTheme) {
+      siteHasThemeHandling.current = true;
+      return dataTheme === 'dark';
+    }
 
-    // Check class-based (.dark class)
-    if (document.documentElement.classList.contains('dark')) return true;
+    // 2. Check .dark class (VitePress and other frameworks)
+    if (document.documentElement.classList.contains('dark')) {
+      siteHasThemeHandling.current = true;
+      return true;
+    }
 
-    // Fall back to prefers-color-scheme
-    return globalThis.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Check if site has theme handling (e.g., VitePress sets classes on html)
+    if (document.documentElement.classList.length > 0) {
+      siteHasThemeHandling.current = true;
+      return false; // Site has theme handling, no .dark = light mode
+    }
+
+    // 3. Fall back to system preference for sites without theme handling
+    if (globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+      return true;
+    }
+
+    // 4. Default to light
+    return false;
   });
 
   useEffect(() => {
-    const mediaQuery = globalThis.matchMedia('(prefers-color-scheme: dark)');
-    const handleMediaChange = (e: MediaQueryListEvent) => {
-      const { theme: dataTheme } = document.documentElement.dataset;
-      if (!dataTheme && !document.documentElement.classList.contains('dark')) {
-        setIsDark(e.matches);
-      }
-    };
-    mediaQuery.addEventListener('change', handleMediaChange);
-
-    const observer = new MutationObserver(() => {
+    // Detect current theme state from DOM
+    const detectTheme = () => {
       const { theme: dataTheme } = document.documentElement.dataset;
       if (dataTheme) {
-        setIsDark(dataTheme === 'dark');
-      } else if (document.documentElement.classList.contains('dark')) {
-        setIsDark(true);
-      } else {
-        setIsDark(globalThis.matchMedia('(prefers-color-scheme: dark)').matches);
+        siteHasThemeHandling.current = true;
+        return dataTheme === 'dark';
       }
+
+      if (document.documentElement.classList.contains('dark')) {
+        siteHasThemeHandling.current = true;
+        return true;
+      }
+
+      // If site has theme handling, absence of dark indicators = light mode
+      if (siteHasThemeHandling.current) {
+        return false;
+      }
+
+      // Fall back to system preference
+      return globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    };
+
+    // Watch for theme changes via DOM mutations
+    const observer = new MutationObserver(() => {
+      siteHasThemeHandling.current = true;
+      setIsDark(detectTheme());
     });
 
     observer.observe(document.documentElement, {
@@ -79,9 +110,17 @@ function useIsDark(): boolean {
       attributeFilter: ['data-theme', 'class'],
     });
 
+    // Listen for system preference changes
+    const mediaQuery = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
+    const handleMediaChange = () => {
+      // Re-detect - if site has theme handling, it may have updated DOM
+      setIsDark(detectTheme());
+    };
+    mediaQuery?.addEventListener('change', handleMediaChange);
+
     return () => {
-      mediaQuery.removeEventListener('change', handleMediaChange);
       observer.disconnect();
+      mediaQuery?.removeEventListener('change', handleMediaChange);
     };
   }, []);
 

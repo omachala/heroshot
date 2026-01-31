@@ -1,7 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { mount, flushPromises } from '@vue/test-utils';
 import Heroshot from '../components/Heroshot.vue';
 import type { Manifest } from '../../../shared';
+
+// Helper to wait for MutationObserver callbacks
+const flushMutationObserver = () => new Promise(resolve => setTimeout(resolve, 0));
 
 // Sample manifest for testing
 const testManifest: Manifest = {
@@ -81,21 +84,22 @@ describe('Heroshot', () => {
     });
   });
 
-  describe('srcset generation', () => {
-    it('generates srcset for viewport variants', () => {
+  describe('viewport source generation', () => {
+    it('generates picture sources for viewport variants', () => {
       const wrapper = mount(Heroshot, {
         props: { name: 'Homepage Hero', manifest: testManifest },
       });
-      const srcset = wrapper.find('img').attributes('srcset');
-      expect(srcset).toContain('heroshots/homepage-hero-mobile-light.png');
-      expect(srcset).toContain('heroshots/homepage-hero-desktop-light.png');
+      const sources = wrapper.findAll('source').map(s => s.attributes('srcset'));
+      expect(sources).toContain('heroshots/homepage-hero-mobile-light.png');
+      expect(sources).toContain('heroshots/homepage-hero-desktop-light.png');
     });
 
-    it('does not generate srcset when no viewports', () => {
+    it('uses img without picture when no viewports', () => {
       const wrapper = mount(Heroshot, {
         props: { name: 'Dashboard', manifest: testManifest },
       });
-      expect(wrapper.find('img').attributes('srcset')).toBeUndefined();
+      expect(wrapper.find('picture').exists()).toBe(false);
+      expect(wrapper.find('img').exists()).toBe(true);
     });
   });
 
@@ -112,6 +116,64 @@ describe('Heroshot', () => {
         props: { name: 'Dashboard', manifest: testManifest },
       });
       expect(wrapper.find('img').attributes('loading')).toBe('lazy');
+    });
+  });
+
+  describe('dark mode detection', () => {
+    it('uses light mode when no dark class even if OS prefers dark (regression test)', () => {
+      // This test ensures that we don't fall back to prefers-color-scheme
+      // when the framework's theme toggle (class-based) says light mode.
+      // Bug: On mobile with dark OS preference but site in light mode,
+      // the component was incorrectly showing dark screenshots.
+      document.documentElement.classList.remove('dark');
+
+      const wrapper = mount(Heroshot, {
+        props: { name: 'Dashboard', manifest: testManifest },
+      });
+
+      // Should show light mode path regardless of OS prefers-color-scheme
+      expect(wrapper.find('img').attributes('src')).toBe('heroshots/dashboard-light.png');
+    });
+
+    it('uses dark mode only when dark class is explicitly set', async () => {
+      // Start in light mode
+      document.documentElement.classList.remove('dark');
+      const wrapper = mount(Heroshot, {
+        props: { name: 'Dashboard', manifest: testManifest },
+      });
+      expect(wrapper.find('img').attributes('src')).toBe('heroshots/dashboard-light.png');
+
+      // Toggle to dark mode via class (like VitePress does)
+      document.documentElement.classList.add('dark');
+      await flushMutationObserver();
+      await flushPromises();
+      expect(wrapper.find('img').attributes('src')).toBe('heroshots/dashboard-dark.png');
+
+      // Toggle back to light mode
+      document.documentElement.classList.remove('dark');
+      await flushMutationObserver();
+      await flushPromises();
+      expect(wrapper.find('img').attributes('src')).toBe('heroshots/dashboard-light.png');
+    });
+
+    it('updates viewport sources when theme changes (regression test)', async () => {
+      document.documentElement.classList.remove('dark');
+      const wrapper = mount(Heroshot, {
+        props: { name: 'Homepage Hero', manifest: testManifest },
+      });
+
+      // In light mode, sources should be light
+      const lightSources = wrapper.findAll('source').map(s => s.attributes('srcset'));
+      expect(lightSources.every(src => src?.includes('-light.png'))).toBe(true);
+
+      // Toggle to dark mode
+      document.documentElement.classList.add('dark');
+      await flushMutationObserver();
+      await flushPromises();
+
+      // Sources should now be dark
+      const darkSources = wrapper.findAll('source').map(s => s.attributes('srcset'));
+      expect(darkSources.every(src => src?.includes('-dark.png'))).toBe(true);
     });
   });
 });
