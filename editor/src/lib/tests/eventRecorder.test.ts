@@ -83,7 +83,9 @@ describe('EventRecorder', () => {
       const actions = recorder.getActions();
       expect(actions.length).toBe(1);
       expect(actions[0]?.type).toBe('click');
-      expect(actions[0]?.selector).toBe('[data-testid="submit-btn"]');
+      expect(actions[0]?.type === 'click' && actions[0]?.selector).toBe(
+        '[data-testid="submit-btn"]'
+      );
     });
 
     it('should record double click', () => {
@@ -123,7 +125,10 @@ describe('EventRecorder', () => {
       recorder.processEvent(new MouseEvent('click', { bubbles: true }), button);
 
       const actions = recorder.getActions();
-      expect(actions[0]?.selector).toBe('role=button[name="Submit Form"]');
+      expect(actions[0]?.type).toBe('click');
+      expect(actions[0]?.type === 'click' && actions[0]?.selector).toBe(
+        'role=button[name="Submit Form"]'
+      );
     });
   });
 
@@ -393,7 +398,8 @@ describe('EventRecorder', () => {
 
       const actions = recorder.getActions();
       expect(actions.length).toBe(1);
-      expect(actions[0]?.selector).toBeTruthy();
+      expect(actions[0]?.type).toBe('click');
+      expect(actions[0]?.type === 'click' && actions[0]?.selector).toBeTruthy();
     });
 
     it('should handle null/undefined target', () => {
