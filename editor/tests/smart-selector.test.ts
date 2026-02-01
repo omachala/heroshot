@@ -55,10 +55,11 @@ test.describe('Smart Selector Generation', () => {
   });
 
   test('should use role with aria-label', async ({ page }) => {
+    // Use a button with text content (not SVG) so the click targets the button itself
     await page.setContent(`
       <div style="padding: 100px;">
         <button aria-label="Close dialog" style="padding: 30px;">
-          <svg width="24" height="24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+          Close
         </button>
       </div>
     `);
