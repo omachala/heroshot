@@ -18,8 +18,8 @@ import { getAccessibleName, getAriaRole, isGuidLike } from './ariaUtilities';
  * cssEscape polyfill for jsdom compatibility
  */
 function cssEscape(value: string): string {
-  if (typeof CSS !== 'undefined' && cssEscape) {
-    return cssEscape(value);
+  if (typeof CSS !== 'undefined' && CSS.escape) {
+    return CSS.escape(value);
   }
   // Simple fallback: escape special CSS characters
   return value.replaceAll(/([^\w-])/g, String.raw`\$1`);

@@ -106,10 +106,18 @@ export async function getElementRect(
 
 /**
  * Click on an element on the page (for element picking)
+ * Note: We move the mouse first to trigger the mousemove handler
+ * which highlights the element before clicking to select it.
  */
 export async function clickPageElement(page: Page, selector: string): Promise<void> {
   const rect = await getElementRect(page, selector);
-  await page.mouse.click(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  const x = rect.left + rect.width / 2;
+  const y = rect.top + rect.height / 2;
+  // Move mouse first to trigger mousemove handler (sets currentElement)
+  await page.mouse.move(x, y);
+  await page.waitForTimeout(100);
+  // Then click to select
+  await page.mouse.click(x, y);
 }
 
 /**
@@ -123,7 +131,24 @@ export async function activatePickerAndSelectElement(page: Page, selector: strin
 }
 
 /**
+ * Confirm the draft screenshot by pressing Enter on the name input
+ * This is the new workflow - when an element is picked, a draft is created
+ * and the name input is focused. Pressing Enter confirms the draft.
+ */
+export async function confirmDraftScreenshot(page: Page): Promise<void> {
+  // Wait for the sidebar input to appear (inside shadow DOM)
+  // The input is auto-focused after element pick, so we find it and press Enter
+  const input = page
+    .locator('#heroshot-root >> [data-testid="sidebar-item"] input[type="text"]')
+    .first();
+  await input.waitFor({ state: 'visible', timeout: 5000 });
+  await input.press('Enter');
+  await page.waitForTimeout(100);
+}
+
+/**
  * Click the confirm button on the highlight overlay for a selected element
+ * @deprecated Use confirmDraftScreenshot instead - the new UI auto-creates drafts
  */
 export async function clickConfirmButtonForElement(page: Page, selector: string): Promise<void> {
   const rect = await getElementRect(page, selector);

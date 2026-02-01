@@ -32,6 +32,7 @@ export {
   clickSidebarItemName,
   clickToolbarButton,
   closeSidebar,
+  confirmDraftScreenshot,
   expandSidebarList,
   getElementRect,
   openSidebar,

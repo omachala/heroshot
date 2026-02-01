@@ -18,8 +18,8 @@
 import { expect, test } from 'playwright/test';
 import {
   activatePickerAndSelectElement,
-  clickConfirmButtonForElement,
   clickToolbarButton,
+  confirmDraftScreenshot,
   getElementRect,
   getEventsByType,
   injectToolbar,
@@ -209,18 +209,19 @@ test.describe('Issue #65: Dropdown capture', () => {
     });
     await page.waitForTimeout(200);
 
-    // Use the standard picker flow
+    // Use the standard picker flow - this creates a draft in the sidebar
     await activatePickerAndSelectElement(page, '#country');
     await page.waitForTimeout(300);
 
-    // Confirm to save
-    await clickConfirmButtonForElement(page, '#country');
+    // Confirm the draft by pressing Enter on the name input in sidebar
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(500);
 
     // Verify screenshot was added
     const addedEvents = await getEventsByType(page, 'screenshot-added');
     expect(addedEvents.length).toBe(1);
-    expect(addedEvents[0]?.data.selector).toMatch(/#country/);
+    // Smart selector uses role=combobox for select elements
+    expect(addedEvents[0]?.data.selector).toMatch(/combobox|#country/);
 
     // The screenshot captures the <select> in closed state
     // There's no way to capture it with the dropdown options expanded

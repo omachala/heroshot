@@ -315,6 +315,214 @@ test.describe('Event Isolation', () => {
     });
   });
 
+  test.describe('Picker mode page isolation', () => {
+    /**
+     * In picker mode, scroll SHOULD still work so users can navigate to find elements.
+     * Only click/keyboard events are blocked.
+     */
+    test('scroll is allowed in picker mode for navigation', async ({ page }) => {
+      await page.setContent(`
+        <div id="content" style="height: 3000px; background: linear-gradient(white, black);">
+          <h1>Scrollable Page</h1>
+          <p style="position: fixed; top: 10px; right: 10px;">
+            Scroll Y: <span id="scroll-y">0</span>
+          </p>
+        </div>
+      `);
+
+      await injectToolbar(page);
+      await page.waitForTimeout(200);
+
+      // Activate picker mode
+      await clickToolbarButton(page, 'picker');
+      await page.waitForTimeout(200);
+
+      // Verify picker mode is active
+      const cursorStyle = await page.evaluate(() => document.body.style.cursor);
+      expect(cursorStyle).toBe('crosshair');
+
+      // Scroll should still work in picker mode
+      await page.mouse.wheel(0, 200);
+      await page.waitForTimeout(100);
+
+      const scrollY = await page.evaluate(() => window.scrollY);
+      expect(scrollY).toBeGreaterThan(0);
+    });
+
+    /**
+     * Test that clicking picker button toggles picker mode on/off.
+     * When off, page interactions should work normally again.
+     */
+    test('picker mode toggle: activate then deactivate restores page interactivity', async ({
+      page,
+    }) => {
+      await page.setContent(`
+        <button id="test-btn">Click me</button>
+        <span id="result">not clicked</span>
+        <script>
+          document.getElementById('test-btn').addEventListener('click', () => {
+            document.getElementById('result').textContent = 'clicked';
+          });
+        </script>
+      `);
+
+      await injectToolbar(page);
+      await page.waitForTimeout(200);
+
+      // Verify page works before picker mode
+      await page.click('#test-btn');
+      await page.waitForTimeout(100);
+      let result = await page.textContent('#result');
+      expect(result).toBe('clicked');
+
+      // Reset
+      await page.evaluate(() => {
+        document.getElementById('result')!.textContent = 'not clicked';
+      });
+
+      // Step 1: Activate picker mode
+      await clickToolbarButton(page, 'picker');
+      await page.waitForTimeout(200);
+
+      // Verify picker mode is active
+      let cursorStyle = await page.evaluate(() => document.body.style.cursor);
+      expect(cursorStyle).toBe('crosshair');
+
+      // Step 2: Deactivate picker mode by clicking picker button again (WITHOUT clicking on page)
+      await clickToolbarButton(page, 'picker');
+      await page.waitForTimeout(200);
+
+      // Verify picker mode is off
+      cursorStyle = await page.evaluate(() => document.body.style.cursor);
+      expect(cursorStyle).toBe('');
+
+      // Step 3: Click should now work normally
+      await page.click('#test-btn');
+      await page.waitForTimeout(100);
+
+      result = await page.textContent('#result');
+      expect(result).toBe('clicked');
+    });
+
+    /**
+     * Test that mousemove still works in picker mode (for element highlighting).
+     * Only click/scroll/keyboard should be blocked, not mouse tracking.
+     */
+    test('mousemove works in picker mode for element highlighting', async ({ page }) => {
+      await page.setContent(`
+        <div id="box1" style="width: 100px; height: 100px; background: red; margin: 20px;">Box 1</div>
+        <div id="box2" style="width: 100px; height: 100px; background: blue; margin: 20px;">Box 2</div>
+      `);
+
+      await injectToolbar(page);
+      await page.waitForTimeout(200);
+
+      // Activate picker mode
+      await clickToolbarButton(page, 'picker');
+      await page.waitForTimeout(200);
+
+      // Move mouse to box1
+      const box1Rect = await page.evaluate(() => {
+        const el = document.getElementById('box1')!;
+        const r = el.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      });
+      await page.mouse.move(box1Rect.x, box1Rect.y);
+      await page.waitForTimeout(200);
+
+      // The overlay should be visible (we check for the heroshot overlay element)
+      // Since we're in picker mode with cursor over an element, there should be a highlight
+      const hasOverlay = await page.evaluate(() => {
+        // Check if body has crosshair cursor (picker mode active)
+        // and an overlay element exists in the heroshot shadow DOM
+        const heroshotRoot = document.querySelector('#heroshot-root');
+        if (!heroshotRoot?.shadowRoot) return false;
+        // Look for the overlay container with fixed positioning
+        const overlays = heroshotRoot.shadowRoot.querySelectorAll('.fixed');
+        return overlays.length > 0;
+      });
+
+      expect(hasOverlay).toBe(true);
+    });
+
+    /**
+     * Test that keyboard events are blocked in picker mode.
+     * User should not be able to type or trigger page shortcuts.
+     */
+    test('keyboard events are blocked in picker mode', async ({ page }) => {
+      await page.setContent(`
+        <input id="test-input" type="text" value="">
+        <div id="key-log"></div>
+        <script>
+          window.keyEvents = [];
+          document.addEventListener('keydown', (e) => {
+            window.keyEvents.push(e.key);
+            document.getElementById('key-log').textContent = window.keyEvents.join(',');
+          });
+        </script>
+      `);
+
+      await injectToolbar(page);
+      await page.waitForTimeout(200);
+
+      // Focus input first
+      await page.focus('#test-input');
+      await page.waitForTimeout(100);
+
+      // Activate picker mode
+      await clickToolbarButton(page, 'picker');
+      await page.waitForTimeout(200);
+
+      // Try to type - should be blocked
+      await page.keyboard.type('hello');
+      await page.waitForTimeout(100);
+
+      // Input should be empty (typing blocked)
+      const inputValue = await page.inputValue('#test-input');
+      expect(inputValue).toBe('');
+
+      // Key events should not have reached the page (except possibly Escape)
+      const keyEvents = await page.evaluate(() => (window as any).keyEvents);
+      // Filter out Escape which might be handled differently
+      const nonEscapeEvents = keyEvents.filter((key: string) => key !== 'Escape');
+      expect(nonEscapeEvents.length).toBe(0);
+    });
+
+    /**
+     * Test that a link with click handler doesn't execute its handler in picker mode.
+     */
+    test('link with onclick handler is blocked in picker mode', async ({ page }) => {
+      await page.setContent(`
+        <a id="test-link" href="#" onclick="window.linkClicked = true; return false;">
+          Click this link
+        </a>
+        <script>
+          window.linkClicked = false;
+        </script>
+      `);
+
+      await injectToolbar(page);
+      await page.waitForTimeout(200);
+
+      // Activate picker mode
+      await clickToolbarButton(page, 'picker');
+      await page.waitForTimeout(200);
+
+      // Click the link
+      const linkRect = await page.evaluate(() => {
+        const el = document.getElementById('test-link')!;
+        const r = el.getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      });
+      await page.mouse.click(linkRect.x, linkRect.y);
+      await page.waitForTimeout(100);
+
+      // onclick handler should NOT have been triggered
+      const linkClicked = await page.evaluate(() => (window as any).linkClicked);
+      expect(linkClicked).toBe(false);
+    });
+  });
+
   test.describe('Shadow DOM boundary', () => {
     /**
      * Events from inside heroshot shadow DOM should not reach page.

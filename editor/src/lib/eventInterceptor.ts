@@ -18,6 +18,10 @@ export type InterceptorMode = 'idle' | 'recording' | 'picker';
 
 /**
  * Event types we intercept at capture phase (for page event blocking)
+ *
+ * Note: scroll/wheel events are intentionally NOT blocked - users may need to
+ * scroll to find the element they want to pick. Only click/keyboard events
+ * that would trigger page handlers are blocked.
  */
 const CAPTURE_EVENT_TYPES: readonly string[] = [
   // Mouse events
@@ -210,13 +214,9 @@ export class EventInterceptor {
   /**
    * Capture-phase handler - handles page events based on mode
    *
-   * Note: We don't use stopImmediatePropagation in picker mode because
-   * ElementPicker also has a capture-phase handler on document that needs
-   * to receive the event to select elements. ElementPicker will call
-   * stopImmediatePropagation itself after processing.
-   *
-   * We only call preventDefault to stop default browser actions (link
-   * navigation, form submission) in picker mode.
+   * In picker mode, we call preventDefault to stop default browser actions
+   * (link navigation, form submission). ElementPicker's capture handler
+   * will call stopImmediatePropagation after processing the event.
    */
   private handleCaptureEvent(event: Event): void {
     const target = event.target instanceof Element ? event.target : null;
@@ -226,7 +226,7 @@ export class EventInterceptor {
       return;
     }
 
-    // In picker mode, only preventDefault (let ElementPicker handle the rest)
+    // In picker mode, block page events (but allow scroll for navigation)
     if (this.mode === 'picker') {
       event.preventDefault();
       // ElementPicker's capture handler will call stopImmediatePropagation
