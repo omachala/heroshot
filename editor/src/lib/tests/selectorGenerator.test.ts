@@ -386,4 +386,22 @@ describe('SelectorGenerator', () => {
       expect(selector).not.toContain('heroshot');
     });
   });
+
+  describe('selector validation edge cases', () => {
+    it('should handle invalid CSS selectors in isUnique', () => {
+      const button = document.createElement('button');
+      document.body.appendChild(button);
+
+      // An invalid CSS selector should return false instead of throwing
+      expect(generator.isUnique('::invalid[[[selector', button)).toBe(false);
+    });
+
+    it('should handle invalid CSS selectors in queryAll', () => {
+      const button = document.createElement('button');
+      document.body.appendChild(button);
+
+      // An invalid CSS selector should return empty array instead of throwing
+      expect(generator.queryAll('::invalid[[[selector').length).toBe(0);
+    });
+  });
 });

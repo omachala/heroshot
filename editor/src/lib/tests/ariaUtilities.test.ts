@@ -540,6 +540,30 @@ describe('ariaUtils', () => {
         expect(isGuidLike('tab-2')).toBe(false);
         expect(isGuidLike('step1')).toBe(false);
       });
+
+      it('should handle empty string', () => {
+        expect(isGuidLike('')).toBe(false);
+      });
+    });
+  });
+
+  describe('getAriaRole edge cases', () => {
+    it('should return slider role for input[type=range]', () => {
+      const input = document.createElement('input');
+      input.type = 'range';
+      document.body.appendChild(input);
+
+      expect(getAriaRole(input)).toBe('slider');
+    });
+
+    it('should return textbox for unknown input types', () => {
+      const input = document.createElement('input');
+      // Set an invalid/unknown type that falls through to default
+      input.setAttribute('type', 'unknowntype');
+      document.body.appendChild(input);
+
+      // Browser normalizes unknown types to 'text', so role should be 'textbox'
+      expect(getAriaRole(input)).toBe('textbox');
     });
   });
 });

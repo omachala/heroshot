@@ -206,6 +206,55 @@ describe('EventRecorder', () => {
       expect((actions[0] as { text?: string }).text).toBe('john');
     });
 
+    it('should ignore blur from non-input elements', () => {
+      vi.useFakeTimers();
+      const input = document.createElement('input');
+      input.placeholder = 'Username';
+      input.value = 'john';
+      container.appendChild(input);
+
+      const div = document.createElement('div');
+      container.appendChild(div);
+
+      recorder.startRecording();
+      recorder.processEvent(new InputEvent('input', { bubbles: true }), input);
+
+      // Trigger blur on a non-input element (should not flush)
+      recorder.processEvent(new FocusEvent('blur', { bubbles: true }), div);
+
+      // Should not have flushed yet
+      expect(recorder.getActions().length).toBe(0);
+
+      // Now flush via timeout
+      vi.advanceTimersByTime(500);
+      expect(recorder.getActions().length).toBe(1);
+    });
+
+    it('should ignore blur from different input than pending', () => {
+      vi.useFakeTimers();
+      const input1 = document.createElement('input');
+      input1.setAttribute('data-testid', 'input1');
+      input1.value = 'first';
+      container.appendChild(input1);
+
+      const input2 = document.createElement('input');
+      input2.setAttribute('data-testid', 'input2');
+      container.appendChild(input2);
+
+      recorder.startRecording();
+      recorder.processEvent(new InputEvent('input', { bubbles: true }), input1);
+
+      // Trigger blur on a different input (should not flush pending for input1)
+      recorder.processEvent(new FocusEvent('blur', { bubbles: true }), input2);
+
+      // Should not have flushed yet
+      expect(recorder.getActions().length).toBe(0);
+
+      // Now flush via timeout
+      vi.advanceTimersByTime(500);
+      expect(recorder.getActions().length).toBe(1);
+    });
+
     it('should record textarea input', () => {
       vi.useFakeTimers();
       const textarea = document.createElement('textarea');
@@ -326,6 +375,67 @@ describe('EventRecorder', () => {
       expect(actions[0]?.type).toBe('press_key');
       expect((actions[0] as { key?: string }).key).toBe('Control+a');
     });
+
+    it('should record Alt key combinations', () => {
+      recorder.startRecording();
+      recorder.processEvent(
+        new KeyboardEvent('keydown', {
+          key: 'a',
+          altKey: true,
+          bubbles: true,
+        }),
+        document.body
+      );
+
+      const actions = recorder.getActions();
+      expect((actions[0] as { key?: string }).key).toBe('Alt+a');
+    });
+
+    it('should record Shift key combinations', () => {
+      recorder.startRecording();
+      recorder.processEvent(
+        new KeyboardEvent('keydown', {
+          key: 'a',
+          shiftKey: true,
+          bubbles: true,
+        }),
+        document.body
+      );
+
+      const actions = recorder.getActions();
+      expect((actions[0] as { key?: string }).key).toBe('Shift+a');
+    });
+
+    it('should record Meta key combinations', () => {
+      recorder.startRecording();
+      recorder.processEvent(
+        new KeyboardEvent('keydown', {
+          key: 'a',
+          metaKey: true,
+          bubbles: true,
+        }),
+        document.body
+      );
+
+      const actions = recorder.getActions();
+      expect((actions[0] as { key?: string }).key).toBe('Meta+a');
+    });
+
+    it('should record multiple modifier combinations', () => {
+      recorder.startRecording();
+      recorder.processEvent(
+        new KeyboardEvent('keydown', {
+          key: 's',
+          ctrlKey: true,
+          shiftKey: true,
+          bubbles: true,
+        }),
+        document.body
+      );
+
+      const actions = recorder.getActions();
+      expect((actions[0] as { key?: string }).key).toBe('Control+Shift+s');
+    });
   });
 
   describe('action callbacks', () => {
@@ -419,6 +529,65 @@ describe('EventRecorder', () => {
       recorder.startRecording();
 
       expect(recorder.isRecording()).toBe(true);
+    });
+
+    it('should ignore input events from non-input elements', () => {
+      vi.useFakeTimers();
+      const div = document.createElement('div');
+      container.appendChild(div);
+
+      recorder.startRecording();
+      recorder.processEvent(new InputEvent('input', { bubbles: true }), div);
+      vi.advanceTimersByTime(500);
+
+      // Should not record type action for non-input element
+      const actions = recorder.getActions();
+      expect(actions.filter(a => a.type === 'type').length).toBe(0);
+    });
+
+    it('should clear actions when clear is called', () => {
+      vi.useFakeTimers();
+      const input = document.createElement('input');
+      input.placeholder = 'Test';
+      input.value = 'hello';
+      container.appendChild(input);
+
+      recorder.startRecording();
+
+      // Add a type action
+      recorder.processEvent(new InputEvent('input', { bubbles: true }), input);
+      vi.advanceTimersByTime(500);
+      expect(recorder.getActions().length).toBe(1);
+
+      // Clear actions
+      recorder.clear();
+      expect(recorder.getActions().length).toBe(0);
+
+      // Still recording
+      expect(recorder.isRecording()).toBe(true);
+    });
+
+    it('should not record type action for empty input value', () => {
+      vi.useFakeTimers();
+      const input = document.createElement('input');
+      input.placeholder = 'Test';
+      input.value = ''; // Empty value
+      container.appendChild(input);
+
+      recorder.startRecording();
+
+      // Simulate typing then clearing
+      input.value = 'test';
+      recorder.processEvent(new InputEvent('input', { bubbles: true }), input);
+
+      // Clear before debounce completes
+      input.value = '';
+      recorder.processEvent(new InputEvent('input', { bubbles: true }), input);
+      vi.advanceTimersByTime(500);
+
+      // Should not add action for empty value
+      const actions = recorder.getActions();
+      expect(actions.filter(a => a.type === 'type').length).toBe(0);
     });
   });
 });

@@ -47,6 +47,20 @@ describe('EventInterceptor', () => {
       expect(interceptor.getMode()).toBe('idle');
     });
 
+    it('should not re-register listeners if init called twice', () => {
+      const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
+
+      interceptor.init();
+      const firstCallCount = addEventListenerSpy.mock.calls.length;
+
+      interceptor.init(); // Second call should be a no-op
+      const secondCallCount = addEventListenerSpy.mock.calls.length;
+
+      expect(secondCallCount).toBe(firstCallCount);
+
+      addEventListenerSpy.mockRestore();
+    });
+
     it('should register capture-phase event listeners on init', () => {
       const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
 
@@ -381,6 +395,22 @@ describe('EventInterceptor', () => {
 
       expect(interceptor.getMode()).toBe('idle');
     });
+
+    it('should handle destroy when heroshot-root was never found', () => {
+      heroshotRoot.remove();
+      const newInterceptor = new EventInterceptor();
+      // Init without heroshot-root present - heroshotRoot will be null
+      newInterceptor.init();
+
+      // Destroy should not throw even with null heroshotRoot
+      expect(() => newInterceptor.destroy()).not.toThrow();
+    });
+
+    it('should handle destroy without init being called', () => {
+      const newInterceptor = new EventInterceptor();
+      // Destroy without init should not throw
+      expect(() => newInterceptor.destroy()).not.toThrow();
+    });
   });
 
   describe('isHeroshotElement helper', () => {
@@ -404,6 +434,80 @@ describe('EventInterceptor', () => {
 
     it('should handle null gracefully', () => {
       expect(interceptor.isHeroshotElement(null)).toBe(false);
+    });
+  });
+
+  describe('delayed heroshot-root initialization', () => {
+    it('should attach bubble listeners when heroshot-root is added later', async () => {
+      // Remove heroshot-root before init
+      heroshotRoot.remove();
+
+      // New interceptor to test MutationObserver path
+      const delayedInterceptor = new EventInterceptor();
+      delayedInterceptor.init();
+
+      // Add heroshot-root after init (triggers MutationObserver)
+      const newHeroshotRoot = document.createElement('div');
+      newHeroshotRoot.id = 'heroshot-root';
+      document.body.appendChild(newHeroshotRoot);
+
+      // Wait for MutationObserver to fire
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      // Verify bubble listeners were attached by checking event stopping
+      delayedInterceptor.setMode('idle');
+      const pageHandler = vi.fn();
+      document.addEventListener('click', pageHandler);
+
+      const button = document.createElement('button');
+      newHeroshotRoot.appendChild(button);
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      // Event should be stopped by bubble handler
+      expect(pageHandler).not.toHaveBeenCalled();
+
+      document.removeEventListener('click', pageHandler);
+      delayedInterceptor.destroy();
+    });
+  });
+
+  describe('callback unsubscription edge cases', () => {
+    beforeEach(() => {
+      interceptor.init();
+    });
+
+    it('should handle unsubscribing a mode change callback twice gracefully', () => {
+      const callback = vi.fn();
+      const unsubscribe = interceptor.onModeChange(callback);
+
+      // First unsubscribe
+      unsubscribe();
+
+      // Second unsubscribe should not throw (index will be -1)
+      expect(() => unsubscribe()).not.toThrow();
+
+      // Verify callback is not called
+      interceptor.setMode('picker');
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('should handle unsubscribing a page event callback twice gracefully', () => {
+      interceptor.setMode('recording');
+
+      const callback = vi.fn();
+      const unsubscribe = interceptor.onPageEvent(callback);
+
+      // First unsubscribe
+      unsubscribe();
+
+      // Second unsubscribe should not throw (index will be -1)
+      expect(() => unsubscribe()).not.toThrow();
+
+      // Verify callback is not called
+      const pageButton = document.getElementById('page-button')!;
+      const event = new MouseEvent('click', { bubbles: true });
+      pageButton.dispatchEvent(event);
+      expect(callback).not.toHaveBeenCalled();
     });
   });
 });
