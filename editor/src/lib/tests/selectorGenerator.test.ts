@@ -393,15 +393,8 @@ describe('SelectorGenerator', () => {
       document.body.appendChild(button);
 
       // An invalid CSS selector should return false instead of throwing
+      // (queryAll catch block returns empty array, isUnique returns false)
       expect(generator.isUnique('::invalid[[[selector', button)).toBe(false);
-    });
-
-    it('should handle invalid CSS selectors in queryAll', () => {
-      const button = document.createElement('button');
-      document.body.appendChild(button);
-
-      // An invalid CSS selector should return empty array instead of throwing
-      expect(generator.queryAll('::invalid[[[selector').length).toBe(0);
     });
   });
 });
