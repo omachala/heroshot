@@ -1,5 +1,25 @@
 # heroshot
 
+## 0.12.0
+
+### Minor Changes
+
+- 769b699: Switch to Playwright locator API for full selector format support
+
+  Shadow DOM piercing now uses `>>` (Playwright standard). Legacy `>>>` syntax still works and is auto-converted.
+
+  **New selector formats supported:**
+  - CSS (default): `.button`, `#header`
+  - Shadow DOM: `host >> .child`
+  - XPath: `xpath=//button[@id="submit"]`
+  - Text: `text=Submit`
+  - Role: `role=button[name="OK"]`
+  - Chained: `.modal >> role=button[name="Close"]`
+
+### Patch Changes
+
+- 0039201: Enable npm provenance attestations for supply chain security
+
 ## 0.11.4
 
 ### Patch Changes
