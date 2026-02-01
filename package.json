@@ -5,6 +5,14 @@
   "type": "module",
   "author": "Ondrej Machala",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/omachala/heroshot"
+  },
+  "publishConfig": {
+    "provenance": true,
+    "access": "public"
+  },
   "bin": {
     "heroshot": "dist/cli/cli.js",
     "heroshot-mcp": "dist/mcp/index.js"
