@@ -161,8 +161,10 @@ features:
     linkText: Padding & masking
 ---
 
-<div class="picker-section">
-  <PickerCarousel />
+<div class="demo-video">
+  <video autoplay loop muted playsinline>
+    <source src="/hero-demo.webm" type="video/webm">
+  </video>
 </div>
 
 <div class="showcase">

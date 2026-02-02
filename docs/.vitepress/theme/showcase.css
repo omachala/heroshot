@@ -21,6 +21,27 @@
   padding-bottom: 0 !important;
 }
 
+/* Demo video section */
+.demo-video {
+  max-width: 1000px;
+  margin: 48px auto 0;
+  padding: 0 24px;
+}
+
+.demo-video video {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 640px) {
+  .demo-video {
+    margin: 32px auto 0;
+    padding: 0 16px;
+  }
+}
+
 /* Showcase section on home page */
 .showcase {
   max-width: 1152px;
