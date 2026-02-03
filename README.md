@@ -28,22 +28,7 @@ npx heroshot
 
 First run opens a browser with a visual picker. Click what you want, name it, done. Screenshots land in `heroshots/`, config saves to `.heroshot/config.json`. Next run regenerates everything headlessly.
 
-<table align="center">
-  <tr>
-    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-desktop-light.png?raw=true" alt="Desktop Light"></td>
-    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-desktop-dark.png?raw=true" alt="Desktop Dark"></td>
-  </tr>
-  <tr>
-    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-tablet-light.png?raw=true" alt="Tablet Light"></td>
-    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-tablet-dark.png?raw=true" alt="Tablet Dark"></td>
-  </tr>
-  <tr>
-    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-mobile-light.png?raw=true" alt="Mobile Light"></td>
-    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-mobile-dark.png?raw=true" alt="Mobile Dark"></td>
-  </tr>
-</table>
-
-<p align="center"><em>6 screenshots from one config entry - always in sync with the live site.</em></p>
+<video src="https://github.com/omachala/heroshot/raw/main/assets/hero-demo.mp4" controls></video>
 
 ## Use in Your Docs
 
@@ -89,6 +74,25 @@ plugins:
 ```
 
 One component/macro, all variants - light/dark mode switches automatically, responsive sizes via srcset.
+
+## One Screenshot - All Variants
+
+<table align="center">
+  <tr>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-desktop-light.png?raw=true" alt="Desktop Light"></td>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-desktop-dark.png?raw=true" alt="Desktop Dark"></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-tablet-light.png?raw=true" alt="Tablet Light"></td>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-tablet-dark.png?raw=true" alt="Tablet Dark"></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-mobile-light.png?raw=true" alt="Mobile Light"></td>
+    <td><img src="https://github.com/omachala/heroshot/blob/main/docs/public/screenshots/hero-mobile-dark.png?raw=true" alt="Mobile Dark"></td>
+  </tr>
+</table>
+
+<p align="center"><em>6 screenshots from one config entry - always in sync with the live site.</em></p>
 
 ## Learn More
 
