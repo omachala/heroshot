@@ -298,6 +298,14 @@ const copyCommand = async () => {
       </div>
     </div>
   </div>
+
+  <div class="demo-video-wrapper">
+    <div class="demo-video">
+      <video autoplay loop muted playsinline>
+        <source src="/hero-demo.webm" type="video/webm" />
+      </video>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -644,6 +652,40 @@ const copyCommand = async () => {
 
   .prompt {
     font-size: 16px;
+  }
+}
+
+/* Demo video */
+.demo-video-wrapper {
+  width: 100%;
+  margin-top: 48px;
+  margin-bottom: 48px;
+}
+
+.demo-video {
+  max-width: 1152px;
+  margin: 0 auto;
+}
+
+.demo-video video {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 960px) {
+  .demo-video-wrapper {
+    margin-top: 32px;
+    margin-bottom: 32px;
+  }
+
+  .demo-video {
+    max-width: 100%;
+  }
+
+  .demo-video video {
+    border-radius: 0;
   }
 }
 </style>

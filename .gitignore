@@ -16,6 +16,9 @@ ha-dashboard.png
 heroshots/
 toolbar/test-results/
 test-results/
+*-snapshots/
+_build/
+integrations/python/build/
 *.heroshot-binary
 src/tests/cli/heroshots/
 src/tests/cli/diffs/
