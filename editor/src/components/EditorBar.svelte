@@ -60,6 +60,44 @@
   let dragStartOffsetX = $state(0);
   let dragStartOffsetY = $state(0);
 
+  // Reference to the bar element for measuring
+  let barElement: HTMLDivElement | null = $state(null);
+
+  // Adjust position to ensure toolbar is fully visible on mount
+  $effect(() => {
+    if (!barElement) return;
+
+    // Wait a tick for the element to be fully rendered
+    globalThis.requestAnimationFrame(() => {
+      if (!barElement) return;
+
+      const rect = barElement.getBoundingClientRect();
+      const viewportWidth = globalThis.innerWidth;
+      const viewportHeight = globalThis.innerHeight;
+
+      // Check if right edge is off screen
+      if (rect.right > viewportWidth) {
+        // Move left so the toolbar fits
+        dragOffsetX = viewportWidth - rect.right - 8; // 8px margin
+      }
+
+      // Check if left edge is off screen
+      if (rect.left < 0) {
+        dragOffsetX = -rect.left + 8; // 8px margin
+      }
+
+      // Check if bottom edge is off screen
+      if (rect.bottom > viewportHeight) {
+        dragOffsetY = viewportHeight - rect.bottom - 8; // 8px margin
+      }
+
+      // Check if top edge is off screen
+      if (rect.top < 0) {
+        dragOffsetY = -rect.top + 8; // 8px margin
+      }
+    });
+  });
+
   /**
    * Start dragging the editor bar
    */
@@ -94,9 +132,8 @@
   }
 
   // Sort screenshots by createdAt (newest first)
-  let sortedScreenshots = $derived(
-    screenshots.toSorted((a, b) => b.createdAt - a.createdAt)
-  );
+  // eslint-disable-next-line unicorn/no-array-sort -- toSorted not available in all targets
+  let sortedScreenshots = $derived([...screenshots].sort((a, b) => b.createdAt - a.createdAt));
 
   // Sync external editingId to local state
   $effect(() => {
@@ -173,6 +210,7 @@
 <!-- Editor Bar - draggable panel with toolbar and screenshot list -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div
+  bind:this={barElement}
   class="fixed top-4 z-[2147483647] pointer-events-auto {isDragging ? '' : 'transition-all duration-300'}"
   style="{positionStyle}"
   onkeydown={stopKeyboardEvent}

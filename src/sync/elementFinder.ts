@@ -25,6 +25,7 @@ export function normalizeSelector(selector: string): string {
 /**
  * Find element using Playwright's locator API with retries.
  * Supports all Playwright selector formats including shadow DOM piercing.
+ * Automatically scrolls the element into view once found.
  */
 export async function findElement(
   page: Page,
@@ -40,6 +41,8 @@ export async function findElement(
       const element = await locator.elementHandle({ timeout: intervalMs });
 
       if (element) {
+        // Scroll element into view before returning
+        await locator.scrollIntoViewIfNeeded({ timeout: 5000 });
         return element;
       }
     } catch {

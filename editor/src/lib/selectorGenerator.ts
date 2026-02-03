@@ -456,7 +456,7 @@ export class SelectorGenerator {
    * Generate selector with added context for uniqueness
    */
   private generateWithContext(element: Element, candidates: SelectorCandidate[]): string {
-    // Try adding parent context
+    // Try adding parent ID context first (if parent has a stable ID)
     const parent = element.parentElement;
     if (parent && !parent.id?.startsWith('heroshot')) {
       const parentId = parent.id && !isGuidLike(parent.id) ? `#${cssEscape(parent.id)} ` : '';
@@ -470,22 +470,68 @@ export class SelectorGenerator {
       }
     }
 
-    // Fall back to nth-of-type
-    const tagName = element.tagName.toLowerCase();
-    const siblings = parent
-      ? [...parent.children].filter(c => c.tagName === element.tagName)
-      : [element];
-    const index = siblings.indexOf(element);
+    // Build full CSS path for uniqueness (recursive approach)
+    return this.buildFullCssPath(element);
+  }
 
-    if (index !== -1 && siblings.length > 1) {
-      const nth = `${tagName}:nth-of-type(${index + 1})`;
-      const parentSelector =
-        parent?.id && !isGuidLike(parent.id) ? `#${cssEscape(parent.id)} ` : '';
-      return parentSelector + nth;
+  /**
+   * Build a full CSS path from root to element for guaranteed uniqueness
+   */
+  private buildFullCssPath(element: Element): string {
+    const path: string[] = [];
+    let current: Element | null = element;
+
+    while (current && current !== document.documentElement) {
+      // Skip heroshot elements
+      if (current.id?.startsWith('heroshot')) {
+        current = current.parentElement;
+        continue;
+      }
+
+      let selector = current.tagName.toLowerCase();
+
+      // Add ID if stable
+      if (current.id && !isGuidLike(current.id)) {
+        selector = `#${cssEscape(current.id)}`;
+        path.unshift(selector);
+        // ID is unique, we can stop here
+        break;
+      }
+
+      // Add classes (first 2, skip dynamic-looking ones)
+      if (current.className && typeof current.className === 'string') {
+        const classes = current.className
+          .split(/\s+/)
+          .filter(c => c && !c.startsWith('heroshot') && !isGuidLike(c) && !/^[a-z]+-\d+$/.test(c))
+          .slice(0, 2);
+        if (classes.length > 0) {
+          selector += '.' + classes.map(c => cssEscape(c)).join('.');
+        }
+      }
+
+      // Add nth-of-type if there are siblings with same tag
+      const parent = current.parentElement;
+      if (parent) {
+        const currentTagName = current.tagName;
+        const siblings = [...parent.children].filter(c => c.tagName === currentTagName);
+        if (siblings.length > 1) {
+          const index = siblings.indexOf(current);
+          if (index !== -1) {
+            selector += `:nth-of-type(${index + 1})`;
+          }
+        }
+      }
+
+      path.unshift(selector);
+      current = current.parentElement;
     }
 
-    // Last resort: use first candidate
-    return candidates[0]?.selector || tagName;
+    // Start with html if we reached the top
+    if (path.length > 0 && !path[0]?.startsWith('#')) {
+      path.unshift('html');
+    }
+
+    return path.join(' > ');
   }
 
   /**

@@ -208,7 +208,11 @@ export class EventInterceptor {
    */
   isHeroshotElement(element: Element | null): boolean {
     if (!element) return false;
-    return element.closest('#heroshot-root') !== null;
+    // Check if inside heroshot-root or is a heroshot overlay (text edit overlays)
+    return (
+      element.closest('#heroshot-root') !== null ||
+      (element instanceof HTMLElement && element.dataset['heroshotOverlay'] === 'true')
+    );
   }
 
   /**

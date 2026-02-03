@@ -39,7 +39,11 @@ export const paddingSchema = z.object({
   left: z.number().int().min(0).default(0).describe('Left padding in pixels'),
 });
 
-/** Scroll position to restore when capturing */
+/**
+ * Scroll position saved from editor.
+ * NOTE: Currently not used during capture - we use scrollIntoView instead.
+ * Kept for potential future use (e.g., precise scroll offset from element).
+ */
 export const scrollPositionSchema = z.object({
   x: z.number().int().min(0).default(0).describe('Horizontal scroll offset in pixels'),
   y: z.number().int().min(0).default(0).describe('Vertical scroll offset in pixels'),
@@ -92,7 +96,9 @@ export const screenshotSchema = z.object({
       'Element selector for capture (omit for full-page). Supports Playwright selector formats: CSS (.class, #id), shadow DOM (host >> child), XPath (xpath=...), text (text=...), role (role=button[name="OK"]), and chained selectors.'
     ),
   padding: paddingSchema.optional().describe('Expand capture area beyond element bounds'),
-  scroll: scrollPositionSchema.optional().describe('Scroll position to restore before capturing'),
+  scroll: scrollPositionSchema
+    .optional()
+    .describe('Saved scroll position (not used during capture - scrollIntoView is used instead)'),
   paddingFill: paddingFillSchema
     .optional()
     .describe(

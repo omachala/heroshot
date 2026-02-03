@@ -10,7 +10,6 @@ import type { Screenshot } from '../types';
 import { verbose } from '../ui';
 import { generateScreenshotFilename } from '../utils/screenshotPath';
 import { executeActions } from './actions';
-import { scrollTo } from './browserFunctions';
 import { captureElementWithOptions } from './elementCapture';
 import { applyColorSchemeClass } from './pageScripts';
 import { buildVariantSuffix } from './results';
@@ -24,12 +23,12 @@ const RETRY_DELAYS = [500, 1000, 2000, 3000, 5000];
 
 /**
  * Navigate to URL and prepare page for screenshot.
+ * Note: Scroll position is handled by findElement which scrolls the element into view.
  */
 async function navigateAndPrepare(
   page: Page,
   url: string,
-  colorScheme?: 'light' | 'dark',
-  scroll?: { x: number; y: number }
+  colorScheme?: 'light' | 'dark'
 ): Promise<{ success: boolean; error?: string }> {
   // Ensure color scheme is set BEFORE navigation
   if (colorScheme) {
@@ -50,12 +49,6 @@ async function navigateAndPrepare(
 
   // Wait for page to stabilize
   await page.waitForTimeout(2000);
-
-  // Restore scroll position if saved
-  if (scroll) {
-    await page.evaluate(scrollTo, { x: scroll.x, y: scroll.y });
-    await page.waitForTimeout(100);
-  }
 
   return { success: true };
 }
@@ -89,8 +82,7 @@ export async function captureScreenshot(
   captureOptions: CaptureOptions,
   variant: CaptureVariant = {}
 ): Promise<{ success: boolean; error?: string; filename: string }> {
-  const { name, url, selector, padding, scroll, paddingFill, elementFill, textOverrides } =
-    screenshot;
+  const { name, url, selector, padding, paddingFill, elementFill, textOverrides } = screenshot;
   const { format, quality, fullPage } = captureOptions;
 
   const filename = generateScreenshotFilename({
@@ -104,8 +96,8 @@ export async function captureScreenshot(
   const suffixDisplay = suffix ? ` (${suffix})` : '';
   verbose(`Capturing: ${name}${suffixDisplay}`);
 
-  // Navigate and prepare page
-  const navResult = await navigateAndPrepare(page, url, variant.colorScheme, scroll);
+  // Navigate and prepare page (element scroll handled by findElement)
+  const navResult = await navigateAndPrepare(page, url, variant.colorScheme);
   if (!navResult.success) {
     return { ...navResult, filename };
   }

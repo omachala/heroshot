@@ -129,9 +129,11 @@
       width: ${rect.width}px;
       height: ${rect.height}px;
       z-index: 2147483645;
-      cursor: default;
+      cursor: text;
       outline: 2px solid #ec4899;
       outline-offset: 2px;
+      background: transparent;
+      pointer-events: auto;
     `;
     overlay.dataset.heroshotOverlay = 'true';
 
@@ -478,8 +480,11 @@
   function handleClick(event: MouseEvent): void {
     const { target } = event;
 
-    // Always skip heroshot UI elements
+    // Always skip heroshot UI elements (including text edit overlays)
     if (target instanceof Element && target.closest('#heroshot-root')) {
+      return;
+    }
+    if (target instanceof HTMLElement && target.dataset.heroshotOverlay === 'true') {
       return;
     }
 
@@ -765,24 +770,20 @@
     const element = findElementBySelector(selector);
 
     if (element) {
+      // Always scroll element into view - the scroll handler will auto-save the position
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
       if (screenshotId) {
-        // Editing existing screenshot - load saved padding, scroll, and fill modes
+        // Editing existing screenshot - load saved padding and fill modes
         const screenshot = screenshots.find(item => item.id === screenshotId);
         const padding = screenshot?.padding ? { ...screenshot.padding } : { ...defaultPadding };
         const savedPaddingFill: PaddingFill = screenshot?.paddingFill ?? 'inherit';
         const savedElementFill: ElementFill = screenshot?.elementFill ?? 'original';
 
-        // Restore saved scroll position, or scroll element into view if none saved
-        if (screenshot?.scroll) {
-          globalThis.scrollTo({ left: screenshot.scroll.x, top: screenshot.scroll.y, behavior: 'smooth' });
-        } else {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
         selectedElement = element;
         selectedPadding = padding;
         originalPadding = { ...padding }; // Store for revert
-        selectedScroll = screenshot?.scroll ? { ...screenshot.scroll } : { x: globalThis.scrollX, y: globalThis.scrollY };
+        selectedScroll = { x: globalThis.scrollX, y: globalThis.scrollY };
         editingScreenshotId = screenshotId;
         isNewElement = false;
         paddingFill = savedPaddingFill;
@@ -796,8 +797,7 @@
           applyTextOverrides(element, screenshot.textOverrides);
         }
       } else {
-        // Just highlighting (no edit mode) - scroll element into view
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Just highlighting (no edit mode)
         currentElement = element;
       }
     } else if (attempt < maxAttempts) {
@@ -975,8 +975,9 @@
     dragStartY = event.clientY;
     dragStartPadding = { ...selectedPadding };
 
-    globalThis.addEventListener('mousemove', handleResizeMouseMove);
-    globalThis.addEventListener('mouseup', handleResizeMouseUp);
+    // Use capture phase so mouseup is received before heroshot-root's bubble handler stops propagation
+    globalThis.addEventListener('mousemove', handleResizeMouseMove, { capture: true });
+    globalThis.addEventListener('mouseup', handleResizeMouseUp, { capture: true });
   }
 
   /**
@@ -994,15 +995,16 @@
 
     if (shiftHeld) {
       // Shift: only resize the 2 paddings of this corner
-      if (vertical === 'top') newPadding.top = Math.max(0, startPadding.top - deltaY);
-      if (vertical === 'bottom') newPadding.bottom = Math.max(0, startPadding.bottom + deltaY);
-      if (horizontal === 'left') newPadding.left = Math.max(0, startPadding.left - deltaX);
-      if (horizontal === 'right') newPadding.right = Math.max(0, startPadding.right + deltaX);
+      if (vertical === 'top') newPadding.top = Math.max(0, Math.round(startPadding.top - deltaY));
+      if (vertical === 'bottom') newPadding.bottom = Math.max(0, Math.round(startPadding.bottom + deltaY));
+      if (horizontal === 'left') newPadding.left = Math.max(0, Math.round(startPadding.left - deltaX));
+      if (horizontal === 'right') newPadding.right = Math.max(0, Math.round(startPadding.right + deltaX));
     } else {
       // Default: proportional resize (all 4 sides equally)
       let expansion = vertical === 'top' ? -deltaY : deltaY;
       if (horizontal === 'left') expansion = Math.max(expansion, -deltaX);
       if (horizontal === 'right') expansion = Math.max(expansion, deltaX);
+      expansion = Math.round(expansion);
 
       newPadding.top = Math.max(0, startPadding.top + expansion);
       newPadding.right = Math.max(0, startPadding.right + expansion);
@@ -1024,10 +1026,10 @@
   ): Padding {
     const newPadding = { ...startPadding };
     const edgeDeltas: Record<string, { key: keyof Padding; opposite: keyof Padding; delta: number }> = {
-      top: { key: 'top', opposite: 'bottom', delta: -deltaY },
-      bottom: { key: 'bottom', opposite: 'top', delta: deltaY },
-      left: { key: 'left', opposite: 'right', delta: -deltaX },
-      right: { key: 'right', opposite: 'left', delta: deltaX },
+      top: { key: 'top', opposite: 'bottom', delta: Math.round(-deltaY) },
+      bottom: { key: 'bottom', opposite: 'top', delta: Math.round(deltaY) },
+      left: { key: 'left', opposite: 'right', delta: Math.round(-deltaX) },
+      right: { key: 'right', opposite: 'left', delta: Math.round(deltaX) },
     };
 
     const edge = edgeDeltas[handle];
@@ -1118,8 +1120,8 @@
     isDragging = false;
     dragHandle = null;
     tooltipData = null; // Clear tooltip
-    globalThis.removeEventListener('mousemove', handleResizeMouseMove);
-    globalThis.removeEventListener('mouseup', handleResizeMouseUp);
+    globalThis.removeEventListener('mousemove', handleResizeMouseMove, { capture: true });
+    globalThis.removeEventListener('mouseup', handleResizeMouseUp, { capture: true });
   }
 
   const cursorMap: Record<string, string> = {

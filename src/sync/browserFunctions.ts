@@ -18,15 +18,3 @@
 export function applyColorScheme(isDark: boolean): void {
   document.documentElement.classList.toggle('dark', isDark);
 }
-
-type ScrollToArguments = {
-  x: number;
-  y: number;
-};
-
-/**
- * Scroll the window to a specific position.
- */
-export function scrollTo({ x, y }: ScrollToArguments): void {
-  window.scrollTo(x, y);
-}
