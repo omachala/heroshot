@@ -658,7 +658,6 @@ const copyCommand = async () => {
 /* Demo video */
 .demo-video-wrapper {
   width: 100%;
-  margin-top: 48px;
   margin-bottom: 48px;
 }
 
@@ -676,7 +675,6 @@ const copyCommand = async () => {
 
 @media (max-width: 960px) {
   .demo-video-wrapper {
-    margin-top: 32px;
     margin-bottom: 32px;
   }
 
