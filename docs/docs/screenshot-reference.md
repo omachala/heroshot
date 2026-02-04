@@ -102,3 +102,7 @@ Select by ARIA role for accessibility-focused selection:
 ::: info Playwright Documentation
 For the complete selector syntax reference, see the [Playwright Locators documentation](https://playwright.dev/docs/locators).
 :::
+
+::: tip Selector Not Working?
+If your selector isn't finding the element or captures the wrong thing, see [Troubleshooting Selectors](/docs/guide/troubleshooting-selectors) for common issues and fixes.
+:::

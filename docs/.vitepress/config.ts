@@ -203,8 +203,12 @@ export default defineConfig({
         {
           text: 'Guides',
           items: [
+            { text: 'Getting Started', link: '/docs/getting-started' },
+            { text: 'Screenshot Design', link: '/docs/guide/screenshot-design' },
             { text: 'Automated Updates', link: '/docs/guide/automated-updates' },
             { text: 'Version Control', link: '/docs/guide/version-control' },
+            { text: 'Authentication', link: '/docs/guide/authentication' },
+            { text: 'Troubleshooting Selectors', link: '/docs/guide/troubleshooting-selectors' },
             { text: 'AI Agents', link: '/docs/ai-agents' },
           ],
         },

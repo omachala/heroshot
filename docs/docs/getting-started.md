@@ -86,7 +86,7 @@ First time you run heroshot, log in manually in the browser. Click around, pick 
 
 Heroshot encrypts and saves your browser session. Next time you run `npx heroshot`, it restores that session automatically. Your headless captures are already authenticated - no flaky login scripts, no environment variables with credentials.
 
-The session is stored in `.heroshot/session.enc`. It's encrypted with a key derived from your machine, so it only works locally. For CI, you'll export a session key (covered in [Automated Updates](/docs/guide/automated-updates)).
+The session is stored in `.heroshot/session.enc`. It's encrypted with a key derived from your machine, so it only works locally. For CI, you'll export a session key. See [Authentication](/docs/guide/authentication) for the full details on SSO, 2FA, and session management.
 
 ## What's in the Config?
 
@@ -183,8 +183,9 @@ These don't touch your config - just quick captures to stdout or a file. See [CL
 
 You've got the basics. From here:
 
+- **[Screenshot Design](/docs/guide/screenshot-design)** - Tips for capturing screenshots that actually help users
 - **[Automated Updates](/docs/guide/automated-updates)** - Set up CI to keep screenshots fresh automatically
-- **[Version Control](/docs/guide/version-control)** - Keep screenshots in Git without bloating your repo
+- **[Authentication](/docs/guide/authentication)** - Capture screenshots behind login pages
+- **[Troubleshooting Selectors](/docs/guide/troubleshooting-selectors)** - Fix common selector issues
 - **[Configuration](/docs/config)** - All the options: padding, masking, scroll position, text overrides
-- **[CLI Reference](/docs/cli)** - Every command and flag
 - **[Integrations](/docs/integrations/vitepress)** - VitePress, Docusaurus, MkDocs, and more

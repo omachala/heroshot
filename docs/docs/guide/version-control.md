@@ -482,23 +482,6 @@ Quick checklist:
 
 If you're setting up [Automated Updates](/docs/guide/automated-updates), set up LFS too. The combination of frequent commits plus binary files is exactly where repos explode.
 
-## GitHub LFS Limits
-
-GitHub includes:
-
-- **1GB storage** free
-- **1GB bandwidth/month** free
-
-After that, it's $5/month per 50GB. For context:
-
-- Typical screenshot: 50-200KB
-- 1GB storage = 5,000-20,000 screenshots
-- 1GB bandwidth = cloning your full screenshot history ~300 times
-
-Most documentation projects never hit these limits.
-
-Check your usage: [github.com/settings/billing](https://github.com/settings/billing)
-
 ## Quick Reference
 
 ```bash
