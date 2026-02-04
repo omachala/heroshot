@@ -184,6 +184,7 @@ These don't touch your config - just quick captures to stdout or a file. See [CL
 You've got the basics. From here:
 
 - **[Automated Updates](/docs/guide/automated-updates)** - Set up CI to keep screenshots fresh automatically
+- **[Version Control](/docs/guide/version-control)** - Keep screenshots in Git without bloating your repo
 - **[Configuration](/docs/config)** - All the options: padding, masking, scroll position, text overrides
 - **[CLI Reference](/docs/cli)** - Every command and flag
 - **[Integrations](/docs/integrations/vitepress)** - VitePress, Docusaurus, MkDocs, and more

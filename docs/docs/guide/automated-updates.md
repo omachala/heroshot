@@ -221,3 +221,11 @@ npx heroshot --session-key="your-key-here"
 ```
 
 If this works locally, it'll work in CI.
+
+## Repository Size
+
+One thing to watch: every time CI regenerates screenshots, Git stores new copies of those binary files. Over months of weekly updates, your repo can grow significantly.
+
+If you have more than 20-30 screenshots or you're running automated updates frequently, consider using Git LFS. It keeps your repo lean by storing images separately.
+
+See [Version Control](/docs/guide/version-control) for a complete walkthrough of setting up Git LFS with Heroshot.

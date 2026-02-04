@@ -204,6 +204,7 @@ export default defineConfig({
           text: 'Guides',
           items: [
             { text: 'Automated Updates', link: '/docs/guide/automated-updates' },
+            { text: 'Version Control', link: '/docs/guide/version-control' },
             { text: 'AI Agents', link: '/docs/ai-agents' },
           ],
         },

@@ -144,3 +144,5 @@ GitBook is a SaaS, so you have less control than with static site generators:
 - Limited custom components compared to MDX
 
 But for team documentation and knowledge bases, it works well. And since heroshot just outputs image files that you commit to Git, the integration is straightforward.
+
+If your docs have many screenshots, consider using [Git LFS](/docs/guide/version-control) to keep your repository lean.
