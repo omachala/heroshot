@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue';
 
+const demoVideo = ref<HTMLVideoElement | null>(null);
+
 // Load JetBrains Mono font for terminal
 onMounted(() => {
   if (!document.querySelector('link[href*="JetBrains+Mono"]')) {
@@ -8,6 +10,20 @@ onMounted(() => {
     link.href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
+  }
+
+  // Force video autoplay - browsers can be flaky with autoplay even when muted
+  if (demoVideo.value) {
+    demoVideo.value.play().catch(() => {
+      // Autoplay blocked, try again on user interaction
+      const playOnInteraction = () => {
+        demoVideo.value?.play();
+        document.removeEventListener('click', playOnInteraction);
+        document.removeEventListener('scroll', playOnInteraction);
+      };
+      document.addEventListener('click', playOnInteraction, { once: true });
+      document.addEventListener('scroll', playOnInteraction, { once: true });
+    });
   }
 });
 
@@ -301,7 +317,7 @@ const copyCommand = async () => {
 
   <div class="demo-video-wrapper">
     <div class="demo-video">
-      <video autoplay loop muted playsinline>
+      <video ref="demoVideo" autoplay loop muted playsinline>
         <source src="/hero-demo.webm" type="video/webm" />
       </video>
     </div>
