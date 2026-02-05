@@ -17,7 +17,7 @@ Back to [Configuration overview](./config#screenshot-definition).
 | ↳ `padding.right`  | number                                       | `0`     | Right padding in pixels                                                                                                                                                                                                                 |
 | ↳ `padding.bottom` | number                                       | `0`     | Bottom padding in pixels                                                                                                                                                                                                                |
 | ↳ `padding.left`   | number                                       | `0`     | Left padding in pixels                                                                                                                                                                                                                  |
-| `scroll`           | object                                       | -       | Scroll position to restore before capturing                                                                                                                                                                                             |
+| `scroll`           | object                                       | -       | Saved scroll position (not used during capture - scrollIntoView is used instead)                                                                                                                                                        |
 | ↳ `scroll.x`       | number                                       | `0`     | Horizontal scroll offset in pixels                                                                                                                                                                                                      |
 | ↳ `scroll.y`       | number                                       | `0`     | Vertical scroll offset in pixels                                                                                                                                                                                                        |
 | `paddingFill`      | `"inherit"` \| `"solid"` \| `"transparent"`  | -       | Background fill for padding area: "inherit" (default) shows page content, "solid" fills with detected background color                                                                                                                  |
@@ -101,8 +101,4 @@ Select by ARIA role for accessibility-focused selection:
 
 ::: info Playwright Documentation
 For the complete selector syntax reference, see the [Playwright Locators documentation](https://playwright.dev/docs/locators).
-:::
-
-::: tip Selector Not Working?
-If your selector isn't finding the element or captures the wrong thing, see [Troubleshooting Selectors](/docs/guide/troubleshooting-selectors) for common issues and fixes.
 :::
