@@ -114,6 +114,15 @@ For crisp screenshots on retina displays, bump the scale. For smaller files, use
 | `-q, --quality <n>` | Output as JPEG with given quality (1-100). Smaller files than PNG |
 | `--viewport-only`   | Capture only the viewport, not the full scrollable page           |
 
+#### Browser emulation
+
+For testing accessibility preferences or mobile user agents.
+
+| Option                  | Description                                                        |
+| ----------------------- | ------------------------------------------------------------------ |
+| `--reduced-motion`      | Emulate `prefers-reduced-motion: reduce` to disable CSS animations |
+| `--user-agent <string>` | Custom user agent string for mobile or bot testing                 |
+
 ::: tip Using Config Defaults
 If you have a `.heroshot/config.json`, one-shot mode automatically uses your saved defaults for output directory, scale factor, and image format. CLI flags override these when specified.
 :::
@@ -349,4 +358,10 @@ heroshot config -v
 # Debug slow captures with visible browser window
 heroshot --headed
 heroshot dashboard --headed
+
+# Capture with reduced motion (no animations)
+heroshot https://example.com --reduced-motion
+
+# Capture with custom user agent (mobile testing)
+heroshot https://example.com --user-agent "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)"
 ```

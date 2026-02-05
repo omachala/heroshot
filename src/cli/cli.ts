@@ -67,6 +67,8 @@ program
   .option('--retina', 'Use retina scale (2x)')
   .option('-q, --quality <percent>', 'JPEG quality (1-100), outputs JPEG', Number.parseInt)
   .option('--viewport-only', 'Capture only viewport (not full page)')
+  .option('--reduced-motion', 'Emulate prefers-reduced-motion: reduce (disables animations)')
+  .option('--user-agent <string>', 'Custom user agent string')
   .option('--save', 'Save screenshot definition to config')
   .option('--clean', 'Delete stale files in output directory')
   .option('--workers <count>', 'Number of parallel capture workers', Number.parseInt)

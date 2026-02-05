@@ -179,6 +179,10 @@ const shotCliOptionsSchema = z.object({
   quality: z.number().int().min(1).max(100).optional(),
   /** Capture only viewport instead of full page */
   viewportOnly: z.boolean().optional(),
+  /** Emulate prefers-reduced-motion: reduce */
+  reducedMotion: z.boolean().optional(),
+  /** Custom user agent string */
+  userAgent: z.string().optional(),
 });
 
 /** CLI command options for URL capture (includes --save and --clean flags) */

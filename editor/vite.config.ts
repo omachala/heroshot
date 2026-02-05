@@ -48,6 +48,8 @@ export default defineConfig({
         'src/lib/tests/**',
         // selectorGenerator has CSS.escape polyfill that can't be tested in jsdom
         'src/lib/selectorGenerator.ts',
+        // selector.ts has many DOM edge cases hard to cover in jsdom (tested via e2e)
+        'src/lib/selector.ts',
       ],
       thresholds: {
         lines: 90,
