@@ -21,6 +21,8 @@ export function buildShotConfig(
       viewport: getViewport(options, existingConfig),
       colorScheme: getColorScheme(options, false), // false = oneshot mode, default to light-only
       deviceScaleFactor: getDeviceScaleFactor(options, existingConfig),
+      reducedMotion: options?.reducedMotion ? 'reduce' : existingConfig?.browser?.reducedMotion,
+      userAgent: options?.userAgent ?? existingConfig?.browser?.userAgent,
     },
     screenshots: [screenshot],
   };
