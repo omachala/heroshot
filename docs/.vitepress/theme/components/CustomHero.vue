@@ -4,7 +4,7 @@ import { ref, onMounted, nextTick } from 'vue';
 const demoVideo = ref<HTMLVideoElement | null>(null);
 
 // Load JetBrains Mono font for terminal
-onMounted(() => {
+onMounted(async () => {
   if (!document.querySelector('link[href*="JetBrains+Mono"]')) {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600&display=swap';
@@ -12,12 +12,21 @@ onMounted(() => {
     document.head.appendChild(link);
   }
 
-  // Force video autoplay - browsers can be flaky with autoplay even when muted
+  // Dynamic import to avoid SSR issues (Plyr accesses `document` at module level)
+  const [{ default: Plyr }] = await Promise.all([import('plyr'), import('plyr/dist/plyr.css')]);
+
+  // Initialize Plyr video player
   if (demoVideo.value) {
-    demoVideo.value.play().catch(() => {
-      // Autoplay blocked, try again on user interaction
+    const player = new Plyr(demoVideo.value, {
+      controls: ['play', 'progress', 'current-time', 'mute', 'fullscreen'],
+      hideControls: true,
+      resetOnEnd: true,
+    });
+
+    // Force autoplay - browsers can be flaky with autoplay even when muted
+    player.play()?.catch(() => {
       const playOnInteraction = () => {
-        demoVideo.value?.play();
+        player.play();
         document.removeEventListener('click', playOnInteraction);
         document.removeEventListener('scroll', playOnInteraction);
       };
@@ -317,7 +326,7 @@ const copyCommand = async () => {
 
   <div class="demo-video-wrapper">
     <div class="demo-video">
-      <video ref="demoVideo" autoplay loop muted playsinline>
+      <video ref="demoVideo" autoplay loop muted playsinline data-plyr-config='{"autoplay":true}'>
         <source src="/hero-demo.webm" type="video/webm" />
       </video>
     </div>
@@ -682,11 +691,14 @@ const copyCommand = async () => {
   margin: 0 auto;
 }
 
-.demo-video video {
-  width: 100%;
-  height: auto;
+.demo-video :deep(.plyr) {
   border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --plyr-color-main: #ea580c;
+}
+
+.demo-video :deep(.plyr video) {
+  border-radius: 12px;
 }
 
 @media (max-width: 960px) {
@@ -698,7 +710,11 @@ const copyCommand = async () => {
     max-width: 100%;
   }
 
-  .demo-video video {
+  .demo-video :deep(.plyr) {
+    border-radius: 0;
+  }
+
+  .demo-video :deep(.plyr video) {
     border-radius: 0;
   }
 }

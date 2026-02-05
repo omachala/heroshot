@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "heroshot": "workspace:*",
+    "plyr": "^3.8.4",
     "vitepress": "^1.6.4",
     "vitepress-plugin-llms": "^1.10.0"
   }
