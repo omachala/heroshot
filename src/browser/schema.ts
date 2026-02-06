@@ -30,6 +30,16 @@ export const screenshotDataSchema: z.ZodType<ScreenshotData> = z.object({
   paddingFill: z.enum(['inherit', 'solid', 'transparent']).optional(),
   elementFill: z.enum(['original', 'solid', 'transparent']).optional(),
   textOverrides: z.record(z.string(), z.string()).optional(),
+  annotations: z
+    .array(
+      z.object({
+        id: z.string(),
+        type: z.string(),
+        points: z.array(z.number()),
+        style: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+      })
+    )
+    .optional(),
 });
 
 /** Schema for browser settings from toolbar */

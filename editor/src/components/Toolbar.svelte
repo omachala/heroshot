@@ -1,7 +1,7 @@
 <script lang="ts">
   import { eventInterceptor } from '../lib/eventInterceptor';
   import { generateSmartName, generateUid } from '../lib/naming';
-  import type { BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, ToolbarJob } from '../types';
+  import type { Annotation, BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, ToolbarJob } from '../types';
   import EditorBar from './EditorBar.svelte';
   import ElementPicker from './ElementPicker.svelte';
   import SettingsModal from './SettingsModal.svelte';
@@ -38,6 +38,9 @@
   let editingId = $state<string | null>(null);
   let draftId = $state<string | null>(null); // ID of draft item (not yet saved)
   let selectedScreenshotId = $state<string | null>(props.initialSelectedId ?? null);
+
+  // Annotation state
+  let annotationTool = $state<string | null>(null); // null = not annotating, 'arrow' | 'rect' | 'ellipse'
 
   // Reference to ElementPicker for calling methods
   let elementPicker: ElementPicker;
@@ -179,6 +182,29 @@
       // Only emit for non-draft items
       emit({ type: 'screenshot-updated', data: updated });
     }
+  }
+
+  /**
+   * Handle annotations update for a screenshot
+   */
+  function handleAnnotationsUpdate(id: string, newAnnotations: Annotation[]): void {
+    screenshots = screenshots.map((screenshot) =>
+      screenshot.id === id
+        ? { ...screenshot, annotations: newAnnotations.length > 0 ? newAnnotations : undefined }
+        : screenshot
+    );
+
+    const updated = screenshots.find((screenshot) => screenshot.id === id);
+    if (updated && id !== draftId) {
+      emit({ type: 'screenshot-updated', data: updated });
+    }
+  }
+
+  /**
+   * Toggle annotation tool
+   */
+  function toggleAnnotationTool(tool: string): void {
+    annotationTool = annotationTool === tool ? null : tool;
   }
 
   /**
@@ -377,6 +403,7 @@
   bind:this={elementPicker}
   active={isPickerActive}
   {screenshots}
+  {annotationTool}
   onToggle={togglePicker}
   onNewElement={handleNewElement}
   onPaddingUpdate={handlePaddingUpdate}
@@ -384,6 +411,8 @@
   onPaddingFillUpdate={handlePaddingFillUpdate}
   onElementFillUpdate={handleElementFillUpdate}
   onTextOverrideUpdate={handleTextOverrideUpdate}
+  onAnnotationsUpdate={handleAnnotationsUpdate}
+  onAnnotationToolDeactivate={() => { annotationTool = null; }}
   onCancel={handleElementCancel}
   onDeselect={handleDeselect}
 />
@@ -397,6 +426,7 @@
   {editingId}
   {draftId}
   selectedId={selectedScreenshotId}
+  {annotationTool}
   onTogglePicker={togglePicker}
   onToggleExpanded={toggleSidebar}
   onToggleSettings={toggleSettings}
@@ -406,6 +436,7 @@
   onRename={handleRenameScreenshot}
   onEditingComplete={() => editingId = null}
   onDraftConfirm={handleDraftConfirm}
+  onToggleAnnotationTool={toggleAnnotationTool}
 />
 
 <!-- Settings Modal -->

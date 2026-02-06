@@ -36,6 +36,8 @@ export type ElementCaptureOptions = {
   paddingFill?: 'inherit' | 'solid' | 'transparent';
   /** Background fill mode for element area */
   elementFill?: 'original' | 'solid' | 'transparent';
+  /** Annotations to render over the element */
+  annotations?: { type: string; points: number[]; style?: Record<string, string | number> }[];
 };
 
 /** Variant options for screenshot capture */

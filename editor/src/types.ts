@@ -33,6 +33,16 @@ export type PaddingFill = 'inherit' | 'solid' | 'transparent';
 export type ElementFill = 'original' | 'solid' | 'transparent';
 
 /**
+ * Visual annotation drawn over a screenshot
+ */
+export type Annotation = {
+  id: string;
+  type: string; // 'arrow' | 'rect' | 'ellipse'
+  points: number[]; // geometry - meaning depends on type
+  style?: Record<string, string | number>; // any CSS/SVG properties
+};
+
+/**
  * Screenshot item stored in the toolbar
  */
 export type ScreenshotItem = {
@@ -52,6 +62,8 @@ export type ScreenshotItem = {
   viewports?: string[];
   /** Text overrides - selector (relative to main element) -> replacement text */
   textOverrides?: Record<string, string>;
+  /** Visual annotations drawn over the screenshot */
+  annotations?: Annotation[];
 };
 
 /**

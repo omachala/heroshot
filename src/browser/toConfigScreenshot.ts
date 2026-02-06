@@ -17,5 +17,6 @@ export function toConfigScreenshot(data: ScreenshotData): Screenshot {
     ...(data.elementFill && { elementFill: data.elementFill }),
     ...(data.textOverrides &&
       Object.keys(data.textOverrides).length > 0 && { textOverrides: data.textOverrides }),
+    ...(data.annotations && data.annotations.length > 0 && { annotations: data.annotations }),
   };
 }

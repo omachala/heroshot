@@ -80,6 +80,21 @@ export const viewportVariantSchema = z.string().refine(
   { message: 'Must be "desktop", "tablet", "mobile", or "WIDTHxHEIGHT" (e.g., "400x500")' }
 );
 
+/** Visual annotation drawn over a screenshot */
+export const annotationSchema = z.object({
+  id: z
+    .string()
+    .min(1)
+    .default(generateUid)
+    .describe('Unique identifier (auto-generated if omitted)'),
+  type: z.string().describe('Annotation type: arrow, rect, or ellipse'),
+  points: z.array(z.number()).describe('Geometry points - meaning depends on type'),
+  style: z
+    .record(z.string(), z.union([z.string(), z.number()]))
+    .optional()
+    .describe('CSS/SVG style properties (stroke, stroke-width, fill, opacity, etc.)'),
+});
+
 /** Single screenshot definition */
 export const screenshotSchema = z.object({
   id: z
@@ -121,6 +136,10 @@ export const screenshotSchema = z.object({
     .describe(
       'Replace text content before capture. Keys are CSS selectors, values are replacement text'
     ),
+  annotations: z
+    .array(annotationSchema)
+    .optional()
+    .describe('Visual annotations drawn over the screenshot (arrows, rectangles, ellipses)'),
   actions: actionsSchema.optional(),
 });
 

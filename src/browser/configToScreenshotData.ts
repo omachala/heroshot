@@ -17,5 +17,6 @@ export function configToScreenshotData(screenshots: Screenshot[]): ScreenshotDat
     ...(screenshot.paddingFill && { paddingFill: screenshot.paddingFill }),
     ...(screenshot.elementFill && { elementFill: screenshot.elementFill }),
     ...(screenshot.textOverrides && { textOverrides: screenshot.textOverrides }),
+    ...(screenshot.annotations && { annotations: screenshot.annotations }),
   }));
 }

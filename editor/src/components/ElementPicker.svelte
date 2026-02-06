@@ -1,13 +1,16 @@
 <script lang="ts">
   import { deepElementFromPoint, getBackgroundColor, getSelector } from '../lib/dom';
   import { findElementBySelector } from '../lib/selector';
-  import type { ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition } from '../types';
+  import type { Annotation, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition } from '../types';
+  import AnnotationLayer from './AnnotationLayer.svelte';
 
   type Props = {
     /** Whether picker mode is active */
     active: boolean;
     /** Screenshots list (for loading saved padding) */
     screenshots: ScreenshotItem[];
+    /** Active annotation tool (null = not annotating) */
+    annotationTool: string | null;
     /** Callback when picker mode should toggle */
     onToggle: () => void;
     /** Callback when new element is picked (creates draft) */
@@ -22,13 +25,17 @@
     onElementFillUpdate: (id: string, elementFill: ElementFill) => void;
     /** Callback when text override is updated */
     onTextOverrideUpdate: (id: string, selector: string, text: string) => void;
+    /** Callback when annotations are updated */
+    onAnnotationsUpdate: (id: string, annotations: Annotation[]) => void;
+    /** Callback to deactivate annotation tool after drawing */
+    onAnnotationToolDeactivate: () => void;
     /** Callback when draft/edit is cancelled */
     onCancel: () => void;
     /** Callback when selection is cleared (clicking outside) */
     onDeselect: () => void;
   }
 
-  const { active, screenshots, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onCancel, onDeselect }: Props = $props();
+  const { active, screenshots, annotationTool, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onAnnotationsUpdate, onAnnotationToolDeactivate, onCancel, onDeselect }: Props = $props();
 
   // Default padding
   const defaultPadding: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -46,6 +53,16 @@
   let originalPaddingFill = $state<PaddingFill>('inherit'); // For revert on Esc
   let elementFill = $state<ElementFill>('original'); // Background fill mode for element
   let originalElementFill = $state<ElementFill>('original'); // For revert on Esc
+
+  // Annotation layer reference
+  let annotationLayer: AnnotationLayer;
+
+  // Current annotations for the selected screenshot
+  let currentAnnotations = $derived.by(() => {
+    if (!editingScreenshotId) return [];
+    const screenshot = screenshots.find(item => item.id === editingScreenshotId);
+    return screenshot?.annotations ?? [];
+  });
 
   // Detected background color for the selected element (computed when element changes)
   let detectedBgColor = $derived(selectedElement ? getBackgroundColor(selectedElement) : '#ffffff');
@@ -548,9 +565,25 @@
 
   /**
    * Handle ESC key for canceling selection or picker mode
+   * Handle Delete/Backspace for deleting selected annotation
    */
   function handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      // Don't intercept when typing in an input field (e.g., StyleEditor)
+      // Use composedPath to pierce shadow DOM boundary (event.target is retargeted to shadow host)
+      const origin = event.composedPath()[0];
+      if (origin instanceof HTMLInputElement || origin instanceof HTMLTextAreaElement) return;
+      if (annotationLayer?.deleteSelected()) {
+        event.stopPropagation();
+        event.preventDefault();
+        return;
+      }
+    }
     if (event.key === 'Escape') {
+      // First try to deselect annotation
+      if (annotationLayer) {
+        annotationLayer.deselect();
+      }
       if (selectedElement) {
         if (isNewElement) {
           // Cancel new element - remove draft
@@ -631,6 +664,15 @@
     } else if (selectedElement && isNewElement) {
       // Cancel new element draft
       handleCancel();
+    }
+  }
+
+  /**
+   * Handle annotation changes
+   */
+  function handleAnnotationsChange(newAnnotations: Annotation[]): void {
+    if (editingScreenshotId) {
+      onAnnotationsUpdate(editingScreenshotId, newAnnotations);
     }
   }
 
@@ -1324,6 +1366,18 @@
         role="button"
         tabindex="0"
       ></div>
+      <!-- Annotation layer -->
+      {#if expandedRect && editingScreenshotId}
+        <AnnotationLayer
+          bind:this={annotationLayer}
+          annotations={currentAnnotations}
+          activeTool={annotationTool}
+          elementRect={{ top: overlayRects.highlight.top, left: overlayRects.highlight.left, width: overlayRects.highlight.width, height: overlayRects.highlight.height }}
+          padding={selectedPadding}
+          onAnnotationsChange={handleAnnotationsChange}
+          onToolDeactivate={onAnnotationToolDeactivate}
+        />
+      {/if}
     {:else}
       <!-- Picker mode: simple cyan border -->
       <div

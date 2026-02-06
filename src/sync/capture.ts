@@ -82,7 +82,8 @@ export async function captureScreenshot(
   captureOptions: CaptureOptions,
   variant: CaptureVariant = {}
 ): Promise<{ success: boolean; error?: string; filename: string }> {
-  const { name, url, selector, padding, paddingFill, elementFill, textOverrides } = screenshot;
+  const { name, url, selector, padding, paddingFill, elementFill, textOverrides, annotations } =
+    screenshot;
   const { format, quality, fullPage } = captureOptions;
 
   const filename = generateScreenshotFilename({
@@ -134,6 +135,7 @@ export async function captureScreenshot(
         paddingFill,
         elementFill,
         textOverrides,
+        annotations,
       })
     : await capturePageScreenshot(page, outputPath, format, quality, fullPage ?? true);
 
