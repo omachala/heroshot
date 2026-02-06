@@ -33,10 +33,10 @@ export const outputFormatSchema = z.enum(['png', 'jpeg']).default('png');
 
 /** Padding around element (can expand capture area) */
 export const paddingSchema = z.object({
-  top: z.number().min(0).default(0).transform(Math.round).describe('Top padding in pixels'),
-  right: z.number().min(0).default(0).transform(Math.round).describe('Right padding in pixels'),
-  bottom: z.number().min(0).default(0).transform(Math.round).describe('Bottom padding in pixels'),
-  left: z.number().min(0).default(0).transform(Math.round).describe('Left padding in pixels'),
+  top: z.number().min(0).default(0).describe('Top padding in pixels'),
+  right: z.number().min(0).default(0).describe('Right padding in pixels'),
+  bottom: z.number().min(0).default(0).describe('Bottom padding in pixels'),
+  left: z.number().min(0).default(0).describe('Left padding in pixels'),
 });
 
 /**

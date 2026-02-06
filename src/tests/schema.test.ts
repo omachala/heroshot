@@ -89,9 +89,9 @@ describe('paddingSchema', () => {
     expect(() => paddingSchema.parse({ top: -10 })).toThrow();
   });
 
-  it('rounds non-integer padding to nearest integer', () => {
+  it('accepts non-integer padding values', () => {
     const result = paddingSchema.parse({ top: 10.5 });
-    expect(result.top).toBe(11);
+    expect(result.top).toBe(10.5);
   });
 });
 

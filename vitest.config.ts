@@ -30,6 +30,8 @@ export default defineConfig({
         'src/sync/configHelpers.ts', // config helpers, tested via CLI tests
         'src/sync/elementCapture.ts', // element capture, tested via e2e tests
         'src/sync/elementFinder.ts', // element finding, tested via e2e tests
+        'src/sync/annotationOverlay.ts', // annotation overlay injection, tested via e2e tests
+        'src/sync/borderRadiusMask.ts', // border radius mask injection, tested via e2e tests
         'src/sync/paddingMask.ts', // padding mask, tested via e2e tests
         'src/sync/pageScripts.ts', // browser context scripts, tested via e2e tests
         'src/sync/results.ts', // result display, mostly UI code, tested via CLI tests
