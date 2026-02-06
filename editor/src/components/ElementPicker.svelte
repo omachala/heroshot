@@ -113,10 +113,10 @@
       break;
       }
       case 'solid': {
-        element.style.backgroundColor = detectedBgColor;
+        element.style.backgroundColor = currentElementColor ?? detectedBgColor;
         element.style.backgroundImage = 'none';
         element.style.backgroundSize = '';
-      
+
       break;
       }
       case 'transparent': {
@@ -487,8 +487,11 @@
       event.stopImmediatePropagation();
     }
 
-    // If we have a selected element (not in picker mode), skip — no click-to-cycle
+    // If we have a selected element (not in picker mode), deselect annotation and skip
     if (selectedElement && !active) {
+      if (annotationLayer) {
+        annotationLayer.deselect();
+      }
       return;
     }
 
@@ -821,6 +824,13 @@
   }
 
   /**
+   * Get the detected background color of the selected element
+   */
+  export function getDetectedBgColor(): string {
+    return detectedBgColor;
+  }
+
+  /**
    * Calculate overlay rectangles
    */
   function getOverlayRects(element: Element | null, _scrollX: number, _scrollY: number, padding?: Padding) {
@@ -887,6 +897,35 @@
     selectedPadding.top > 0 || selectedPadding.right > 0 || selectedPadding.bottom > 0 || selectedPadding.left > 0
   );
 
+  // Derive custom colors and border properties from the screenshots prop
+  let currentPaddingColor = $derived.by(() => {
+    const screenshot = editingScreenshotId ? screenshots.find(item => item.id === editingScreenshotId) : null;
+    return screenshot?.paddingColor;
+  });
+
+  let currentElementColor = $derived.by(() => {
+    const screenshot = editingScreenshotId ? screenshots.find(item => item.id === editingScreenshotId) : null;
+    return screenshot?.elementColor;
+  });
+
+  let currentBorderWidth = $derived.by(() => {
+    if (!editingScreenshotId) return 0;
+    const screenshot = screenshots.find(item => item.id === editingScreenshotId);
+    return screenshot?.borderWidth ?? 0;
+  });
+
+  let currentBorderColor = $derived.by(() => {
+    if (!editingScreenshotId) return '#000000';
+    const screenshot = screenshots.find(item => item.id === editingScreenshotId);
+    return screenshot?.borderColor ?? '#000000';
+  });
+
+  let currentBorderRadius = $derived.by(() => {
+    if (!editingScreenshotId) return 0;
+    const screenshot = screenshots.find(item => item.id === editingScreenshotId);
+    return screenshot?.borderRadius ?? 0;
+  });
+
   // Checkered pattern for transparent mode (gray/white checkerboard)
   const checkeredPattern = 'repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px';
 
@@ -895,7 +934,7 @@
     switch (paddingFill) {
       case 'inherit': { return 'rgba(34, 197, 94, 0.25)';
       } // Green tint to show it's the padding area
-      case 'solid': { return detectedBgColor;
+      case 'solid': { return currentPaddingColor ?? detectedBgColor;
       }
       case 'transparent': { return checkeredPattern;
       }
@@ -995,10 +1034,10 @@
     const elementBottom = elementRect.bottom + globalThis.scrollY;
 
     return {
-      top: Math.min(padding.top, elementTop),
-      left: Math.min(padding.left, elementLeft),
-      bottom: Math.min(padding.bottom, documentHeight - elementBottom),
-      right: Math.min(padding.right, documentWidth - elementRight),
+      top: Math.round(Math.min(padding.top, elementTop)),
+      left: Math.round(Math.min(padding.left, elementLeft)),
+      bottom: Math.round(Math.min(padding.bottom, documentHeight - elementBottom)),
+      right: Math.round(Math.min(padding.right, documentWidth - elementRight)),
     };
   }
 
@@ -1133,13 +1172,13 @@
         {#if selectedPadding.top > 0}
           <div
             class="fixed pointer-events-none"
-            style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{paddingBackground};"
+            style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{paddingBackground};{currentBorderRadius > 0 ? `border-radius:${currentBorderRadius}px ${currentBorderRadius}px 0 0;` : ''}"
           ></div>
         {/if}
         {#if selectedPadding.bottom > 0}
           <div
             class="fixed pointer-events-none"
-            style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{paddingBackground};"
+            style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{paddingBackground};{currentBorderRadius > 0 ? `border-radius:0 0 ${currentBorderRadius}px ${currentBorderRadius}px;` : ''}"
           ></div>
         {/if}
         {#if selectedPadding.left > 0}
@@ -1173,10 +1212,17 @@
       <!-- Element area - no overlay, clicks handled via document handler to allow text editing -->
       <!-- Text elements get mouseenter/click handlers directly, element clicks detected by exclusion -->
 
-      <!-- Expanded area border -->
+      <!-- User's border (visual preview) -->
+      {#if currentBorderWidth > 0}
+        <div
+          class="fixed pointer-events-none box-border"
+          style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{expandedRect.height}px;border:{currentBorderWidth}px solid {currentBorderColor};border-radius:{currentBorderRadius}px;"
+        ></div>
+      {/if}
+      <!-- Expanded area border (editor indicator) -->
       <div
         class="fixed pointer-events-none box-border" class:border-dashed={hasPadding}
-        style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{expandedRect.height}px;border:1px solid #22c55e;"
+        style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{expandedRect.height}px;border:1px solid #22c55e;border-radius:{currentBorderRadius}px;"
       ></div>
 
       <!-- Resize handles - edge handles -->
@@ -1245,6 +1291,7 @@
           activeTool={annotationTool}
           elementRect={{ top: overlayRects.highlight.top, left: overlayRects.highlight.left, width: overlayRects.highlight.width, height: overlayRects.highlight.height }}
           padding={selectedPadding}
+          borderRadius={currentBorderRadius}
           onAnnotationsChange={handleAnnotationsChange}
           onToolDeactivate={onAnnotationToolDeactivate}
           onSelectionChange={onAnnotationSelectionChange}
