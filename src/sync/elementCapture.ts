@@ -8,6 +8,7 @@ import {
   injectAnnotationOverlay,
   removeAnnotationOverlay,
 } from './annotationOverlay';
+import { injectBorderRadiusMask, removeBorderRadiusMask } from './borderRadiusMask';
 import { findElement } from './elementFinder';
 import { injectPaddingMask, removePaddingMask } from './paddingMask';
 import {
@@ -55,6 +56,7 @@ type PaddedCaptureOptions = {
   quality: number;
   needsTransparent: boolean;
   annotations: ElementCaptureOptions['annotations'];
+  borderRadius?: number;
 };
 
 /** Capture element with padding using clip region. */
@@ -72,6 +74,7 @@ async function captureWithPadding(
     quality,
     needsTransparent,
     annotations,
+    borderRadius,
   } = options;
   const box = await element.boundingBox();
   if (!box) return { success: false, error: 'Could not get element bounding box' };
@@ -81,20 +84,26 @@ async function captureWithPadding(
   const hasAnnotations = annotations && annotations.length > 0;
   if (hasAnnotations) await injectAnnotationOverlay(page, element, annotations, padding);
 
+  const clip = {
+    x: Math.max(0, box.x - padding.left),
+    y: Math.max(0, box.y - padding.top),
+    width: box.width + padding.left + padding.right,
+    height: box.height + padding.top + padding.bottom,
+  };
+
+  const hasBorderRadius = borderRadius != null && borderRadius > 0;
+  if (hasBorderRadius) await injectBorderRadiusMask(page, clip, borderRadius);
+
   await takeScreenshot({
     target: page,
     outputPath,
     format,
     quality,
-    clip: {
-      x: Math.max(0, box.x - padding.left),
-      y: Math.max(0, box.y - padding.top),
-      width: box.width + padding.left + padding.right,
-      height: box.height + padding.top + padding.bottom,
-    },
-    omitBackground: needsTransparent,
+    clip,
+    omitBackground: needsTransparent || hasBorderRadius,
   });
 
+  if (hasBorderRadius) await removeBorderRadiusMask(page);
   if (hasAnnotations) await removeAnnotationOverlay(page);
   if (paddingFill === 'solid') await removePaddingMask(page);
 
@@ -118,6 +127,7 @@ export async function captureElementScreenshot(
     paddingFill,
     elementFill,
     annotations,
+    borderRadius,
   } = options;
 
   // Auto-expand padding if annotations extend beyond current padding
@@ -152,7 +162,7 @@ export async function captureElementScreenshot(
     await applyElementBackground(page, selector, 'transparent');
   }
 
-  if (hasPadding || hasAnnotations) {
+  if (hasPadding || hasAnnotations || (borderRadius != null && borderRadius > 0)) {
     const result = await captureWithPadding({
       page,
       element,
@@ -164,6 +174,7 @@ export async function captureElementScreenshot(
       quality,
       needsTransparent,
       annotations,
+      borderRadius,
     });
     if (!result.success) return result;
   } else {

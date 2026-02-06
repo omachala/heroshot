@@ -34,7 +34,9 @@ export type ScreenshotData = {
     y: number;
   };
   paddingFill?: 'inherit' | 'solid' | 'transparent';
+  paddingColor?: string;
   elementFill?: 'original' | 'solid' | 'transparent';
+  elementColor?: string;
   textOverrides?: Record<string, string>;
   annotations?: {
     id: string;
@@ -42,6 +44,9 @@ export type ScreenshotData = {
     points: number[];
     style?: Record<string, string | number>;
   }[];
+  borderWidth?: number;
+  borderColor?: string;
+  borderRadius?: number;
 };
 
 /** Job types that CLI can send to toolbar */

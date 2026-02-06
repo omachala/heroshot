@@ -21,9 +21,14 @@ export function toConfigScreenshot(data: ScreenshotData): Screenshot {
     }),
     ...(data.scroll && { scroll: data.scroll }),
     ...(data.paddingFill && { paddingFill: data.paddingFill }),
+    ...(data.paddingColor && { paddingColor: data.paddingColor }),
     ...(data.elementFill && { elementFill: data.elementFill }),
+    ...(data.elementColor && { elementColor: data.elementColor }),
     ...(data.textOverrides &&
       Object.keys(data.textOverrides).length > 0 && { textOverrides: data.textOverrides }),
     ...(data.annotations && data.annotations.length > 0 && { annotations: data.annotations }),
+    ...(data.borderWidth && { borderWidth: data.borderWidth }),
+    ...(data.borderColor && { borderColor: data.borderColor }),
+    ...(data.borderRadius && { borderRadius: data.borderRadius }),
   };
 }

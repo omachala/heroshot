@@ -38,6 +38,8 @@ export type ElementCaptureOptions = {
   elementFill?: 'original' | 'solid' | 'transparent';
   /** Annotations to render over the element */
   annotations?: { type: string; points: number[]; style?: Record<string, string | number> }[];
+  /** Corner radius in pixels — clips screenshot to rounded rect with transparent corners */
+  borderRadius?: number;
 };
 
 /** Variant options for screenshot capture */

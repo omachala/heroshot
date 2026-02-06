@@ -119,10 +119,22 @@ export const screenshotSchema = z.object({
     .describe(
       'Background fill for padding area: "inherit" (default) shows page content, "solid" fills with detected background color'
     ),
+  paddingColor: z
+    .string()
+    .optional()
+    .describe(
+      'Custom color for padding fill when set to "solid" (hex, defaults to auto-detected background)'
+    ),
   elementFill: elementFillSchema
     .optional()
     .describe(
       'Background fill for element area: "original" (default) keeps actual background, "solid" replaces with detected color'
+    ),
+  elementColor: z
+    .string()
+    .optional()
+    .describe(
+      'Custom color for element fill when set to "solid" (hex, defaults to auto-detected background)'
     ),
   viewports: z
     .array(viewportVariantSchema)
@@ -140,6 +152,21 @@ export const screenshotSchema = z.object({
     .array(annotationSchema)
     .optional()
     .describe('Visual annotations drawn over the screenshot (arrows, rectangles, ellipses)'),
+  borderWidth: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe('Border width around capture area in pixels (default 0)'),
+  borderColor: z.string().optional().describe('Border color (hex, default "#000000")'),
+  borderRadius: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe(
+      'Corner radius in pixels — rounds the screenshot corners with transparency (PNG only)'
+    ),
   actions: actionsSchema.optional(),
 });
 

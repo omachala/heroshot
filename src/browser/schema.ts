@@ -28,7 +28,9 @@ export const screenshotDataSchema: z.ZodType<ScreenshotData> = z.object({
     })
     .optional(),
   paddingFill: z.enum(['inherit', 'solid', 'transparent']).optional(),
+  paddingColor: z.string().optional(),
   elementFill: z.enum(['original', 'solid', 'transparent']).optional(),
+  elementColor: z.string().optional(),
   textOverrides: z.record(z.string(), z.string()).optional(),
   annotations: z
     .array(
@@ -40,6 +42,9 @@ export const screenshotDataSchema: z.ZodType<ScreenshotData> = z.object({
       })
     )
     .optional(),
+  borderWidth: z.number().optional(),
+  borderColor: z.string().optional(),
+  borderRadius: z.number().optional(),
 });
 
 /** Schema for browser settings from toolbar */

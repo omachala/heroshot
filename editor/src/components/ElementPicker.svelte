@@ -1172,13 +1172,13 @@
         {#if selectedPadding.top > 0}
           <div
             class="fixed pointer-events-none"
-            style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{paddingBackground};{currentBorderRadius > 0 ? `border-radius:${currentBorderRadius}px ${currentBorderRadius}px 0 0;` : ''}"
+            style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{paddingBackground};"
           ></div>
         {/if}
         {#if selectedPadding.bottom > 0}
           <div
             class="fixed pointer-events-none"
-            style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{paddingBackground};{currentBorderRadius > 0 ? `border-radius:0 0 ${currentBorderRadius}px ${currentBorderRadius}px;` : ''}"
+            style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{paddingBackground};"
           ></div>
         {/if}
         {#if selectedPadding.left > 0}
@@ -1207,6 +1207,31 @@
         {#if selectedPadding.right > 0}
           <div class="fixed w-0.5 bg-heroshot-primary/50 pointer-events-none" style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left + overlayRects.highlight.width}px;height:{overlayRects.highlight.height}px;"></div>
         {/if}
+      {/if}
+
+      <!-- Checkered corners indicator (shows what will be transparent in PNG) -->
+      {#if currentBorderRadius > 0}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="fixed pointer-events-none"
+          style="top:{expandedRect.top}px;left:{expandedRect.left}px;"
+          width={expandedRect.width}
+          height={expandedRect.height}
+        >
+          <defs>
+            <pattern id="heroshot-checkered" width="16" height="16" patternUnits="userSpaceOnUse">
+              <rect width="8" height="8" fill="#ccc" />
+              <rect x="8" y="8" width="8" height="8" fill="#ccc" />
+              <rect x="8" width="8" height="8" fill="#fff" />
+              <rect y="8" width="8" height="8" fill="#fff" />
+            </pattern>
+            <mask id="heroshot-corner-mask">
+              <rect width="100%" height="100%" fill="white" />
+              <rect width="100%" height="100%" rx={currentBorderRadius} fill="black" />
+            </mask>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#heroshot-checkered)" mask="url(#heroshot-corner-mask)" />
+        </svg>
       {/if}
 
       <!-- Element area - no overlay, clicks handled via document handler to allow text editing -->

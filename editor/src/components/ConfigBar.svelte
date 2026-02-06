@@ -34,6 +34,48 @@
     annotationStyle, onAnnotationStyleChange,
   }: Props = $props();
 
+  // Drag state — offset from default position
+  let dragOffset = $state<{ x: number; y: number }>({ x: 0, y: 0 });
+  let isDragging = $state(false);
+  let dragStartMouse = $state({ x: 0, y: 0 });
+  let dragStartOffset = $state({ x: 0, y: 0 });
+
+  // Reset drag offset when selection context changes (new element/annotation selected)
+  let lastContextKey = $state('');
+  $effect(() => {
+    const key = context.type === 'annotation' && 'annotationId' in context
+      ? `annotation-${context.annotationId}`
+      : context.type;
+    if (key !== lastContextKey) {
+      lastContextKey = key;
+      dragOffset = { x: 0, y: 0 };
+    }
+  });
+
+  function handleGripMouseDown(event: MouseEvent): void {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    isDragging = true;
+    dragStartMouse = { x: event.clientX, y: event.clientY };
+    dragStartOffset = { ...dragOffset };
+    globalThis.addEventListener('mousemove', handleDragMove, { capture: true });
+    globalThis.addEventListener('mouseup', handleDragUp, { capture: true });
+  }
+
+  function handleDragMove(event: MouseEvent): void {
+    dragOffset = {
+      x: dragStartOffset.x + (event.clientX - dragStartMouse.x),
+      y: dragStartOffset.y + (event.clientY - dragStartMouse.y),
+    };
+  }
+
+  function handleDragUp(): void {
+    isDragging = false;
+    globalThis.removeEventListener('mousemove', handleDragMove, { capture: true });
+    globalThis.removeEventListener('mouseup', handleDragUp, { capture: true });
+  }
+
   function handleKeyDown(event: KeyboardEvent): void {
     event.stopPropagation();
     if (event.key === 'Escape' && event.target instanceof HTMLElement) {
@@ -82,7 +124,7 @@
   }
 
   let barStyle = $derived(
-    `left:${position.x}px;top:${position.y}px;transform:translateX(-50%);`
+    `left:${position.x + dragOffset.x}px;top:${position.y + dragOffset.y}px;transform:translateX(-50%);`
   );
 </script>
 
@@ -98,7 +140,20 @@
     onmousemove={stopPropagation}
   >
     {#if context.type === 'element'}
-      <div class="px-3 py-1.5 border-b border-slate-700 text-slate-300 font-semibold uppercase tracking-wide text-xs">
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="px-3 py-1.5 border-b border-slate-700 text-slate-300 font-semibold uppercase tracking-wide text-xs flex items-center gap-1.5 cursor-grab select-none"
+        class:cursor-grabbing={isDragging}
+        onmousedown={handleGripMouseDown}
+      >
+        <svg width="6" height="10" viewBox="0 0 6 10" class="text-slate-500 flex-shrink-0">
+          <circle cx="1.5" cy="1.5" r="1" fill="currentColor" />
+          <circle cx="4.5" cy="1.5" r="1" fill="currentColor" />
+          <circle cx="1.5" cy="5" r="1" fill="currentColor" />
+          <circle cx="4.5" cy="5" r="1" fill="currentColor" />
+          <circle cx="1.5" cy="8.5" r="1" fill="currentColor" />
+          <circle cx="4.5" cy="8.5" r="1" fill="currentColor" />
+        </svg>
         Element
       </div>
       <div class="p-2 flex flex-col gap-1.5">
@@ -214,11 +269,23 @@
             }}
             onkeydown={handleKeyDown}
           />
-          <span class="text-slate-400 text-xs">px</span>
         </div>
       </div>
     {:else if context.type === 'annotation'}
-      <div class="px-3 py-1.5 border-b border-slate-700 text-slate-300 font-semibold uppercase tracking-wide text-xs">
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div
+        class="px-3 py-1.5 border-b border-slate-700 text-slate-300 font-semibold uppercase tracking-wide text-xs flex items-center gap-1.5 cursor-grab select-none"
+        class:cursor-grabbing={isDragging}
+        onmousedown={handleGripMouseDown}
+      >
+        <svg width="6" height="10" viewBox="0 0 6 10" class="text-slate-500 flex-shrink-0">
+          <circle cx="1.5" cy="1.5" r="1" fill="currentColor" />
+          <circle cx="4.5" cy="1.5" r="1" fill="currentColor" />
+          <circle cx="1.5" cy="5" r="1" fill="currentColor" />
+          <circle cx="4.5" cy="5" r="1" fill="currentColor" />
+          <circle cx="1.5" cy="8.5" r="1" fill="currentColor" />
+          <circle cx="4.5" cy="8.5" r="1" fill="currentColor" />
+        </svg>
         Annotation
       </div>
       <div class="p-2">
