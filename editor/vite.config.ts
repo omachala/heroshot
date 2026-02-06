@@ -50,6 +50,8 @@ export default defineConfig({
         'src/lib/selectorGenerator.ts',
         // selector.ts has many DOM edge cases hard to cover in jsdom (tested via e2e)
         'src/lib/selector.ts',
+        // annotations are visual SVG drawing functions, tested via e2e
+        'src/lib/annotations/**',
       ],
       thresholds: {
         lines: 90,
