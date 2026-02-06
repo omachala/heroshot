@@ -1,5 +1,22 @@
 # heroshot
 
+## 0.12.1
+
+### Patch Changes
+
+- 16d44cd: Add EventInterceptor for toolbar event isolation (fixes #65)
+  - Toolbar clicks no longer propagate to page (prevents dropdown closing)
+  - Picker mode blocks page clicks/keyboard while allowing scroll
+  - Added smart selector generation with ARIA role support
+  - Added event recorder for action recording
+
+- 123bdf0: Add `--reduced-motion` and `--user-agent` CLI flags
+  - `--reduced-motion` emulates `prefers-reduced-motion: reduce` to disable CSS animations
+  - `--user-agent <string>` sets a custom user agent for mobile or bot testing
+  - Both flags work with one-shot mode and are documented in CLI reference
+
+- fc97c42: Add demo video to landing page
+
 ## 0.12.0
 
 ### Minor Changes
