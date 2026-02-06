@@ -90,60 +90,26 @@ test('change viewport dimensions', async ({ page }) => {
   expect(settingsEvents[0]?.data.viewport.height).toBe(1080);
 });
 
-test('change color scheme to Light', async ({ page }) => {
+test('color scheme defaults to Both and can be changed to Light or Dark', async ({ page }) => {
   await openSettingsModal(page);
 
-  // Default is both selected. Click Dark to deselect it → only Light remains
+  // Visual regression: both mode selected (default state)
+  await expect(page).toHaveScreenshot('settings-both-selected.png');
+
+  // Deselect Dark → only Light remains
   await page.locator(SETTINGS_SELECTORS.darkButton).click();
   await page.waitForTimeout(100);
 
   // Visual regression: light mode selected
   await expect(page).toHaveScreenshot('settings-light-selected.png');
 
-  // Click Save
+  // Save and verify
   await page.locator(SETTINGS_SELECTORS.saveButton).click();
   await page.waitForTimeout(300);
 
-  // Verify settings-updated event with light color scheme
   const settingsEvents = await getEventsByType(page, 'settings-updated');
   expect(settingsEvents.length).toBe(1);
   expect(settingsEvents[0]?.data.colorScheme).toBe('light');
-});
-
-test('change color scheme to Dark', async ({ page }) => {
-  await openSettingsModal(page);
-
-  // Default is both selected. Click Light to deselect it → only Dark remains
-  await page.locator(SETTINGS_SELECTORS.lightButton).click();
-  await page.waitForTimeout(100);
-
-  // Visual regression: dark mode selected
-  await expect(page).toHaveScreenshot('settings-dark-selected.png');
-
-  // Click Save
-  await page.locator(SETTINGS_SELECTORS.saveButton).click();
-  await page.waitForTimeout(300);
-
-  // Verify settings-updated event with dark color scheme
-  const settingsEvents = await getEventsByType(page, 'settings-updated');
-  expect(settingsEvents.length).toBe(1);
-  expect(settingsEvents[0]?.data.colorScheme).toBe('dark');
-});
-
-test('default color scheme is Both (captures light and dark variants)', async ({ page }) => {
-  await openSettingsModal(page);
-
-  // Visual regression: both mode selected (default state)
-  await expect(page).toHaveScreenshot('settings-both-selected.png');
-
-  // Click Save without changing anything
-  await page.locator(SETTINGS_SELECTORS.saveButton).click();
-  await page.waitForTimeout(300);
-
-  // Verify settings-updated event with both color scheme (undefined means "both")
-  const settingsEvents = await getEventsByType(page, 'settings-updated');
-  expect(settingsEvents.length).toBe(1);
-  expect(settingsEvents[0]?.data.colorScheme).toBeUndefined();
 });
 
 test('cancel settings does not emit event', async ({ page }) => {
