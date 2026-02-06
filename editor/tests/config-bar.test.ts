@@ -64,7 +64,7 @@ test('config bar fill dropdowns emit screenshot-updated events', async ({ page }
 
   let events = await getEventsByType(page, 'screenshot-updated');
   expect(events.length).toBeGreaterThan(0);
-  expect(events[events.length - 1]?.data.paddingFill).toBe('solid');
+  expect(events.at(-1)?.data.paddingFill).toBe('solid');
 
   // Change element fill to 'solid' via second dropdown
   const elementSelect = page.locator('#heroshot-root >> select').nth(1);
@@ -72,7 +72,7 @@ test('config bar fill dropdowns emit screenshot-updated events', async ({ page }
   await page.waitForTimeout(200);
 
   events = await getEventsByType(page, 'screenshot-updated');
-  expect(events[events.length - 1]?.data.elementFill).toBe('solid');
+  expect(events.at(-1)?.data.elementFill).toBe('solid');
 });
 
 test('config bar switches to annotation properties when annotation is drawn', async ({ page }) => {
@@ -206,7 +206,7 @@ test('annotation style change via config bar updates annotation data', async ({ 
   // Verify the annotation was updated in the emitted event
   const events = await getEventsByType(page, 'screenshot-updated');
   expect(events.length).toBeGreaterThan(0);
-  const lastEvent = events[events.length - 1];
+  const lastEvent = events.at(-1);
   const annotations = lastEvent?.data.annotations;
   expect(annotations).toBeDefined();
   expect(annotations?.length).toBe(1);
