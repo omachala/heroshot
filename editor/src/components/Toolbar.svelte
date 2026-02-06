@@ -92,6 +92,18 @@
     return screenshot?.elementFill ?? 'original';
   });
 
+  // Current colors and border from the screenshots array (reactive)
+  let currentScreenshot = $derived.by((): ScreenshotItem | undefined => {
+    if (selectionContext.type !== 'element' && selectionContext.type !== 'annotation') return undefined;
+    return screenshots.find(s => s.id === selectionContext.screenshotId);
+  });
+
+  let currentPaddingColor = $derived(currentScreenshot?.paddingColor);
+  let currentElementColor = $derived(currentScreenshot?.elementColor);
+  let currentBorderWidth = $derived(currentScreenshot?.borderWidth ?? 0);
+  let currentBorderColor = $derived(currentScreenshot?.borderColor ?? '#000000');
+  let currentBorderRadius = $derived(currentScreenshot?.borderRadius ?? 0);
+
   // Current annotation style (from annotation layer)
   let currentAnnotationStyle = $derived.by((): Record<string, string | number> | undefined => {
     if (selectionContext.type !== 'annotation') return undefined;
@@ -302,6 +314,23 @@
    */
   function handleConfigElementFillChange(fill: ElementFill): void {
     elementPicker.setElementFill(fill);
+  }
+
+  /**
+   * Generic screenshot property update from ConfigBar
+   */
+  function updateCurrentScreenshot(updates: Partial<ScreenshotItem>): void {
+    const id = selectionContext.type === 'element' || selectionContext.type === 'annotation'
+      ? selectionContext.screenshotId
+      : null;
+    if (!id) return;
+
+    screenshots = screenshots.map(s => s.id === id ? { ...s, ...updates } : s);
+
+    const updated = screenshots.find(s => s.id === id);
+    if (updated && id !== draftId) {
+      emit({ type: 'screenshot-updated', data: updated });
+    }
   }
 
   /**
@@ -532,10 +561,21 @@
     context={selectionContext}
     position={configBarPosition}
     paddingFill={currentPaddingFill}
+    paddingColor={currentPaddingColor}
     elementFill={currentElementFill}
+    elementColor={currentElementColor}
+    borderWidth={currentBorderWidth}
+    borderColor={currentBorderColor}
+    borderRadius={currentBorderRadius}
+    detectedBgColor={elementPicker?.getDetectedBgColor()}
     annotationStyle={currentAnnotationStyle}
     onPaddingFillChange={handleConfigPaddingFillChange}
+    onPaddingColorChange={(color) => updateCurrentScreenshot({ paddingColor: color })}
     onElementFillChange={handleConfigElementFillChange}
+    onElementColorChange={(color) => updateCurrentScreenshot({ elementColor: color })}
+    onBorderWidthChange={(w) => updateCurrentScreenshot({ borderWidth: w || undefined })}
+    onBorderColorChange={(c) => updateCurrentScreenshot({ borderColor: c })}
+    onBorderRadiusChange={(r) => updateCurrentScreenshot({ borderRadius: r || undefined })}
     onAnnotationStyleChange={handleConfigAnnotationStyleChange}
   />
 {/if}

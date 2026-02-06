@@ -13,6 +13,8 @@
     elementRect: { top: number; left: number; width: number; height: number };
     /** Padding around element */
     padding: { top: number; right: number; bottom: number; left: number };
+    /** Border radius for clipping */
+    borderRadius?: number;
     /** Callback when annotations change */
     onAnnotationsChange: (annotations: Annotation[]) => void;
     /** Callback to deactivate the drawing tool */
@@ -21,7 +23,7 @@
     onSelectionChange: (annotationId: string | null) => void;
   };
 
-  let { annotations, activeTool, elementRect, padding, onAnnotationsChange, onToolDeactivate, onSelectionChange }: Props = $props();
+  let { annotations, activeTool, elementRect, padding, borderRadius = 0, onAnnotationsChange, onToolDeactivate, onSelectionChange }: Props = $props();
 
   // Selection state
   let selectedId = $state<string | null>(null);
@@ -305,8 +307,8 @@
 <!-- SVG annotation overlay -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="fixed pointer-events-none"
-  style="top:{svgTop}px;left:{svgLeft}px;width:{svgWidth}px;height:{svgHeight}px;z-index:2147483645;"
+  class="fixed pointer-events-none overflow-hidden"
+  style="top:{svgTop}px;left:{svgLeft}px;width:{svgWidth}px;height:{svgHeight}px;z-index:2147483645;{borderRadius > 0 ? `border-radius:${borderRadius}px;` : ''}"
 >
   <!-- Drawing interaction layer - ONLY shown when a drawing tool is active -->
   {#if activeTool !== null}
@@ -323,7 +325,7 @@
     xmlns="http://www.w3.org/2000/svg"
     width={svgWidth}
     height={svgHeight}
-    class="absolute inset-0 pointer-events-none overflow-visible"
+    class="absolute inset-0 pointer-events-none overflow-hidden"
   >
     <g transform="translate({padding.left},{padding.top})">
       <!-- Existing annotations - each has its own hit area for selection/move -->
