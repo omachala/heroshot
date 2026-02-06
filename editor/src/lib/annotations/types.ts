@@ -46,7 +46,6 @@ export const DEFAULT_STYLE: Record<string, string | number> = {
   stroke: '#ef4444',
   'stroke-width': 3,
   opacity: 1,
-  fill: 'none',
 };
 
 /** Get effective style value, falling back to defaults */
@@ -57,7 +56,11 @@ export function getStyleValue(annotation: Annotation, key: string): string {
 
 /** Build SVG style attribute string from annotation style */
 export function buildStyleString(annotation: Annotation): string {
-  const merged = { ...DEFAULT_STYLE, ...annotation.style };
+  const merged: Record<string, string | number> = {
+    fill: 'none',
+    ...DEFAULT_STYLE,
+    ...annotation.style,
+  };
   return Object.entries(merged)
     .map(([k, v]) => `${k}:${String(v)}`)
     .join(';');

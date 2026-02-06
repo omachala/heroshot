@@ -46,56 +46,50 @@
   // Selection tracking for ConfigBar
   let selectedAnnotationId = $state<string | null>(null);
   let isTextEditing = $state(false);
+  let pickerEditingId = $state<string | null>(null);
+  let pickerExpandedRect = $state<{ top: number; left: number; width: number; height: number } | null>(null);
 
   // Reference to ElementPicker for calling methods
   let elementPicker: ElementPicker;
 
-  // Derive selection context
+  // Derive selection context (uses $state pickerEditingId pushed via callback, not method call)
   let selectionContext = $derived.by((): SelectionContext => {
-    const editId = elementPicker?.getEditingScreenshotId();
-    if (!editId) return { type: 'none' };
-    if (isTextEditing) return { type: 'text', screenshotId: editId };
-    if (selectedAnnotationId) return { type: 'annotation', screenshotId: editId, annotationId: selectedAnnotationId };
-    return { type: 'element', screenshotId: editId };
+    if (!pickerEditingId) return { type: 'none' };
+    if (isTextEditing) return { type: 'text', screenshotId: pickerEditingId };
+    if (selectedAnnotationId) return { type: 'annotation', screenshotId: pickerEditingId, annotationId: selectedAnnotationId };
+    return { type: 'element', screenshotId: pickerEditingId };
   });
 
-  // Derive config bar position
+  // Derive config bar position (uses $state pickerExpandedRect pushed via callback)
   let configBarPosition = $derived.by((): { x: number; y: number } | null => {
-    if (!elementPicker) return null;
     if (selectionContext.type === 'annotation') {
       // Position below annotation bbox
-      // Access annotationLayer through elementPicker's binding is not direct,
-      // so we get it from the annotation layer's exposed method
       const annotationLayer = elementPicker?.getAnnotationLayer();
       if (annotationLayer) {
         return annotationLayer.getSelectedBBoxPosition();
       }
       return null;
     }
-    if (selectionContext.type === 'element') {
-      // Position below expanded rect center
-      const rect: { top: number; left: number; width: number; height: number } | null = elementPicker.getExpandedRect();
-      if (rect) {
-        return {
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height + 12,
-        };
-      }
+    if (selectionContext.type === 'element' && pickerExpandedRect) {
+      return {
+        x: pickerExpandedRect.left + pickerExpandedRect.width / 2,
+        y: pickerExpandedRect.top + pickerExpandedRect.height + 12,
+      };
     }
     return null;
   });
 
-  // Current paddingFill/elementFill from the selected screenshot
+  // Current paddingFill/elementFill from the screenshots array (reactive)
   let currentPaddingFill = $derived.by((): PaddingFill => {
     if (selectionContext.type !== 'element' && selectionContext.type !== 'annotation') return 'inherit';
     const screenshot = screenshots.find(s => s.id === selectionContext.screenshotId);
-    return elementPicker?.getCurrentPaddingFill() ?? screenshot?.paddingFill ?? 'inherit';
+    return screenshot?.paddingFill ?? 'inherit';
   });
 
   let currentElementFill = $derived.by((): ElementFill => {
     if (selectionContext.type !== 'element' && selectionContext.type !== 'annotation') return 'original';
     const screenshot = screenshots.find(s => s.id === selectionContext.screenshotId);
-    return elementPicker?.getCurrentElementFill() ?? screenshot?.elementFill ?? 'original';
+    return screenshot?.elementFill ?? 'original';
   });
 
   // Current annotation style (from annotation layer)
@@ -154,6 +148,7 @@
     draftId = id;
     sidebarExpanded = true;
     editingId = id; // Focus the name input
+    elementPicker.setDraftId(id); // Associate element with draft so ConfigBar shows
   }
 
   /**
@@ -265,6 +260,20 @@
    */
   function toggleAnnotationTool(tool: string): void {
     annotationTool = annotationTool === tool ? null : tool;
+  }
+
+  /**
+   * Handle editing screenshot ID change from ElementPicker
+   */
+  function handleEditingScreenshotChange(id: string | null): void {
+    pickerEditingId = id;
+  }
+
+  /**
+   * Handle expanded rect change from ElementPicker (for ConfigBar positioning)
+   */
+  function handleExpandedRectChange(rect: { top: number; left: number; width: number; height: number } | null): void {
+    pickerExpandedRect = rect;
   }
 
   /**
@@ -513,6 +522,8 @@
   onDeselect={handleDeselect}
   onAnnotationSelectionChange={handleAnnotationSelectionChange}
   onTextEditChange={handleTextEditChange}
+  onEditingScreenshotChange={handleEditingScreenshotChange}
+  onExpandedRectChange={handleExpandedRectChange}
 />
 
 <!-- Floating Config Bar -->

@@ -37,9 +37,13 @@
     onAnnotationSelectionChange: (annotationId: string | null) => void;
     /** Callback when text editing state changes */
     onTextEditChange: (editing: boolean) => void;
+    /** Callback when editing screenshot ID changes */
+    onEditingScreenshotChange: (id: string | null) => void;
+    /** Callback when expanded rect changes (for ConfigBar positioning) */
+    onExpandedRectChange: (rect: { top: number; left: number; width: number; height: number } | null) => void;
   }
 
-  const { active, screenshots, annotationTool, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onAnnotationsUpdate, onAnnotationToolDeactivate, onCancel, onDeselect, onAnnotationSelectionChange, onTextEditChange }: Props = $props();
+  const { active, screenshots, annotationTool, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onAnnotationsUpdate, onAnnotationToolDeactivate, onCancel, onDeselect, onAnnotationSelectionChange, onTextEditChange, onEditingScreenshotChange, onExpandedRectChange }: Props = $props();
 
   // Default padding
   const defaultPadding: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -405,6 +409,16 @@
     }
   });
 
+  // Push editingScreenshotId changes to parent (Svelte 5 can't track reads through methods)
+  $effect(() => {
+    onEditingScreenshotChange(editingScreenshotId);
+  });
+
+  // Push expandedRect changes to parent for ConfigBar positioning
+  $effect(() => {
+    onExpandedRectChange(expandedRect);
+  });
+
   // Scroll tracking for overlay repositioning
   let scrollY = $state(globalThis.scrollY ?? 0);
   let scrollX = $state(globalThis.scrollX ?? 0);
@@ -762,7 +776,7 @@
    */
   export function setPaddingFill(fill: PaddingFill): void {
     paddingFill = fill;
-    if (editingScreenshotId && !isNewElement) {
+    if (editingScreenshotId) {
       onPaddingFillUpdate(editingScreenshotId, fill);
     }
   }
@@ -772,9 +786,16 @@
    */
   export function setElementFill(fill: ElementFill): void {
     elementFill = fill;
-    if (editingScreenshotId && !isNewElement) {
+    if (editingScreenshotId) {
       onElementFillUpdate(editingScreenshotId, fill);
     }
+  }
+
+  /**
+   * Set editing screenshot ID for a new draft (before confirmation)
+   */
+  export function setDraftId(id: string): void {
+    editingScreenshotId = id;
   }
 
   /**

@@ -37,6 +37,12 @@ export interface ScreenshotItem {
   paddingFill?: 'inherit' | 'solid' | 'transparent';
   elementFill?: 'original' | 'solid' | 'transparent';
   textOverrides?: Record<string, string>;
+  annotations?: {
+    id: string;
+    type: string;
+    points: number[];
+    style?: Record<string, string | number>;
+  }[];
 }
 
 /**

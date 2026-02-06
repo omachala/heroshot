@@ -23,7 +23,6 @@ const DEFAULT_STYLE: Record<string, string | number> = {
   stroke: '#ef4444',
   'stroke-width': 3,
   opacity: 1,
-  fill: 'none',
 };
 
 /**
@@ -113,7 +112,7 @@ export async function injectAnnotationOverlay(
       if (existing) existing.remove();
 
       function buildStyle(ann) {
-        var merged = {};
+        var merged = { fill: 'none' };
         for (var k in DEFAULT_STYLE) merged[k] = DEFAULT_STYLE[k];
         if (ann.style) {
           for (var k in ann.style) merged[k] = ann.style[k];
@@ -129,22 +128,31 @@ export async function injectAnnotationOverlay(
           case 'arrow': {
             var x1 = ann.points[0] || 0, y1 = ann.points[1] || 0;
             var x2 = ann.points[2] || 0, y2 = ann.points[3] || 0;
+            var strokeWidth = (ann.style && ann.style['stroke-width']) || 3;
+            var headLength = 8 + strokeWidth * 2;
+            var headAngle = Math.PI / 7;
             var angle = Math.atan2(y2 - y1, x2 - x1);
-            var headLen = 12;
-            var a1x = x2 - headLen * Math.cos(angle - Math.PI / 6);
-            var a1y = y2 - headLen * Math.sin(angle - Math.PI / 6);
-            var a2x = x2 - headLen * Math.cos(angle + Math.PI / 6);
-            var a2y = y2 - headLen * Math.sin(angle + Math.PI / 6);
+            var a1x = x2 - headLength * Math.cos(angle - headAngle);
+            var a1y = y2 - headLength * Math.sin(angle - headAngle);
+            var a2x = x2 - headLength * Math.cos(angle + headAngle);
+            var a2y = y2 - headLength * Math.sin(angle + headAngle);
+            var baseFactor = Math.cos(headAngle);
+            var baseX = x2 - headLength * baseFactor * Math.cos(angle);
+            var baseY = y2 - headLength * baseFactor * Math.sin(angle);
             var strokeColor = (ann.style && ann.style.stroke) || '#ef4444';
             var opacity = (ann.style && ann.style.opacity) || 1;
-            return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" style="' + style + '" />'
+            var lineStyle = 'stroke:' + strokeColor + ';stroke-width:' + strokeWidth + ';fill:none';
+            return '<g style="opacity:' + opacity + '">'
+              + '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + baseX + '" y2="' + baseY + '" style="' + lineStyle + '" />'
               + '<polygon points="' + x2 + ',' + y2 + ' ' + a1x + ',' + a1y + ' ' + a2x + ',' + a2y + '" '
-              + 'fill="' + strokeColor + '" style="opacity:' + opacity + '" />';
+              + 'fill="' + strokeColor + '" />'
+              + '</g>';
           }
           case 'rect': {
             var x = ann.points[0] || 0, y = ann.points[1] || 0;
             var w = ann.points[2] || 0, h = ann.points[3] || 0;
-            return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" style="' + style + '" />';
+            var borderRadius = (ann.style && ann.style['border-radius'] != null) ? ann.style['border-radius'] : 4;
+            return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + borderRadius + '" style="' + style + '" />';
           }
           case 'ellipse': {
             var cx = ann.points[0] || 0, cy = ann.points[1] || 0;

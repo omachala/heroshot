@@ -106,8 +106,8 @@ export const arrowType: AnnotationTypeDefinition = {
     const baseX = x2 - headLength * baseFactor * Math.cos(angle);
     const baseY = y2 - headLength * baseFactor * Math.sin(angle);
 
-    const strokeColor = String(annotation.style?.stroke ?? '#ef4444');
-    const opacity = String(annotation.style?.opacity ?? 1);
+    const strokeColor = String(annotation.style?.['stroke'] ?? '#ef4444');
+    const opacity = String(annotation.style?.['opacity'] ?? 1);
     const lineStyle = `stroke:${strokeColor};stroke-width:${String(strokeWidth)};fill:none`;
 
     // Group opacity so line+head don't double-blend

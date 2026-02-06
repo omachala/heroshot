@@ -113,7 +113,8 @@ export const rectType: AnnotationTypeDefinition = {
 
   toSvgString(annotation) {
     const [x = 0, y = 0, w = 0, h = 0] = annotation.points;
+    const borderRadius = annotation.style?.['border-radius'] ?? 4;
     const style = buildStyleString(annotation);
-    return `<rect x="${String(x)}" y="${String(y)}" width="${String(w)}" height="${String(h)}" style="${style}" />`;
+    return `<rect x="${String(x)}" y="${String(y)}" width="${String(w)}" height="${String(h)}" rx="${String(borderRadius)}" style="${style}" />`;
   },
 };
