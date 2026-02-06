@@ -1,5 +1,4 @@
 import type { AnnotationTypeDefinition, BBox, ResizeHandle } from './types';
-import { buildStyleString } from './types';
 
 /** Distance from a point to a line segment */
 function pointToSegmentDistance(
@@ -89,20 +88,35 @@ export const arrowType: AnnotationTypeDefinition = {
 
   toSvgString(annotation) {
     const [x1 = 0, y1 = 0, x2 = 0, y2 = 0] = annotation.points;
-    const style = buildStyleString(annotation);
 
-    // Calculate arrowhead
+    // Scale arrowhead with stroke-width
+    const strokeWidth = Number(annotation.style?.['stroke-width'] ?? 3);
+    const headLength = 8 + strokeWidth * 2;
+    const headAngle = Math.PI / 7;
     const angle = Math.atan2(y2 - y1, x2 - x1);
-    const headLength = 12;
-    const a1x = x2 - headLength * Math.cos(angle - Math.PI / 6);
-    const a1y = y2 - headLength * Math.sin(angle - Math.PI / 6);
-    const a2x = x2 - headLength * Math.cos(angle + Math.PI / 6);
-    const a2y = y2 - headLength * Math.sin(angle + Math.PI / 6);
 
+    // Wing points
+    const a1x = x2 - headLength * Math.cos(angle - headAngle);
+    const a1y = y2 - headLength * Math.sin(angle - headAngle);
+    const a2x = x2 - headLength * Math.cos(angle + headAngle);
+    const a2y = y2 - headLength * Math.sin(angle + headAngle);
+
+    // End line at arrowhead base to avoid overlap at low opacity
+    const baseFactor = Math.cos(headAngle);
+    const baseX = x2 - headLength * baseFactor * Math.cos(angle);
+    const baseY = y2 - headLength * baseFactor * Math.sin(angle);
+
+    const strokeColor = String(annotation.style?.stroke ?? '#ef4444');
+    const opacity = String(annotation.style?.opacity ?? 1);
+    const lineStyle = `stroke:${strokeColor};stroke-width:${String(strokeWidth)};fill:none`;
+
+    // Group opacity so line+head don't double-blend
     return (
-      `<line x1="${String(x1)}" y1="${String(y1)}" x2="${String(x2)}" y2="${String(y2)}" style="${style}" />` +
+      `<g style="opacity:${opacity}">` +
+      `<line x1="${String(x1)}" y1="${String(y1)}" x2="${String(baseX)}" y2="${String(baseY)}" style="${lineStyle}" />` +
       `<polygon points="${String(x2)},${String(y2)} ${String(a1x)},${String(a1y)} ${String(a2x)},${String(a2y)}" ` +
-      `fill="${String(annotation.style?.stroke ?? '#ef4444')}" style="opacity:${String(annotation.style?.opacity ?? 1)}" />`
+      `fill="${strokeColor}" />` +
+      `</g>`
     );
   },
 };

@@ -1,7 +1,8 @@
 <script lang="ts">
   import { eventInterceptor } from '../lib/eventInterceptor';
   import { generateSmartName, generateUid } from '../lib/naming';
-  import type { Annotation, BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, ToolbarJob } from '../types';
+  import type { Annotation, BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, SelectionContext, ToolbarJob } from '../types';
+  import ConfigBar from './ConfigBar.svelte';
   import EditorBar from './EditorBar.svelte';
   import ElementPicker from './ElementPicker.svelte';
   import SettingsModal from './SettingsModal.svelte';
@@ -42,8 +43,67 @@
   // Annotation state
   let annotationTool = $state<string | null>(null); // null = not annotating, 'arrow' | 'rect' | 'ellipse'
 
+  // Selection tracking for ConfigBar
+  let selectedAnnotationId = $state<string | null>(null);
+  let isTextEditing = $state(false);
+
   // Reference to ElementPicker for calling methods
   let elementPicker: ElementPicker;
+
+  // Derive selection context
+  let selectionContext = $derived.by((): SelectionContext => {
+    const editId = elementPicker?.getEditingScreenshotId();
+    if (!editId) return { type: 'none' };
+    if (isTextEditing) return { type: 'text', screenshotId: editId };
+    if (selectedAnnotationId) return { type: 'annotation', screenshotId: editId, annotationId: selectedAnnotationId };
+    return { type: 'element', screenshotId: editId };
+  });
+
+  // Derive config bar position
+  let configBarPosition = $derived.by((): { x: number; y: number } | null => {
+    if (!elementPicker) return null;
+    if (selectionContext.type === 'annotation') {
+      // Position below annotation bbox
+      // Access annotationLayer through elementPicker's binding is not direct,
+      // so we get it from the annotation layer's exposed method
+      const annotationLayer = elementPicker?.getAnnotationLayer();
+      if (annotationLayer) {
+        return annotationLayer.getSelectedBBoxPosition();
+      }
+      return null;
+    }
+    if (selectionContext.type === 'element') {
+      // Position below expanded rect center
+      const rect: { top: number; left: number; width: number; height: number } | null = elementPicker.getExpandedRect();
+      if (rect) {
+        return {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height + 12,
+        };
+      }
+    }
+    return null;
+  });
+
+  // Current paddingFill/elementFill from the selected screenshot
+  let currentPaddingFill = $derived.by((): PaddingFill => {
+    if (selectionContext.type !== 'element' && selectionContext.type !== 'annotation') return 'inherit';
+    const screenshot = screenshots.find(s => s.id === selectionContext.screenshotId);
+    return elementPicker?.getCurrentPaddingFill() ?? screenshot?.paddingFill ?? 'inherit';
+  });
+
+  let currentElementFill = $derived.by((): ElementFill => {
+    if (selectionContext.type !== 'element' && selectionContext.type !== 'annotation') return 'original';
+    const screenshot = screenshots.find(s => s.id === selectionContext.screenshotId);
+    return elementPicker?.getCurrentElementFill() ?? screenshot?.elementFill ?? 'original';
+  });
+
+  // Current annotation style (from annotation layer)
+  let currentAnnotationStyle = $derived.by((): Record<string, string | number> | undefined => {
+    if (selectionContext.type !== 'annotation') return undefined;
+    const annotationLayer = elementPicker?.getAnnotationLayer();
+    return annotationLayer?.getSelectedStyle();
+  });
 
   // Highlight initially selected screenshot on mount (run once)
   let initialHighlightDone = false;
@@ -208,6 +268,42 @@
   }
 
   /**
+   * Handle annotation selection change from ElementPicker
+   */
+  function handleAnnotationSelectionChange(annotationId: string | null): void {
+    selectedAnnotationId = annotationId;
+  }
+
+  /**
+   * Handle text edit state change from ElementPicker
+   */
+  function handleTextEditChange(editing: boolean): void {
+    isTextEditing = editing;
+  }
+
+  /**
+   * Handle paddingFill change from ConfigBar
+   */
+  function handleConfigPaddingFillChange(fill: PaddingFill): void {
+    elementPicker.setPaddingFill(fill);
+  }
+
+  /**
+   * Handle elementFill change from ConfigBar
+   */
+  function handleConfigElementFillChange(fill: ElementFill): void {
+    elementPicker.setElementFill(fill);
+  }
+
+  /**
+   * Handle annotation style change from ConfigBar
+   */
+  function handleConfigAnnotationStyleChange(style: Record<string, string | number>): void {
+    const annotationLayer = elementPicker?.getAnnotationLayer();
+    annotationLayer?.updateStyle(style);
+  }
+
+  /**
    * Handle cancel - remove draft if exists
    */
   function handleElementCancel(): void {
@@ -235,8 +331,8 @@
       // Get current padding, scroll, and fill modes from picker and update the screenshot
       const padding = elementPicker.getCurrentPadding();
       const scroll = elementPicker.getCurrentScroll();
-      const currentPaddingFill = elementPicker.getCurrentPaddingFill();
-      const currentElementFill = elementPicker.getCurrentElementFill();
+      const draftPaddingFill = elementPicker.getCurrentPaddingFill();
+      const draftElementFill = elementPicker.getCurrentElementFill();
       const hasPadding = padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0;
 
       screenshots = screenshots.map((screenshot) =>
@@ -245,8 +341,8 @@
               ...screenshot,
               padding: hasPadding ? { ...padding } : undefined,
               scroll: { ...scroll },
-              paddingFill: currentPaddingFill === 'inherit' ? undefined : currentPaddingFill,
-              elementFill: currentElementFill === 'original' ? undefined : currentElementFill,
+              paddingFill: draftPaddingFill === 'inherit' ? undefined : draftPaddingFill,
+              elementFill: draftElementFill === 'original' ? undefined : draftElementFill,
             }
           : screenshot
       );
@@ -415,7 +511,23 @@
   onAnnotationToolDeactivate={() => { annotationTool = null; }}
   onCancel={handleElementCancel}
   onDeselect={handleDeselect}
+  onAnnotationSelectionChange={handleAnnotationSelectionChange}
+  onTextEditChange={handleTextEditChange}
 />
+
+<!-- Floating Config Bar -->
+{#if configBarPosition && (selectionContext.type === 'element' || selectionContext.type === 'annotation')}
+  <ConfigBar
+    context={selectionContext}
+    position={configBarPosition}
+    paddingFill={currentPaddingFill}
+    elementFill={currentElementFill}
+    annotationStyle={currentAnnotationStyle}
+    onPaddingFillChange={handleConfigPaddingFillChange}
+    onElementFillChange={handleConfigElementFillChange}
+    onAnnotationStyleChange={handleConfigAnnotationStyleChange}
+  />
+{/if}
 
 <!-- Editor Bar (combined toolbar + screenshot list) -->
 <EditorBar

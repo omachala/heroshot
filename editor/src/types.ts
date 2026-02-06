@@ -1,4 +1,13 @@
 /**
+ * Selection context - what is currently selected in the editor
+ */
+export type SelectionContext =
+  | { type: 'none' }
+  | { type: 'element'; screenshotId: string }
+  | { type: 'annotation'; screenshotId: string; annotationId: string }
+  | { type: 'text'; screenshotId: string };
+
+/**
  * Padding around element (expands capture area)
  */
 export type Padding = {

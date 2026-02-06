@@ -33,9 +33,13 @@
     onCancel: () => void;
     /** Callback when selection is cleared (clicking outside) */
     onDeselect: () => void;
+    /** Callback when annotation selection changes */
+    onAnnotationSelectionChange: (annotationId: string | null) => void;
+    /** Callback when text editing state changes */
+    onTextEditChange: (editing: boolean) => void;
   }
 
-  const { active, screenshots, annotationTool, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onAnnotationsUpdate, onAnnotationToolDeactivate, onCancel, onDeselect }: Props = $props();
+  const { active, screenshots, annotationTool, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onAnnotationsUpdate, onAnnotationToolDeactivate, onCancel, onDeselect, onAnnotationSelectionChange, onTextEditChange }: Props = $props();
 
   // Default padding
   const defaultPadding: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -235,6 +239,7 @@
     selection?.addRange(range);
 
     tooltipData = null;
+    onTextEditChange(true);
   }
 
   /**
@@ -318,6 +323,7 @@
     if (editingTextElement === element) {
       editingTextElement = null;
     }
+    onTextEditChange(false);
   }
 
   /**
@@ -423,53 +429,9 @@
   });
 
   /**
-   * Check if a point is within the element bounds (not padding)
-   */
-  function isPointInElement(clientX: number, clientY: number): boolean {
-    if (!selectedElement) return false;
-    const rect = selectedElement.getBoundingClientRect();
-    return clientX >= rect.left && clientX <= rect.right &&
-           clientY >= rect.top && clientY <= rect.bottom;
-  }
-
-  /**
-   * Check if a point is within the padding area (but not element)
-   */
-  function isPointInPadding(clientX: number, clientY: number): boolean {
-    if (!selectedElement || !expandedRect) return false;
-    const rect = selectedElement.getBoundingClientRect();
-    // Check if in expanded area but not in element area
-    const inExpanded = clientX >= expandedRect.left && clientX <= expandedRect.left + expandedRect.width &&
-                       clientY >= expandedRect.top && clientY <= expandedRect.top + expandedRect.height;
-    const inElement = clientX >= rect.left && clientX <= rect.right &&
-                      clientY >= rect.top && clientY <= rect.bottom;
-    return inExpanded && !inElement;
-  }
-
-  /**
    * Handle mouse movement - highlight element under cursor
    */
   function handleMouseMove(event: MouseEvent): void {
-    // If we have a selected element and we're in the element area (not text, not padding)
-    if (selectedElement && !active && !hoveredTextElement && !editingTextElement) {
-      if (isPointInElement(event.clientX, event.clientY)) {
-        // Check if we're over a text element (which has its own handlers)
-        const targetElement = document.elementFromPoint(event.clientX, event.clientY);
-        const isOverText = targetElement?.closest('[data-heroshot-text-highlight]');
-        if (!isOverText) {
-          tooltipData = { element: getElementFillLabel(elementFill) };
-          tooltipX = event.clientX;
-          tooltipY = event.clientY;
-          return;
-        }
-      } else if (isPointInPadding(event.clientX, event.clientY)) {
-        tooltipData = { padding: getPaddingFillLabel(paddingFill) };
-        tooltipX = event.clientX;
-        tooltipY = event.clientY;
-        return;
-      }
-    }
-
     if (!active) return;
 
     const element = deepElementFromPoint(event.clientX, event.clientY);
@@ -511,30 +473,8 @@
       event.stopImmediatePropagation();
     }
 
-    // If we have a selected element (not in picker mode), handle element/padding clicks
+    // If we have a selected element (not in picker mode), skip — no click-to-cycle
     if (selectedElement && !active) {
-      // Check if clicking on a text element (has its own handlers via overlay)
-      if (target instanceof Element && target.closest('[data-heroshot-text-highlight]')) {
-        return; // Let text handler deal with it
-      }
-
-      // Check if clicking in element area (not padding)
-      if (isPointInElement(event.clientX, event.clientY)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        // Cycle element fill mode
-        elementFill = cycleNextElementFill(elementFill);
-        tooltipData = { element: getElementFillLabel(elementFill) };
-
-        // Auto-save for existing screenshots (not new drafts)
-        if (editingScreenshotId && !isNewElement) {
-          onElementFillUpdate(editingScreenshotId, elementFill);
-        }
-        return;
-      }
-
-      // Padding area clicks are handled by the padding overlay divs
       return;
     }
 
@@ -688,109 +628,6 @@
     }
   }
 
-  /**
-   * Get tooltip label for padding fill mode
-   */
-  function getPaddingFillLabel(fill: PaddingFill): string {
-    switch (fill) {
-      case 'inherit': { return 'inherit';
-      }
-      case 'solid': { return 'solid';
-      }
-      case 'transparent': { return 'transparent';
-      }
-    }
-  }
-
-  /**
-   * Get tooltip label for element fill mode
-   */
-  function getElementFillLabel(fill: ElementFill): string {
-    switch (fill) {
-      case 'original': { return 'original';
-      }
-      case 'solid': { return 'solid';
-      }
-      case 'transparent': { return 'transparent';
-      }
-    }
-  }
-
-  /**
-   * Cycle to next padding fill mode: inherit -> solid -> inherit
-   * NOTE: transparent mode not enabled yet
-   * To re-enable: solid -> transparent, transparent -> inherit
-   */
-  function cycleNextPaddingFill(current: PaddingFill): PaddingFill {
-    switch (current) {
-      case 'inherit': { return 'solid';
-      }
-      case 'solid': { return 'inherit'; // TODO: return 'transparent' to enable transparent mode
-      }
-      case 'transparent': { return 'inherit';
-      }
-    }
-  }
-
-  /**
-   * Cycle to next element fill mode: original -> solid -> original
-   * NOTE: transparent mode not enabled yet
-   * To re-enable: solid -> transparent, transparent -> original
-   */
-  function cycleNextElementFill(current: ElementFill): ElementFill {
-    switch (current) {
-      case 'original': { return 'solid';
-      }
-      case 'solid': { return 'original'; // TODO: return 'transparent' to enable transparent mode
-      }
-      case 'transparent': { return 'original';
-      }
-    }
-  }
-
-  /**
-   * Cycle padding fill mode and update state
-   */
-  function cyclePaddingFill(): void {
-    paddingFill = cycleNextPaddingFill(paddingFill);
-
-    // Update tooltip immediately
-    tooltipData = {
-      padding: getPaddingFillLabel(paddingFill),
-    };
-
-    // Auto-save for existing screenshots (not new drafts)
-    if (editingScreenshotId && !isNewElement) {
-      onPaddingFillUpdate(editingScreenshotId, paddingFill);
-    }
-  }
-
-  /**
-   * Handle padding area click - cycle through fill modes
-   */
-  function handlePaddingClick(event: MouseEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    cyclePaddingFill();
-  }
-
-  /**
-   * Handle padding area mouse enter/move - show and update tooltip
-   */
-  function handlePaddingMouseMove(event: MouseEvent): void {
-    tooltipData = {
-      padding: getPaddingFillLabel(paddingFill),
-    };
-    tooltipX = event.clientX;
-    tooltipY = event.clientY;
-  }
-
-  /**
-   * Handle padding area mouse leave - hide tooltip
-   */
-  function handlePaddingMouseLeave(): void {
-    tooltipData = null;
-  }
 
   /**
    * Apply text overrides to the DOM
@@ -921,6 +758,48 @@
   }
 
   /**
+   * Set paddingFill from external source (ConfigBar)
+   */
+  export function setPaddingFill(fill: PaddingFill): void {
+    paddingFill = fill;
+    if (editingScreenshotId && !isNewElement) {
+      onPaddingFillUpdate(editingScreenshotId, fill);
+    }
+  }
+
+  /**
+   * Set elementFill from external source (ConfigBar)
+   */
+  export function setElementFill(fill: ElementFill): void {
+    elementFill = fill;
+    if (editingScreenshotId && !isNewElement) {
+      onElementFillUpdate(editingScreenshotId, fill);
+    }
+  }
+
+  /**
+   * Get the expanded rect (element + padding) for config bar positioning
+   */
+  export function getExpandedRect(): { top: number; left: number; width: number; height: number } | null {
+    return expandedRect;
+  }
+
+  /**
+   * Get the element highlight rect for config bar positioning
+   */
+  export function getElementRect(): { top: number; left: number; width: number; height: number } | null {
+    if (!overlayRects) return null;
+    return overlayRects.highlight;
+  }
+
+  /**
+   * Get the annotation layer component reference
+   */
+  export function getAnnotationLayer(): AnnotationLayer | undefined {
+    return annotationLayer;
+  }
+
+  /**
    * Calculate overlay rectangles
    */
   function getOverlayRects(element: Element | null, _scrollX: number, _scrollY: number, padding?: Padding) {
@@ -958,8 +837,7 @@
   type TooltipData = {
     size?: string;    // e.g., "300 x 400"
     path?: string;    // e.g., "div.container >>> ha-card"
-    padding?: string; // e.g., "24" or "inherit/solid/transparent"
-    element?: string; // e.g., "original/solid/transparent"
+    padding?: string; // e.g., "24" (resize handle drag)
     text?: string;    // e.g., "Click to edit"
   }
   let tooltipData = $state<TooltipData | null>(null);
@@ -1229,58 +1107,30 @@
     {#if selectedElement !== null && expandedRect}
       <!-- Selected mode: padding overlays and resize handles -->
 
-      <!-- Padding area overlays (clickable to cycle fill mode) -->
+      <!-- Padding area overlays (visual only - config bar controls fill mode) -->
       {#if hasPadding}
         {#if selectedPadding.top > 0}
           <div
-            role="button"
-            tabindex="-1"
-            class="fixed pointer-events-auto cursor-pointer"
+            class="fixed pointer-events-none"
             style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{paddingBackground};"
-            onclick={handlePaddingClick}
-            onkeydown={(event) => event.key === 'Enter' && cyclePaddingFill()}
-            onmouseenter={handlePaddingMouseMove}
-            onmousemove={handlePaddingMouseMove}
-            onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
         {#if selectedPadding.bottom > 0}
           <div
-            role="button"
-            tabindex="-1"
-            class="fixed pointer-events-auto cursor-pointer"
+            class="fixed pointer-events-none"
             style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{paddingBackground};"
-            onclick={handlePaddingClick}
-            onkeydown={(event) => event.key === 'Enter' && cyclePaddingFill()}
-            onmouseenter={handlePaddingMouseMove}
-            onmousemove={handlePaddingMouseMove}
-            onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
         {#if selectedPadding.left > 0}
           <div
-            role="button"
-            tabindex="-1"
-            class="fixed pointer-events-auto cursor-pointer"
+            class="fixed pointer-events-none"
             style="top:{overlayRects.highlight.top}px;left:{expandedRect.left}px;width:{selectedPadding.left}px;height:{overlayRects.highlight.height}px;background:{paddingBackground};"
-            onclick={handlePaddingClick}
-            onkeydown={(event) => event.key === 'Enter' && cyclePaddingFill()}
-            onmouseenter={handlePaddingMouseMove}
-            onmousemove={handlePaddingMouseMove}
-            onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
         {#if selectedPadding.right > 0}
           <div
-            role="button"
-            tabindex="-1"
-            class="fixed pointer-events-auto cursor-pointer"
+            class="fixed pointer-events-none"
             style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left + overlayRects.highlight.width}px;width:{selectedPadding.right}px;height:{overlayRects.highlight.height}px;background:{paddingBackground};"
-            onclick={handlePaddingClick}
-            onkeydown={(event) => event.key === 'Enter' && cyclePaddingFill()}
-            onmouseenter={handlePaddingMouseMove}
-            onmousemove={handlePaddingMouseMove}
-            onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
 
@@ -1376,6 +1226,7 @@
           padding={selectedPadding}
           onAnnotationsChange={handleAnnotationsChange}
           onToolDeactivate={onAnnotationToolDeactivate}
+          onSelectionChange={onAnnotationSelectionChange}
         />
       {/if}
     {:else}
@@ -1402,9 +1253,6 @@
     {/if}
     {#if tooltipData.padding}
       <span style="color:#22c55e;">padding: {tooltipData.padding}</span>
-    {/if}
-    {#if tooltipData.element}
-      <span style="color:#3b82f6;">element: {tooltipData.element}</span>
     {/if}
     {#if tooltipData.text}
       <span style="color:#ec4899;">{tooltipData.text}</span>

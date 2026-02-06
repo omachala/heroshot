@@ -3,7 +3,6 @@
   import type { ResizeHandle } from '../lib/annotations/types';
   import { DEFAULT_STYLE } from '../lib/annotations/types';
   import type { Annotation } from '../types';
-  import StyleEditor from './StyleEditor.svelte';
 
   type Props = {
     /** Annotations for the current screenshot */
@@ -18,12 +17,22 @@
     onAnnotationsChange: (annotations: Annotation[]) => void;
     /** Callback to deactivate the drawing tool */
     onToolDeactivate: () => void;
+    /** Callback when annotation selection changes */
+    onSelectionChange: (annotationId: string | null) => void;
   };
 
-  let { annotations, activeTool, elementRect, padding, onAnnotationsChange, onToolDeactivate }: Props = $props();
+  let { annotations, activeTool, elementRect, padding, onAnnotationsChange, onToolDeactivate, onSelectionChange }: Props = $props();
 
   // Selection state
   let selectedId = $state<string | null>(null);
+
+  // Notify parent when selection changes
+  $effect(() => {
+    onSelectionChange(selectedId);
+  });
+
+  // Brush style - persists across annotations so new shapes inherit the last-used style
+  let brushStyle = $state<Record<string, string | number>>({});
 
   // Drawing state
   let isDrawing = $state(false);
@@ -94,58 +103,11 @@
     globalThis.removeEventListener('mouseup', handleGlobalMouseUp, { capture: true });
   }
 
-  function handleMouseDown(event: MouseEvent): void {
-    // Only handle left clicks
+  /** Handle mousedown on the drawing interaction layer (only active when activeTool is set) */
+  function handleDrawingMouseDown(event: MouseEvent): void {
     if (event.button !== 0) return;
-
     const { x, y } = toAnnotationCoords(event.clientX, event.clientY);
 
-    // If we have a selected annotation, check for resize handles first
-    if (selectedAnnotation && !activeTool) {
-      const typeHandler = getAnnotationType(selectedAnnotation.type);
-      if (typeHandler) {
-        const annHandles = typeHandler.getHandles(selectedAnnotation);
-        for (const handle of annHandles) {
-          if (Math.hypot(x - handle.x, y - handle.y) <= HIT_TOLERANCE) {
-            event.preventDefault();
-            event.stopPropagation();
-            isResizing = true;
-            resizeStartX = event.clientX;
-            resizeStartY = event.clientY;
-            resizeHandle = handle;
-            resizeOriginal = { ...selectedAnnotation, points: [...selectedAnnotation.points] };
-            startGlobalDrag();
-            return;
-          }
-        }
-      }
-    }
-
-    // Check if clicking on an existing annotation (for selection/move)
-    if (!activeTool) {
-      // Hit test in reverse order (top-most first)
-      for (let index = annotations.length - 1; index >= 0; index--) {
-        const ann = annotations[index];
-        if (!ann) continue;
-        const typeHandler = getAnnotationType(ann.type);
-        if (typeHandler?.hitTest(ann, x, y, HIT_TOLERANCE)) {
-          event.preventDefault();
-          event.stopPropagation();
-          selectedId = ann.id;
-          isMoving = true;
-          moveStartX = event.clientX;
-          moveStartY = event.clientY;
-          moveOriginal = { ...ann, points: [...ann.points] };
-          startGlobalDrag();
-          return;
-        }
-      }
-      // Clicked on empty space - deselect
-      selectedId = null;
-      return;
-    }
-
-    // Drawing mode
     event.preventDefault();
     event.stopPropagation();
     isDrawing = true;
@@ -154,6 +116,34 @@
     drawCurrentX = x;
     drawCurrentY = y;
     drawShiftKey = event.shiftKey;
+    startGlobalDrag();
+  }
+
+  /** Handle mousedown on an annotation shape (for selection/move) */
+  function handleAnnotationMouseDown(event: MouseEvent, ann: Annotation): void {
+    if (event.button !== 0 || activeTool) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    selectedId = ann.id;
+    isMoving = true;
+    moveStartX = event.clientX;
+    moveStartY = event.clientY;
+    moveOriginal = { ...ann, points: [...ann.points] };
+    startGlobalDrag();
+  }
+
+  /** Handle mousedown on a resize handle */
+  function handleHandleMouseDown(event: MouseEvent, handle: ResizeHandle): void {
+    if (event.button !== 0 || !selectedAnnotation) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    isResizing = true;
+    resizeStartX = event.clientX;
+    resizeStartY = event.clientY;
+    resizeHandle = handle;
+    resizeOriginal = { ...selectedAnnotation, points: [...selectedAnnotation.points] };
     startGlobalDrag();
   }
 
@@ -191,8 +181,12 @@
         const typeHandler = getAnnotationType(activeTool);
         if (typeHandler) {
           const newAnnotation = typeHandler.createFromDrag(drawStartX, drawStartY, x, y, event.shiftKey);
-          onAnnotationsChange([...annotations, newAnnotation]);
-          selectedId = newAnnotation.id;
+          // Apply brush style (last-used style) to new annotations
+          const styledAnnotation = Object.keys(brushStyle).length > 0
+            ? { ...newAnnotation, style: { ...brushStyle } }
+            : newAnnotation;
+          onAnnotationsChange([...annotations, styledAnnotation]);
+          selectedId = styledAnnotation.id;
         }
       }
       isDrawing = false;
@@ -238,8 +232,25 @@
     selectedId = null;
   }
 
-  // Style editor position (viewport coords, centered on selected annotation bbox)
-  let styleEditorPos = $derived.by(() => {
+  /** Type-specific default styles shown in the editor */
+  const TYPE_DEFAULTS: Record<string, Record<string, string | number>> = {
+    rect: { 'border-radius': 4 },
+  };
+
+  // Effective style for the selected annotation (merged with defaults)
+  let selectedStyle = $derived.by(() => {
+    if (!selectedAnnotation) return {};
+    const typeDefaults = TYPE_DEFAULTS[selectedAnnotation.type] ?? {};
+    return { ...DEFAULT_STYLE, ...typeDefaults, ...selectedAnnotation.style };
+  });
+
+  /** Get the merged style for the currently selected annotation */
+  export function getSelectedStyle(): Record<string, string | number> {
+    return selectedStyle;
+  }
+
+  /** Get position for the config bar (viewport coords, centered below annotation bbox) */
+  export function getSelectedBBoxPosition(): { x: number; y: number } | null {
     if (!selectedAnnotation || activeTool) return null;
     const typeHandler = getAnnotationType(selectedAnnotation.type);
     if (!typeHandler) return null;
@@ -248,24 +259,23 @@
       x: elementRect.left + (bbox.minX + bbox.maxX) / 2,
       y: elementRect.top + bbox.maxY + 12,
     };
-  });
+  }
 
-  // Effective style for the selected annotation (merged with defaults)
-  let selectedStyle = $derived.by(() => {
-    if (!selectedAnnotation) return {};
-    return { ...DEFAULT_STYLE, ...selectedAnnotation.style };
-  });
-
-  /** Handle style change from StyleEditor */
-  function handleStyleChange(newStyle: Record<string, string | number>): void {
-    if (!selectedId) return;
+  /** Handle style change from ConfigBar */
+  export function updateStyle(newStyle: Record<string, string | number>): void {
+    if (!selectedId || !selectedAnnotation) return;
+    // Merge all defaults for this type
+    const typeDefaults = TYPE_DEFAULTS[selectedAnnotation.type] ?? {};
+    const allDefaults = { ...DEFAULT_STYLE, ...typeDefaults };
     // Remove entries that match defaults
     const cleaned: Record<string, string | number> = {};
     for (const [key, value] of Object.entries(newStyle)) {
-      if (String(DEFAULT_STYLE[key]) !== String(value)) {
+      if (String(allDefaults[key]) !== String(value)) {
         cleaned[key] = value;
       }
     }
+    // Update brush style so next annotations inherit these values
+    brushStyle = { ...cleaned };
     onAnnotationsChange(annotations.map(a =>
       a.id === selectedId ? { ...a, style: Object.keys(cleaned).length > 0 ? cleaned : undefined } : a
     ));
@@ -276,6 +286,20 @@
     const typeHandler = getAnnotationType(ann.type);
     return typeHandler?.toSvgString(ann) ?? '';
   }
+
+  /** Build an invisible hit-area for an annotation (wider stroke, transparent) */
+  function renderHitArea(ann: Annotation): string {
+    const typeHandler = getAnnotationType(ann.type);
+    if (!typeHandler) return '';
+    const bbox = typeHandler.getBBox(ann);
+    // For arrows, use a wide transparent line as hit area
+    if (ann.type === 'arrow') {
+      const [x1 = 0, y1 = 0, x2 = 0, y2 = 0] = ann.points;
+      return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="transparent" stroke-width="${HIT_TOLERANCE * 2}" fill="none" />`;
+    }
+    // For shapes, use a transparent rect over the bbox
+    return `<rect x="${bbox.minX}" y="${bbox.minY}" width="${bbox.maxX - bbox.minX}" height="${bbox.maxY - bbox.minY}" fill="transparent" stroke="transparent" stroke-width="${HIT_TOLERANCE * 2}" />`;
+  }
 </script>
 
 <!-- SVG annotation overlay -->
@@ -284,13 +308,13 @@
   class="fixed pointer-events-none"
   style="top:{svgTop}px;left:{svgLeft}px;width:{svgWidth}px;height:{svgHeight}px;z-index:2147483645;"
 >
-  <!-- Interaction layer - captures mouse events when annotations exist or drawing -->
-  {#if activeTool || annotations.length > 0}
+  <!-- Drawing interaction layer - ONLY shown when a drawing tool is active -->
+  {#if activeTool !== null}
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
       class="absolute inset-0 pointer-events-auto"
-      style="cursor:{activeTool ? 'crosshair' : 'default'};"
-      onmousedown={handleMouseDown}
+      style="cursor:crosshair;"
+      onmousedown={handleDrawingMouseDown}
     ></div>
   {/if}
 
@@ -302,12 +326,22 @@
     class="absolute inset-0 pointer-events-none overflow-visible"
   >
     <g transform="translate({padding.left},{padding.top})">
-      <!-- Existing annotations -->
+      <!-- Existing annotations - each has its own hit area for selection/move -->
       {#each annotations as ann (ann.id)}
         <!-- eslint-disable svelte/no-at-html-tags -->
         <g class:annotation-selected={selectedId === ann.id}>
           {@html renderAnnotationSvg(ann)}
         </g>
+        <!-- Invisible hit area for clicking/dragging this annotation -->
+        {#if !activeTool}
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <g
+            style="pointer-events:auto;cursor:grab;"
+            onmousedown={(event) => handleAnnotationMouseDown(event, ann)}
+          >
+            {@html renderHitArea(ann)}
+          </g>
+        {/if}
       {/each}
 
       <!-- Preview while drawing -->
@@ -320,6 +354,15 @@
       <!-- Resize handles for selected annotation -->
       {#if selectedAnnotation && !activeTool}
         {#each handles as handle (handle.id)}
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <circle
+            cx={handle.x}
+            cy={handle.y}
+            r="7"
+            fill="transparent"
+            style="pointer-events:auto;cursor:{handle.cursor};"
+            onmousedown={(event) => handleHandleMouseDown(event, handle)}
+          />
           <circle
             cx={handle.x}
             cy={handle.y}
@@ -335,12 +378,3 @@
   </svg>
 </div>
 
-<!-- Style editor for selected annotation -->
-{#if selectedAnnotation && styleEditorPos && !activeTool}
-  <StyleEditor
-    style={selectedStyle}
-    onStyleChange={handleStyleChange}
-    x={styleEditorPos.x}
-    y={styleEditorPos.y}
-  />
-{/if}
