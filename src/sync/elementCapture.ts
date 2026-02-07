@@ -8,6 +8,7 @@ import {
   injectAnnotationOverlay,
   removeAnnotationOverlay,
 } from './annotationOverlay';
+import { injectBorderOverlay, removeBorderOverlay } from './borderOverlay';
 import { injectBorderRadiusMask, removeBorderRadiusMask } from './borderRadiusMask';
 import { findElement } from './elementFinder';
 import { injectPaddingMask, removePaddingMask } from './paddingMask';
@@ -56,6 +57,8 @@ type PaddedCaptureOptions = {
   quality: number;
   needsTransparent: boolean;
   annotations: ElementCaptureOptions['annotations'];
+  borderWidth?: number;
+  borderColor?: string;
   borderRadius?: number;
 };
 
@@ -74,6 +77,8 @@ async function captureWithPadding(
     quality,
     needsTransparent,
     annotations,
+    borderWidth,
+    borderColor,
     borderRadius,
   } = options;
   const box = await element.boundingBox();
@@ -91,6 +96,9 @@ async function captureWithPadding(
     height: box.height + padding.top + padding.bottom,
   };
 
+  const hasBorder = borderWidth != null && borderWidth > 0 && borderColor != null;
+  if (hasBorder) await injectBorderOverlay(page, clip, borderWidth, borderColor, borderRadius ?? 0);
+
   const hasBorderRadius = borderRadius != null && borderRadius > 0;
   if (hasBorderRadius) await injectBorderRadiusMask(page, clip, borderRadius);
 
@@ -104,10 +112,26 @@ async function captureWithPadding(
   });
 
   if (hasBorderRadius) await removeBorderRadiusMask(page);
+  if (hasBorder) await removeBorderOverlay(page);
   if (hasAnnotations) await removeAnnotationOverlay(page);
   if (paddingFill === 'solid') await removePaddingMask(page);
 
   return { success: true };
+}
+
+/** Expand padding to fit annotations that extend beyond current bounds. */
+function expandPaddingForAnnotations(
+  padding: { top: number; right: number; bottom: number; left: number },
+  annotations: ElementCaptureOptions['annotations']
+): { top: number; right: number; bottom: number; left: number } {
+  if (!annotations || annotations.length === 0) return padding;
+  const ap = calculateAnnotationPadding(annotations);
+  return {
+    top: Math.max(padding.top, ap.top),
+    right: Math.max(padding.right, ap.right),
+    bottom: Math.max(padding.bottom, ap.bottom),
+    left: Math.max(padding.left, ap.left),
+  };
 }
 
 /**
@@ -127,27 +151,22 @@ export async function captureElementScreenshot(
     paddingFill,
     elementFill,
     annotations,
+    borderWidth,
+    borderColor,
     borderRadius,
   } = options;
 
-  // Auto-expand padding if annotations extend beyond current padding
-  let effectivePadding = padding ?? { top: 0, right: 0, bottom: 0, left: 0 };
+  const effectivePadding = expandPaddingForAnnotations(
+    padding ?? { top: 0, right: 0, bottom: 0, left: 0 },
+    annotations
+  );
   const hasAnnotations = annotations && annotations.length > 0;
-  if (hasAnnotations) {
-    const ap = calculateAnnotationPadding(annotations);
-    effectivePadding = {
-      top: Math.max(effectivePadding.top, ap.top),
-      right: Math.max(effectivePadding.right, ap.right),
-      bottom: Math.max(effectivePadding.bottom, ap.bottom),
-      left: Math.max(effectivePadding.left, ap.left),
-    };
-  }
-
   const hasPadding =
-    effectivePadding.top > 0 ||
-    effectivePadding.right > 0 ||
-    effectivePadding.bottom > 0 ||
-    effectivePadding.left > 0;
+    effectivePadding.top +
+      effectivePadding.right +
+      effectivePadding.bottom +
+      effectivePadding.left >
+    0;
   const needsTransparent =
     format === 'png' && (paddingFill === 'transparent' || elementFill === 'transparent');
 
@@ -162,7 +181,9 @@ export async function captureElementScreenshot(
     await applyElementBackground(page, selector, 'transparent');
   }
 
-  if (hasPadding || hasAnnotations || (borderRadius != null && borderRadius > 0)) {
+  const hasBorderProperties =
+    (borderRadius != null && borderRadius > 0) || (borderWidth != null && borderWidth > 0);
+  if (hasPadding || hasAnnotations || hasBorderProperties) {
     const result = await captureWithPadding({
       page,
       element,
@@ -174,6 +195,8 @@ export async function captureElementScreenshot(
       quality,
       needsTransparent,
       annotations,
+      borderWidth,
+      borderColor,
       borderRadius,
     });
     if (!result.success) return result;

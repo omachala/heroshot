@@ -91,6 +91,8 @@ export async function captureScreenshot(
     elementFill,
     textOverrides,
     annotations,
+    borderWidth,
+    borderColor,
     borderRadius,
   } = screenshot;
   const { format, quality, fullPage } = captureOptions;
@@ -145,6 +147,8 @@ export async function captureScreenshot(
         elementFill,
         textOverrides,
         annotations,
+        borderWidth,
+        borderColor,
         borderRadius,
       })
     : await capturePageScreenshot(page, outputPath, format, quality, fullPage ?? true);
