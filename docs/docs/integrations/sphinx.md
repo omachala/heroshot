@@ -3,8 +3,6 @@ title: Sphinx Documentation Screenshots
 description: Use Heroshot with Sphinx documentation. Theme-aware screenshots that switch with Furo, PyData, and other dark mode themes.
 ---
 
-title: Sphinx Documentation Screenshot Integration
-
 # Sphinx
 
 > Want to see it working? Check out the [full example on GitHub](https://github.com/omachala/heroshot/tree/main/integrations/examples/sphinx) - a minimal Furo setup you can clone and run.
