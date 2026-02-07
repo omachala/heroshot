@@ -24,7 +24,6 @@ import { expect, test } from 'playwright/test';
 import {
   activatePickerAndSelectElement,
   confirmDraftScreenshot,
-  clickSidebarItem,
   clickToolbarButton,
   getElementRect,
   getEventsByType,
@@ -79,7 +78,7 @@ test('complete flow: pick element, confirm, edit name, click done', async ({ pag
   const updatedEvents = await getEventsByType(page, 'screenshot-updated');
   expect(updatedEvents.length).toBeGreaterThan(0);
   // Check the final event has the correct name
-  const lastEvent = updatedEvents[updatedEvents.length - 1];
+  const lastEvent = updatedEvents.at(-1);
   expect(lastEvent?.data.name).toBe('My Hero Section');
 
   // Visual regression: item renamed in sidebar
