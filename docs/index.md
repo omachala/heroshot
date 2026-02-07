@@ -118,6 +118,18 @@ features:
     link: /docs/getting-started
     linkText: Try the picker
   - icon:
+      src: /icons/paintbrush.svg
+    title: Visual Editor
+    details: Adjust padding, style borders, change background colors, and edit text - all visually. What you see is what you screenshot.
+    link: /docs/guide/screenshot-design
+    linkText: Open the editor
+  - icon:
+      src: /icons/annotations.svg
+    title: Annotations
+    details: Add arrows, rectangles, and callouts to highlight what matters. Draw attention to the features your docs need to explain.
+    link: /docs/guide/screenshot-design
+    linkText: Add annotations
+  - icon:
       src: /icons/moon.svg
     title: Light & Dark Mode
     details: Capture both color schemes in one run. Pixel-perfect backgrounds that match your UI theme.
@@ -136,12 +148,6 @@ features:
     link: /docs/guide/automated-updates
     linkText: GitHub Actions setup
   - icon:
-      src: /icons/server.svg
-    title: Self-Hosted
-    details: Own your screenshots. No vendor lock-in, no monthly fees. Everything runs on your machine or CI.
-    link: /docs/
-    linkText: How it works
-  - icon:
       src: /icons/lock.svg
     title: Persistent Auth
     details: Encrypted sessions let you log in once and capture protected pages headlessly.
@@ -153,12 +159,6 @@ features:
     details: MCP server lets Claude Code, Cursor, and Copilot manage screenshots directly. Just ask.
     link: /docs/ai-agents
     linkText: Configure MCP
-  - icon:
-      src: /icons/sliders.svg
-    title: Visual Editor
-    details: Refine your screenshots with adjustable padding, margins, and borders - all without touching code.
-    link: /docs/config#padding
-    linkText: Padding & masking
 ---
 
 <div class="showcase">
