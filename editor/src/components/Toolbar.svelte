@@ -61,9 +61,8 @@
   });
 
   // Derive config bar position (uses $state pickerExpandedRect pushed via callback)
-  let configBarPosition = $derived.by((): { x: number; y: number } | null => {
+  let configBarPosition = $derived.by((): { x: number; y: number; placement: 'left' | 'right' } | null => {
     if (selectionContext.type === 'annotation') {
-      // Position below annotation bbox
       const annotationLayer = elementPicker?.getAnnotationLayer();
       if (annotationLayer) {
         return annotationLayer.getSelectedBBoxPosition();
@@ -71,9 +70,15 @@
       return null;
     }
     if (selectionContext.type === 'element' && pickerExpandedRect) {
+      const viewportWidth = globalThis.innerWidth;
+      const elementCenterX = pickerExpandedRect.left + pickerExpandedRect.width / 2;
+      const placeRight = elementCenterX < viewportWidth / 2;
       return {
-        x: pickerExpandedRect.left + pickerExpandedRect.width / 2,
-        y: pickerExpandedRect.top + pickerExpandedRect.height + 12,
+        x: placeRight
+          ? pickerExpandedRect.left + pickerExpandedRect.width + 12
+          : pickerExpandedRect.left - 12,
+        y: pickerExpandedRect.top + pickerExpandedRect.height / 2,
+        placement: placeRight ? 'right' : 'left',
       };
     }
     return null;

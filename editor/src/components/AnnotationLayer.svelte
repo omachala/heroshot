@@ -251,15 +251,21 @@
     return selectedStyle;
   }
 
-  /** Get position for the config bar (viewport coords, centered below annotation bbox) */
-  export function getSelectedBBoxPosition(): { x: number; y: number } | null {
+  /** Get position for the config bar (viewport coords, to left or right of annotation bbox) */
+  export function getSelectedBBoxPosition(): { x: number; y: number; placement: 'left' | 'right' } | null {
     if (!selectedAnnotation || activeTool) return null;
     const typeHandler = getAnnotationType(selectedAnnotation.type);
     if (!typeHandler) return null;
     const bbox = typeHandler.getBBox(selectedAnnotation);
+    const bboxCenterX = elementRect.left + (bbox.minX + bbox.maxX) / 2;
+    const placeRight = bboxCenterX < globalThis.innerWidth / 2;
+    const bboxCenterY = elementRect.top + (bbox.minY + bbox.maxY) / 2;
     return {
-      x: elementRect.left + (bbox.minX + bbox.maxX) / 2,
-      y: elementRect.top + bbox.maxY + 12,
+      x: placeRight
+        ? elementRect.left + bbox.maxX + 12
+        : elementRect.left + bbox.minX - 12,
+      y: bboxCenterY,
+      placement: placeRight ? 'right' : 'left',
     };
   }
 

@@ -3,7 +3,7 @@
 
   type Props = {
     context: SelectionContext;
-    position: { x: number; y: number };
+    position: { x: number; y: number; placement?: 'left' | 'right' };
     // Element properties
     paddingFill?: PaddingFill;
     paddingColor?: string;
@@ -123,9 +123,17 @@
     return value === 'original' || value === 'solid' || value === 'transparent';
   }
 
-  let barStyle = $derived(
-    `left:${position.x + dragOffset.x}px;top:${position.y + dragOffset.y}px;transform:translateX(-50%);`
-  );
+  let barStyle = $derived.by(() => {
+    const x = position.x + dragOffset.x;
+    const y = position.y + dragOffset.y;
+    if (position.placement === 'right') {
+      return `left:${x}px;top:${y}px;transform:translateY(-50%);`;
+    }
+    if (position.placement === 'left') {
+      return `left:${x}px;top:${y}px;transform:translate(-100%,-50%);`;
+    }
+    return `left:${x}px;top:${y}px;transform:translateX(-50%);`;
+  });
 </script>
 
 {#if context.type === 'element' || context.type === 'annotation'}

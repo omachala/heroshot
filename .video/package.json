@@ -1,0 +1,17 @@
+{
+  "name": "heroshot-video",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion render MyComp out/video.mp4",
+    "render": "remotion render"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.415",
+    "@remotion/media": "^4.0.415",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "^4.0.415"
+  }
+}
