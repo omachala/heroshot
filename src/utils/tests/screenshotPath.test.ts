@@ -72,4 +72,30 @@ describe('generateScreenshotFilename', () => {
   it('handles name with numbers', () => {
     expect(generateScreenshotFilename({ name: 'Page 123' })).toBe('page-123.png');
   });
+
+  it('preserves forward slashes as subdirectory paths', () => {
+    expect(generateScreenshotFilename({ name: 'registry/login-01' })).toBe('registry/login-01.png');
+  });
+
+  it('adds color scheme suffix to filename, not directory', () => {
+    expect(generateScreenshotFilename({ name: 'registry/login-01', colorScheme: 'dark' })).toBe(
+      'registry/login-01-dark.png'
+    );
+  });
+
+  it('adds viewport suffix to filename, not directory', () => {
+    expect(generateScreenshotFilename({ name: 'examples/dashboard', viewport: 'mobile' })).toBe(
+      'examples/dashboard-mobile.png'
+    );
+  });
+
+  it('handles deeply nested paths', () => {
+    expect(
+      generateScreenshotFilename({ name: 'docs/static/img/login', colorScheme: 'light' })
+    ).toBe('docs/static/img/login-light.png');
+  });
+
+  it('handles trailing and leading slashes', () => {
+    expect(generateScreenshotFilename({ name: '/registry/login/' })).toBe('registry/login.png');
+  });
 });
