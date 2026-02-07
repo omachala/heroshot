@@ -8,16 +8,17 @@ import { verbose } from '../ui';
 
 /**
  * Get list of existing screenshot files in output directory.
- * Returns only .png and .jpg files.
+ * Scans recursively to support subdirectory output paths.
+ * Returns relative paths (e.g., "registry/login-01-light.png").
  */
 export function getExistingFiles(outputDirectory: string): string[] {
   if (!existsSync(outputDirectory)) {
     return [];
   }
   try {
-    return readdirSync(outputDirectory).filter(
-      file => file.endsWith('.png') || file.endsWith('.jpg')
-    );
+    return readdirSync(outputDirectory, { recursive: true })
+      .map(file => (typeof file === 'string' ? file : file.toString()))
+      .filter(file => file.endsWith('.png') || file.endsWith('.jpg'));
   } catch {
     return [];
   }
