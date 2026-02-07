@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { Viewport } from '../types';
 
 /** Default viewport dimensions */
@@ -22,4 +23,7 @@ function findPackageRoot(startDirectory: string): string {
 }
 
 /** Path to editor directory */
-export const EDITOR_DIR = path.join(findPackageRoot(import.meta.dirname), 'editor');
+export const EDITOR_DIR = path.join(
+  findPackageRoot(path.dirname(fileURLToPath(import.meta.url))),
+  'editor'
+);

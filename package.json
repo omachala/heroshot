@@ -9,6 +9,9 @@
     "type": "git",
     "url": "https://github.com/omachala/heroshot"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "publishConfig": {
     "provenance": true,
     "access": "public"
