@@ -28,7 +28,7 @@ npx heroshot
 
 First run opens a browser with a visual picker. Click what you want, name it, done. Screenshots land in `heroshots/`, config saves to `.heroshot/config.json`. Next run regenerates everything headlessly.
 
-https://github.com/user-attachments/assets/f35600a6-9220-4bd2-a8c6-a6b4ee8a33d9
+https://github.com/user-attachments/assets/1636d404-1e5f-4151-9aba-d5676ed3ff2a
 
 ## Use in Your Docs
 
