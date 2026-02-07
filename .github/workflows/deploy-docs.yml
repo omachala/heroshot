@@ -19,9 +19,9 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-          cache-dependency-path: docs/pnpm-lock.yaml
 
       - name: Install dependencies
+        working-directory: .
         run: pnpm install
 
       - name: Update screenshots with heroshot

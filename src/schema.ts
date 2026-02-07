@@ -33,10 +33,10 @@ export const outputFormatSchema = z.enum(['png', 'jpeg']).default('png');
 
 /** Padding around element (can expand capture area) */
 export const paddingSchema = z.object({
-  top: z.number().int().min(0).default(0).describe('Top padding in pixels'),
-  right: z.number().int().min(0).default(0).describe('Right padding in pixels'),
-  bottom: z.number().int().min(0).default(0).describe('Bottom padding in pixels'),
-  left: z.number().int().min(0).default(0).describe('Left padding in pixels'),
+  top: z.number().min(0).default(0).describe('Top padding in pixels'),
+  right: z.number().min(0).default(0).describe('Right padding in pixels'),
+  bottom: z.number().min(0).default(0).describe('Bottom padding in pixels'),
+  left: z.number().min(0).default(0).describe('Left padding in pixels'),
 });
 
 /**
@@ -80,6 +80,21 @@ export const viewportVariantSchema = z.string().refine(
   { message: 'Must be "desktop", "tablet", "mobile", or "WIDTHxHEIGHT" (e.g., "400x500")' }
 );
 
+/** Visual annotation drawn over a screenshot */
+export const annotationSchema = z.object({
+  id: z
+    .string()
+    .min(1)
+    .default(generateUid)
+    .describe('Unique identifier (auto-generated if omitted)'),
+  type: z.string().describe('Annotation type: arrow, rect, or ellipse'),
+  points: z.array(z.number()).describe('Geometry points - meaning depends on type'),
+  style: z
+    .record(z.string(), z.union([z.string(), z.number()]))
+    .optional()
+    .describe('CSS/SVG style properties (stroke, stroke-width, fill, opacity, etc.)'),
+});
+
 /** Single screenshot definition */
 export const screenshotSchema = z.object({
   id: z
@@ -104,10 +119,22 @@ export const screenshotSchema = z.object({
     .describe(
       'Background fill for padding area: "inherit" (default) shows page content, "solid" fills with detected background color'
     ),
+  paddingColor: z
+    .string()
+    .optional()
+    .describe(
+      'Custom color for padding fill when set to "solid" (hex, defaults to auto-detected background)'
+    ),
   elementFill: elementFillSchema
     .optional()
     .describe(
       'Background fill for element area: "original" (default) keeps actual background, "solid" replaces with detected color'
+    ),
+  elementColor: z
+    .string()
+    .optional()
+    .describe(
+      'Custom color for element fill when set to "solid" (hex, defaults to auto-detected background)'
     ),
   viewports: z
     .array(viewportVariantSchema)
@@ -120,6 +147,25 @@ export const screenshotSchema = z.object({
     .optional()
     .describe(
       'Replace text content before capture. Keys are CSS selectors, values are replacement text'
+    ),
+  annotations: z
+    .array(annotationSchema)
+    .optional()
+    .describe('Visual annotations drawn over the screenshot (arrows, rectangles, ellipses)'),
+  borderWidth: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe('Border width around capture area in pixels (default 0)'),
+  borderColor: z.string().optional().describe('Border color (hex, default "#000000")'),
+  borderRadius: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe(
+      'Corner radius in pixels — rounds the screenshot corners with transparency (PNG only)'
     ),
   actions: actionsSchema.optional(),
 });

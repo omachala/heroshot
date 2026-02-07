@@ -23,8 +23,7 @@
 import { expect, test } from 'playwright/test';
 import {
   activatePickerAndSelectElement,
-  clickConfirmButtonForElement,
-  clickSidebarItem,
+  confirmDraftScreenshot,
   clickToolbarButton,
   getElementRect,
   getEventsByType,
@@ -42,8 +41,8 @@ test('complete flow: pick element, confirm, edit name, click done', async ({ pag
   // Visual regression: element selected with confirm/cancel buttons
   await expect(page).toHaveScreenshot('element-selected.png');
 
-  // Step 2: Click confirm button (saves immediately, NOT in edit mode)
-  await clickConfirmButtonForElement(page, '#hero');
+  // Step 2: Confirm draft by pressing Enter on the sidebar input
+  await confirmDraftScreenshot(page);
   await page.waitForTimeout(500);
 
   // Visual regression: sidebar open with new item saved
@@ -57,11 +56,7 @@ test('complete flow: pick element, confirm, edit name, click done', async ({ pag
   expect(selector).toBeTruthy();
   expect(addedEvents[0]?.data.url).toContain('heroshot.sh');
 
-  // Step 4: Click sidebar item button to select it (shows edit span)
-  await clickSidebarItem(page, 0);
-  await page.waitForTimeout(200);
-
-  // Step 5: Click on the name span to enter edit mode
+  // Step 4: Click on the name span to enter edit mode (item is already selected after confirm)
   const sidebarItemName = page
     .locator('#heroshot-root >> [data-testid="sidebar-item"] span.text-xs')
     .first();
@@ -83,7 +78,7 @@ test('complete flow: pick element, confirm, edit name, click done', async ({ pag
   const updatedEvents = await getEventsByType(page, 'screenshot-updated');
   expect(updatedEvents.length).toBeGreaterThan(0);
   // Check the final event has the correct name
-  const lastEvent = updatedEvents[updatedEvents.length - 1];
+  const lastEvent = updatedEvents.at(-1);
   expect(lastEvent?.data.name).toBe('My Hero Section');
 
   // Visual regression: item renamed in sidebar
@@ -123,8 +118,8 @@ test('corner resize handle adds proportional padding', async ({ page }) => {
   // Visual regression: element with padding after resize
   await expect(page).toHaveScreenshot('element-with-padding-after-resize.png');
 
-  // Confirm to save the screenshot
-  await clickConfirmButtonForElement(page, '#primary-btn');
+  // Confirm draft by pressing Enter on the sidebar input
+  await confirmDraftScreenshot(page);
   await page.waitForTimeout(300);
 
   // Verify padding was added to all sides (proportional)

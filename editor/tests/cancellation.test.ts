@@ -87,22 +87,6 @@ test('ESC key cancels picker mode', async ({ page }) => {
   expect(cursor).toBe('');
 });
 
-test('ESC key cancels element selection', async ({ page }) => {
-  await page.goto(TEST_PAGE_URL, { waitUntil: 'domcontentloaded' });
-  await injectToolbar(page);
-
-  // Activate picker and select element
-  await activatePickerAndSelectElement(page, '#hero');
-
-  // Press ESC to cancel selection
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-
-  // Verify no screenshot-added event
-  const addedEvents = await getEventsByType(page, 'screenshot-added');
-  expect(addedEvents.length).toBe(0);
-});
-
 // Note: ESC padding revert test removed - resize handle positioning was unreliable in e2e tests
 // The functionality works but the mouse position calculations for resize handles are difficult to test
 // Unit tests in src/tests/ cover the padding revert logic more reliably

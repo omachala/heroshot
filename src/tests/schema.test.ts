@@ -89,8 +89,9 @@ describe('paddingSchema', () => {
     expect(() => paddingSchema.parse({ top: -10 })).toThrow();
   });
 
-  it('rejects non-integer padding', () => {
-    expect(() => paddingSchema.parse({ top: 10.5 })).toThrow();
+  it('accepts non-integer padding values', () => {
+    const result = paddingSchema.parse({ top: 10.5 });
+    expect(result.top).toBe(10.5);
   });
 });
 

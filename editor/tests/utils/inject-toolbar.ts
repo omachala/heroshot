@@ -35,8 +35,19 @@ export interface ScreenshotItem {
     y: number;
   };
   paddingFill?: 'inherit' | 'solid' | 'transparent';
+  paddingColor?: string;
   elementFill?: 'original' | 'solid' | 'transparent';
+  elementColor?: string;
+  borderWidth?: number;
+  borderColor?: string;
+  borderRadius?: number;
   textOverrides?: Record<string, string>;
+  annotations?: {
+    id: string;
+    type: string;
+    points: number[];
+    style?: Record<string, string | number>;
+  }[];
 }
 
 /**

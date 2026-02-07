@@ -1,4 +1,13 @@
 /**
+ * Selection context - what is currently selected in the editor
+ */
+export type SelectionContext =
+  | { type: 'none' }
+  | { type: 'element'; screenshotId: string }
+  | { type: 'annotation'; screenshotId: string; annotationId: string }
+  | { type: 'text'; screenshotId: string };
+
+/**
  * Padding around element (expands capture area)
  */
 export type Padding = {
@@ -33,6 +42,16 @@ export type PaddingFill = 'inherit' | 'solid' | 'transparent';
 export type ElementFill = 'original' | 'solid' | 'transparent';
 
 /**
+ * Visual annotation drawn over a screenshot
+ */
+export type Annotation = {
+  id: string;
+  type: string; // 'arrow' | 'rect' | 'ellipse'
+  points: number[]; // geometry - meaning depends on type
+  style?: Record<string, string | number>; // any CSS/SVG properties
+};
+
+/**
  * Screenshot item stored in the toolbar
  */
 export type ScreenshotItem = {
@@ -52,6 +71,18 @@ export type ScreenshotItem = {
   viewports?: string[];
   /** Text overrides - selector (relative to main element) -> replacement text */
   textOverrides?: Record<string, string>;
+  /** Custom color when paddingFill = 'solid' (hex, defaults to auto-detected bg) */
+  paddingColor?: string;
+  /** Custom color when elementFill = 'solid' (hex, defaults to auto-detected bg) */
+  elementColor?: string;
+  /** Border width around capture area in px (default 0) */
+  borderWidth?: number;
+  /** Border color (hex, default '#000000') */
+  borderColor?: string;
+  /** Corner radius of capture area in px (default 0) */
+  borderRadius?: number;
+  /** Visual annotations drawn over the screenshot */
+  annotations?: Annotation[];
 };
 
 /**

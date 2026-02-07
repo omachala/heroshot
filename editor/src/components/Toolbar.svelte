@@ -1,7 +1,8 @@
 <script lang="ts">
   import { eventInterceptor } from '../lib/eventInterceptor';
   import { generateSmartName, generateUid } from '../lib/naming';
-  import type { BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, ToolbarJob } from '../types';
+  import type { Annotation, BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, SelectionContext, ToolbarJob } from '../types';
+  import ConfigBar from './ConfigBar.svelte';
   import EditorBar from './EditorBar.svelte';
   import ElementPicker from './ElementPicker.svelte';
   import SettingsModal from './SettingsModal.svelte';
@@ -39,8 +40,76 @@
   let draftId = $state<string | null>(null); // ID of draft item (not yet saved)
   let selectedScreenshotId = $state<string | null>(props.initialSelectedId ?? null);
 
+  // Annotation state
+  let annotationTool = $state<string | null>(null); // null = not annotating, 'arrow' | 'rect' | 'ellipse'
+
+  // Selection tracking for ConfigBar
+  let selectedAnnotationId = $state<string | null>(null);
+  let isTextEditing = $state(false);
+  let pickerEditingId = $state<string | null>(null);
+  let pickerExpandedRect = $state<{ top: number; left: number; width: number; height: number } | null>(null);
+
   // Reference to ElementPicker for calling methods
   let elementPicker: ElementPicker;
+
+  // Derive selection context (uses $state pickerEditingId pushed via callback, not method call)
+  let selectionContext = $derived.by((): SelectionContext => {
+    if (!pickerEditingId) return { type: 'none' };
+    if (isTextEditing) return { type: 'text', screenshotId: pickerEditingId };
+    if (selectedAnnotationId) return { type: 'annotation', screenshotId: pickerEditingId, annotationId: selectedAnnotationId };
+    return { type: 'element', screenshotId: pickerEditingId };
+  });
+
+  // Derive config bar position (uses $state pickerExpandedRect pushed via callback)
+  let configBarPosition = $derived.by((): { x: number; y: number } | null => {
+    if (selectionContext.type === 'annotation') {
+      // Position below annotation bbox
+      const annotationLayer = elementPicker?.getAnnotationLayer();
+      if (annotationLayer) {
+        return annotationLayer.getSelectedBBoxPosition();
+      }
+      return null;
+    }
+    if (selectionContext.type === 'element' && pickerExpandedRect) {
+      return {
+        x: pickerExpandedRect.left + pickerExpandedRect.width / 2,
+        y: pickerExpandedRect.top + pickerExpandedRect.height + 12,
+      };
+    }
+    return null;
+  });
+
+  // Current paddingFill/elementFill from the screenshots array (reactive)
+  let currentPaddingFill = $derived.by((): PaddingFill => {
+    if (selectionContext.type !== 'element' && selectionContext.type !== 'annotation') return 'inherit';
+    const screenshot = screenshots.find(s => s.id === selectionContext.screenshotId);
+    return screenshot?.paddingFill ?? 'inherit';
+  });
+
+  let currentElementFill = $derived.by((): ElementFill => {
+    if (selectionContext.type !== 'element' && selectionContext.type !== 'annotation') return 'original';
+    const screenshot = screenshots.find(s => s.id === selectionContext.screenshotId);
+    return screenshot?.elementFill ?? 'original';
+  });
+
+  // Current colors and border from the screenshots array (reactive)
+  let currentScreenshot = $derived.by((): ScreenshotItem | undefined => {
+    if (selectionContext.type !== 'element' && selectionContext.type !== 'annotation') return undefined;
+    return screenshots.find(s => s.id === selectionContext.screenshotId);
+  });
+
+  let currentPaddingColor = $derived(currentScreenshot?.paddingColor);
+  let currentElementColor = $derived(currentScreenshot?.elementColor);
+  let currentBorderWidth = $derived(currentScreenshot?.borderWidth ?? 0);
+  let currentBorderColor = $derived(currentScreenshot?.borderColor ?? '#000000');
+  let currentBorderRadius = $derived(currentScreenshot?.borderRadius ?? 0);
+
+  // Current annotation style (from annotation layer)
+  let currentAnnotationStyle = $derived.by((): Record<string, string | number> | undefined => {
+    if (selectionContext.type !== 'annotation') return undefined;
+    const annotationLayer = elementPicker?.getAnnotationLayer();
+    return annotationLayer?.getSelectedStyle();
+  });
 
   // Highlight initially selected screenshot on mount (run once)
   let initialHighlightDone = false;
@@ -91,6 +160,7 @@
     draftId = id;
     sidebarExpanded = true;
     editingId = id; // Focus the name input
+    elementPicker.setDraftId(id); // Associate element with draft so ConfigBar shows
   }
 
   /**
@@ -182,6 +252,96 @@
   }
 
   /**
+   * Handle annotations update for a screenshot
+   */
+  function handleAnnotationsUpdate(id: string, newAnnotations: Annotation[]): void {
+    screenshots = screenshots.map((screenshot) =>
+      screenshot.id === id
+        ? { ...screenshot, annotations: newAnnotations.length > 0 ? newAnnotations : undefined }
+        : screenshot
+    );
+
+    const updated = screenshots.find((screenshot) => screenshot.id === id);
+    if (updated && id !== draftId) {
+      emit({ type: 'screenshot-updated', data: updated });
+    }
+  }
+
+  /**
+   * Toggle annotation tool
+   */
+  function toggleAnnotationTool(tool: string): void {
+    annotationTool = annotationTool === tool ? null : tool;
+  }
+
+  /**
+   * Handle editing screenshot ID change from ElementPicker
+   */
+  function handleEditingScreenshotChange(id: string | null): void {
+    pickerEditingId = id;
+  }
+
+  /**
+   * Handle expanded rect change from ElementPicker (for ConfigBar positioning)
+   */
+  function handleExpandedRectChange(rect: { top: number; left: number; width: number; height: number } | null): void {
+    pickerExpandedRect = rect;
+  }
+
+  /**
+   * Handle annotation selection change from ElementPicker
+   */
+  function handleAnnotationSelectionChange(annotationId: string | null): void {
+    selectedAnnotationId = annotationId;
+  }
+
+  /**
+   * Handle text edit state change from ElementPicker
+   */
+  function handleTextEditChange(editing: boolean): void {
+    isTextEditing = editing;
+  }
+
+  /**
+   * Handle paddingFill change from ConfigBar
+   */
+  function handleConfigPaddingFillChange(fill: PaddingFill): void {
+    elementPicker.setPaddingFill(fill);
+  }
+
+  /**
+   * Handle elementFill change from ConfigBar
+   */
+  function handleConfigElementFillChange(fill: ElementFill): void {
+    elementPicker.setElementFill(fill);
+  }
+
+  /**
+   * Generic screenshot property update from ConfigBar
+   */
+  function updateCurrentScreenshot(updates: Partial<ScreenshotItem>): void {
+    const id = selectionContext.type === 'element' || selectionContext.type === 'annotation'
+      ? selectionContext.screenshotId
+      : null;
+    if (!id) return;
+
+    screenshots = screenshots.map(s => s.id === id ? { ...s, ...updates } : s);
+
+    const updated = screenshots.find(s => s.id === id);
+    if (updated && id !== draftId) {
+      emit({ type: 'screenshot-updated', data: updated });
+    }
+  }
+
+  /**
+   * Handle annotation style change from ConfigBar
+   */
+  function handleConfigAnnotationStyleChange(style: Record<string, string | number>): void {
+    const annotationLayer = elementPicker?.getAnnotationLayer();
+    annotationLayer?.updateStyle(style);
+  }
+
+  /**
    * Handle cancel - remove draft if exists
    */
   function handleElementCancel(): void {
@@ -209,8 +369,8 @@
       // Get current padding, scroll, and fill modes from picker and update the screenshot
       const padding = elementPicker.getCurrentPadding();
       const scroll = elementPicker.getCurrentScroll();
-      const currentPaddingFill = elementPicker.getCurrentPaddingFill();
-      const currentElementFill = elementPicker.getCurrentElementFill();
+      const draftPaddingFill = elementPicker.getCurrentPaddingFill();
+      const draftElementFill = elementPicker.getCurrentElementFill();
       const hasPadding = padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0;
 
       screenshots = screenshots.map((screenshot) =>
@@ -219,8 +379,8 @@
               ...screenshot,
               padding: hasPadding ? { ...padding } : undefined,
               scroll: { ...scroll },
-              paddingFill: currentPaddingFill === 'inherit' ? undefined : currentPaddingFill,
-              elementFill: currentElementFill === 'original' ? undefined : currentElementFill,
+              paddingFill: draftPaddingFill === 'inherit' ? undefined : draftPaddingFill,
+              elementFill: draftElementFill === 'original' ? undefined : draftElementFill,
             }
           : screenshot
       );
@@ -377,6 +537,7 @@
   bind:this={elementPicker}
   active={isPickerActive}
   {screenshots}
+  {annotationTool}
   onToggle={togglePicker}
   onNewElement={handleNewElement}
   onPaddingUpdate={handlePaddingUpdate}
@@ -384,9 +545,40 @@
   onPaddingFillUpdate={handlePaddingFillUpdate}
   onElementFillUpdate={handleElementFillUpdate}
   onTextOverrideUpdate={handleTextOverrideUpdate}
+  onAnnotationsUpdate={handleAnnotationsUpdate}
+  onAnnotationToolDeactivate={() => { annotationTool = null; }}
   onCancel={handleElementCancel}
   onDeselect={handleDeselect}
+  onAnnotationSelectionChange={handleAnnotationSelectionChange}
+  onTextEditChange={handleTextEditChange}
+  onEditingScreenshotChange={handleEditingScreenshotChange}
+  onExpandedRectChange={handleExpandedRectChange}
 />
+
+<!-- Floating Config Bar -->
+{#if configBarPosition && (selectionContext.type === 'element' || selectionContext.type === 'annotation')}
+  <ConfigBar
+    context={selectionContext}
+    position={configBarPosition}
+    paddingFill={currentPaddingFill}
+    paddingColor={currentPaddingColor}
+    elementFill={currentElementFill}
+    elementColor={currentElementColor}
+    borderWidth={currentBorderWidth}
+    borderColor={currentBorderColor}
+    borderRadius={currentBorderRadius}
+    detectedBgColor={elementPicker?.getDetectedBgColor()}
+    annotationStyle={currentAnnotationStyle}
+    onPaddingFillChange={handleConfigPaddingFillChange}
+    onPaddingColorChange={(color) => updateCurrentScreenshot({ paddingColor: color })}
+    onElementFillChange={handleConfigElementFillChange}
+    onElementColorChange={(color) => updateCurrentScreenshot({ elementColor: color })}
+    onBorderWidthChange={(w) => updateCurrentScreenshot({ borderWidth: w || undefined })}
+    onBorderColorChange={(c) => updateCurrentScreenshot({ borderColor: c })}
+    onBorderRadiusChange={(r) => updateCurrentScreenshot({ borderRadius: r || undefined })}
+    onAnnotationStyleChange={handleConfigAnnotationStyleChange}
+  />
+{/if}
 
 <!-- Editor Bar (combined toolbar + screenshot list) -->
 <EditorBar
@@ -397,6 +589,7 @@
   {editingId}
   {draftId}
   selectedId={selectedScreenshotId}
+  {annotationTool}
   onTogglePicker={togglePicker}
   onToggleExpanded={toggleSidebar}
   onToggleSettings={toggleSettings}
@@ -406,6 +599,7 @@
   onRename={handleRenameScreenshot}
   onEditingComplete={() => editingId = null}
   onDraftConfirm={handleDraftConfirm}
+  onToggleAnnotationTool={toggleAnnotationTool}
 />
 
 <!-- Settings Modal -->

@@ -28,8 +28,23 @@ export const screenshotDataSchema: z.ZodType<ScreenshotData> = z.object({
     })
     .optional(),
   paddingFill: z.enum(['inherit', 'solid', 'transparent']).optional(),
+  paddingColor: z.string().optional(),
   elementFill: z.enum(['original', 'solid', 'transparent']).optional(),
+  elementColor: z.string().optional(),
   textOverrides: z.record(z.string(), z.string()).optional(),
+  annotations: z
+    .array(
+      z.object({
+        id: z.string(),
+        type: z.string(),
+        points: z.array(z.number()),
+        style: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+      })
+    )
+    .optional(),
+  borderWidth: z.number().optional(),
+  borderColor: z.string().optional(),
+  borderRadius: z.number().optional(),
 });
 
 /** Schema for browser settings from toolbar */

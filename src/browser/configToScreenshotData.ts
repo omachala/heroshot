@@ -15,7 +15,13 @@ export function configToScreenshotData(screenshots: Screenshot[]): ScreenshotDat
     ...(screenshot.padding && { padding: screenshot.padding }),
     ...(screenshot.scroll && { scroll: screenshot.scroll }),
     ...(screenshot.paddingFill && { paddingFill: screenshot.paddingFill }),
+    ...(screenshot.paddingColor && { paddingColor: screenshot.paddingColor }),
     ...(screenshot.elementFill && { elementFill: screenshot.elementFill }),
+    ...(screenshot.elementColor && { elementColor: screenshot.elementColor }),
     ...(screenshot.textOverrides && { textOverrides: screenshot.textOverrides }),
+    ...(screenshot.annotations && { annotations: screenshot.annotations }),
+    ...(screenshot.borderWidth && { borderWidth: screenshot.borderWidth }),
+    ...(screenshot.borderColor && { borderColor: screenshot.borderColor }),
+    ...(screenshot.borderRadius && { borderRadius: screenshot.borderRadius }),
   }));
 }

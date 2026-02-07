@@ -1,13 +1,16 @@
 <script lang="ts">
   import { deepElementFromPoint, getBackgroundColor, getSelector } from '../lib/dom';
   import { findElementBySelector } from '../lib/selector';
-  import type { ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition } from '../types';
+  import type { Annotation, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition } from '../types';
+  import AnnotationLayer from './AnnotationLayer.svelte';
 
   type Props = {
     /** Whether picker mode is active */
     active: boolean;
     /** Screenshots list (for loading saved padding) */
     screenshots: ScreenshotItem[];
+    /** Active annotation tool (null = not annotating) */
+    annotationTool: string | null;
     /** Callback when picker mode should toggle */
     onToggle: () => void;
     /** Callback when new element is picked (creates draft) */
@@ -22,13 +25,25 @@
     onElementFillUpdate: (id: string, elementFill: ElementFill) => void;
     /** Callback when text override is updated */
     onTextOverrideUpdate: (id: string, selector: string, text: string) => void;
+    /** Callback when annotations are updated */
+    onAnnotationsUpdate: (id: string, annotations: Annotation[]) => void;
+    /** Callback to deactivate annotation tool after drawing */
+    onAnnotationToolDeactivate: () => void;
     /** Callback when draft/edit is cancelled */
     onCancel: () => void;
     /** Callback when selection is cleared (clicking outside) */
     onDeselect: () => void;
+    /** Callback when annotation selection changes */
+    onAnnotationSelectionChange: (annotationId: string | null) => void;
+    /** Callback when text editing state changes */
+    onTextEditChange: (editing: boolean) => void;
+    /** Callback when editing screenshot ID changes */
+    onEditingScreenshotChange: (id: string | null) => void;
+    /** Callback when expanded rect changes (for ConfigBar positioning) */
+    onExpandedRectChange: (rect: { top: number; left: number; width: number; height: number } | null) => void;
   }
 
-  const { active, screenshots, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onCancel, onDeselect }: Props = $props();
+  const { active, screenshots, annotationTool, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onAnnotationsUpdate, onAnnotationToolDeactivate, onCancel, onDeselect, onAnnotationSelectionChange, onTextEditChange, onEditingScreenshotChange, onExpandedRectChange }: Props = $props();
 
   // Default padding
   const defaultPadding: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -46,6 +61,16 @@
   let originalPaddingFill = $state<PaddingFill>('inherit'); // For revert on Esc
   let elementFill = $state<ElementFill>('original'); // Background fill mode for element
   let originalElementFill = $state<ElementFill>('original'); // For revert on Esc
+
+  // Annotation layer reference
+  let annotationLayer: AnnotationLayer;
+
+  // Current annotations for the selected screenshot
+  let currentAnnotations = $derived.by(() => {
+    if (!editingScreenshotId) return [];
+    const screenshot = screenshots.find(item => item.id === editingScreenshotId);
+    return screenshot?.annotations ?? [];
+  });
 
   // Detected background color for the selected element (computed when element changes)
   let detectedBgColor = $derived(selectedElement ? getBackgroundColor(selectedElement) : '#ffffff');
@@ -88,10 +113,10 @@
       break;
       }
       case 'solid': {
-        element.style.backgroundColor = detectedBgColor;
+        element.style.backgroundColor = currentElementColor ?? detectedBgColor;
         element.style.backgroundImage = 'none';
         element.style.backgroundSize = '';
-      
+
       break;
       }
       case 'transparent': {
@@ -218,6 +243,7 @@
     selection?.addRange(range);
 
     tooltipData = null;
+    onTextEditChange(true);
   }
 
   /**
@@ -301,6 +327,7 @@
     if (editingTextElement === element) {
       editingTextElement = null;
     }
+    onTextEditChange(false);
   }
 
   /**
@@ -382,6 +409,16 @@
     }
   });
 
+  // Push editingScreenshotId changes to parent (Svelte 5 can't track reads through methods)
+  $effect(() => {
+    onEditingScreenshotChange(editingScreenshotId);
+  });
+
+  // Push expandedRect changes to parent for ConfigBar positioning
+  $effect(() => {
+    onExpandedRectChange(expandedRect);
+  });
+
   // Scroll tracking for overlay repositioning
   let scrollY = $state(globalThis.scrollY ?? 0);
   let scrollX = $state(globalThis.scrollX ?? 0);
@@ -406,53 +443,9 @@
   });
 
   /**
-   * Check if a point is within the element bounds (not padding)
-   */
-  function isPointInElement(clientX: number, clientY: number): boolean {
-    if (!selectedElement) return false;
-    const rect = selectedElement.getBoundingClientRect();
-    return clientX >= rect.left && clientX <= rect.right &&
-           clientY >= rect.top && clientY <= rect.bottom;
-  }
-
-  /**
-   * Check if a point is within the padding area (but not element)
-   */
-  function isPointInPadding(clientX: number, clientY: number): boolean {
-    if (!selectedElement || !expandedRect) return false;
-    const rect = selectedElement.getBoundingClientRect();
-    // Check if in expanded area but not in element area
-    const inExpanded = clientX >= expandedRect.left && clientX <= expandedRect.left + expandedRect.width &&
-                       clientY >= expandedRect.top && clientY <= expandedRect.top + expandedRect.height;
-    const inElement = clientX >= rect.left && clientX <= rect.right &&
-                      clientY >= rect.top && clientY <= rect.bottom;
-    return inExpanded && !inElement;
-  }
-
-  /**
    * Handle mouse movement - highlight element under cursor
    */
   function handleMouseMove(event: MouseEvent): void {
-    // If we have a selected element and we're in the element area (not text, not padding)
-    if (selectedElement && !active && !hoveredTextElement && !editingTextElement) {
-      if (isPointInElement(event.clientX, event.clientY)) {
-        // Check if we're over a text element (which has its own handlers)
-        const targetElement = document.elementFromPoint(event.clientX, event.clientY);
-        const isOverText = targetElement?.closest('[data-heroshot-text-highlight]');
-        if (!isOverText) {
-          tooltipData = { element: getElementFillLabel(elementFill) };
-          tooltipX = event.clientX;
-          tooltipY = event.clientY;
-          return;
-        }
-      } else if (isPointInPadding(event.clientX, event.clientY)) {
-        tooltipData = { padding: getPaddingFillLabel(paddingFill) };
-        tooltipX = event.clientX;
-        tooltipY = event.clientY;
-        return;
-      }
-    }
-
     if (!active) return;
 
     const element = deepElementFromPoint(event.clientX, event.clientY);
@@ -494,30 +487,11 @@
       event.stopImmediatePropagation();
     }
 
-    // If we have a selected element (not in picker mode), handle element/padding clicks
+    // If we have a selected element (not in picker mode), deselect annotation and skip
     if (selectedElement && !active) {
-      // Check if clicking on a text element (has its own handlers via overlay)
-      if (target instanceof Element && target.closest('[data-heroshot-text-highlight]')) {
-        return; // Let text handler deal with it
+      if (annotationLayer) {
+        annotationLayer.deselect();
       }
-
-      // Check if clicking in element area (not padding)
-      if (isPointInElement(event.clientX, event.clientY)) {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        // Cycle element fill mode
-        elementFill = cycleNextElementFill(elementFill);
-        tooltipData = { element: getElementFillLabel(elementFill) };
-
-        // Auto-save for existing screenshots (not new drafts)
-        if (editingScreenshotId && !isNewElement) {
-          onElementFillUpdate(editingScreenshotId, elementFill);
-        }
-        return;
-      }
-
-      // Padding area clicks are handled by the padding overlay divs
       return;
     }
 
@@ -548,9 +522,25 @@
 
   /**
    * Handle ESC key for canceling selection or picker mode
+   * Handle Delete/Backspace for deleting selected annotation
    */
   function handleKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      // Don't intercept when typing in an input field (e.g., StyleEditor)
+      // Use composedPath to pierce shadow DOM boundary (event.target is retargeted to shadow host)
+      const origin = event.composedPath()[0];
+      if (origin instanceof HTMLInputElement || origin instanceof HTMLTextAreaElement) return;
+      if (annotationLayer?.deleteSelected()) {
+        event.stopPropagation();
+        event.preventDefault();
+        return;
+      }
+    }
     if (event.key === 'Escape') {
+      // First try to deselect annotation
+      if (annotationLayer) {
+        annotationLayer.deselect();
+      }
       if (selectedElement) {
         if (isNewElement) {
           // Cancel new element - remove draft
@@ -635,6 +625,15 @@
   }
 
   /**
+   * Handle annotation changes
+   */
+  function handleAnnotationsChange(newAnnotations: Annotation[]): void {
+    if (editingScreenshotId) {
+      onAnnotationsUpdate(editingScreenshotId, newAnnotations);
+    }
+  }
+
+  /**
    * Handle padding change - auto-save for existing screenshots
    */
   function handlePaddingChange(newPadding: Padding): void {
@@ -646,109 +645,6 @@
     }
   }
 
-  /**
-   * Get tooltip label for padding fill mode
-   */
-  function getPaddingFillLabel(fill: PaddingFill): string {
-    switch (fill) {
-      case 'inherit': { return 'inherit';
-      }
-      case 'solid': { return 'solid';
-      }
-      case 'transparent': { return 'transparent';
-      }
-    }
-  }
-
-  /**
-   * Get tooltip label for element fill mode
-   */
-  function getElementFillLabel(fill: ElementFill): string {
-    switch (fill) {
-      case 'original': { return 'original';
-      }
-      case 'solid': { return 'solid';
-      }
-      case 'transparent': { return 'transparent';
-      }
-    }
-  }
-
-  /**
-   * Cycle to next padding fill mode: inherit -> solid -> inherit
-   * NOTE: transparent mode not enabled yet
-   * To re-enable: solid -> transparent, transparent -> inherit
-   */
-  function cycleNextPaddingFill(current: PaddingFill): PaddingFill {
-    switch (current) {
-      case 'inherit': { return 'solid';
-      }
-      case 'solid': { return 'inherit'; // TODO: return 'transparent' to enable transparent mode
-      }
-      case 'transparent': { return 'inherit';
-      }
-    }
-  }
-
-  /**
-   * Cycle to next element fill mode: original -> solid -> original
-   * NOTE: transparent mode not enabled yet
-   * To re-enable: solid -> transparent, transparent -> original
-   */
-  function cycleNextElementFill(current: ElementFill): ElementFill {
-    switch (current) {
-      case 'original': { return 'solid';
-      }
-      case 'solid': { return 'original'; // TODO: return 'transparent' to enable transparent mode
-      }
-      case 'transparent': { return 'original';
-      }
-    }
-  }
-
-  /**
-   * Cycle padding fill mode and update state
-   */
-  function cyclePaddingFill(): void {
-    paddingFill = cycleNextPaddingFill(paddingFill);
-
-    // Update tooltip immediately
-    tooltipData = {
-      padding: getPaddingFillLabel(paddingFill),
-    };
-
-    // Auto-save for existing screenshots (not new drafts)
-    if (editingScreenshotId && !isNewElement) {
-      onPaddingFillUpdate(editingScreenshotId, paddingFill);
-    }
-  }
-
-  /**
-   * Handle padding area click - cycle through fill modes
-   */
-  function handlePaddingClick(event: MouseEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    cyclePaddingFill();
-  }
-
-  /**
-   * Handle padding area mouse enter/move - show and update tooltip
-   */
-  function handlePaddingMouseMove(event: MouseEvent): void {
-    tooltipData = {
-      padding: getPaddingFillLabel(paddingFill),
-    };
-    tooltipX = event.clientX;
-    tooltipY = event.clientY;
-  }
-
-  /**
-   * Handle padding area mouse leave - hide tooltip
-   */
-  function handlePaddingMouseLeave(): void {
-    tooltipData = null;
-  }
 
   /**
    * Apply text overrides to the DOM
@@ -879,6 +775,62 @@
   }
 
   /**
+   * Set paddingFill from external source (ConfigBar)
+   */
+  export function setPaddingFill(fill: PaddingFill): void {
+    paddingFill = fill;
+    if (editingScreenshotId) {
+      onPaddingFillUpdate(editingScreenshotId, fill);
+    }
+  }
+
+  /**
+   * Set elementFill from external source (ConfigBar)
+   */
+  export function setElementFill(fill: ElementFill): void {
+    elementFill = fill;
+    if (editingScreenshotId) {
+      onElementFillUpdate(editingScreenshotId, fill);
+    }
+  }
+
+  /**
+   * Set editing screenshot ID for a new draft (before confirmation)
+   */
+  export function setDraftId(id: string): void {
+    editingScreenshotId = id;
+  }
+
+  /**
+   * Get the expanded rect (element + padding) for config bar positioning
+   */
+  export function getExpandedRect(): { top: number; left: number; width: number; height: number } | null {
+    return expandedRect;
+  }
+
+  /**
+   * Get the element highlight rect for config bar positioning
+   */
+  export function getElementRect(): { top: number; left: number; width: number; height: number } | null {
+    if (!overlayRects) return null;
+    return overlayRects.highlight;
+  }
+
+  /**
+   * Get the annotation layer component reference
+   */
+  export function getAnnotationLayer(): AnnotationLayer | undefined {
+    return annotationLayer;
+  }
+
+  /**
+   * Get the detected background color of the selected element
+   */
+  export function getDetectedBgColor(): string {
+    return detectedBgColor;
+  }
+
+  /**
    * Calculate overlay rectangles
    */
   function getOverlayRects(element: Element | null, _scrollX: number, _scrollY: number, padding?: Padding) {
@@ -916,8 +868,7 @@
   type TooltipData = {
     size?: string;    // e.g., "300 x 400"
     path?: string;    // e.g., "div.container >>> ha-card"
-    padding?: string; // e.g., "24" or "inherit/solid/transparent"
-    element?: string; // e.g., "original/solid/transparent"
+    padding?: string; // e.g., "24" (resize handle drag)
     text?: string;    // e.g., "Click to edit"
   }
   let tooltipData = $state<TooltipData | null>(null);
@@ -946,6 +897,35 @@
     selectedPadding.top > 0 || selectedPadding.right > 0 || selectedPadding.bottom > 0 || selectedPadding.left > 0
   );
 
+  // Derive custom colors and border properties from the screenshots prop
+  let currentPaddingColor = $derived.by(() => {
+    const screenshot = editingScreenshotId ? screenshots.find(item => item.id === editingScreenshotId) : null;
+    return screenshot?.paddingColor;
+  });
+
+  let currentElementColor = $derived.by(() => {
+    const screenshot = editingScreenshotId ? screenshots.find(item => item.id === editingScreenshotId) : null;
+    return screenshot?.elementColor;
+  });
+
+  let currentBorderWidth = $derived.by(() => {
+    if (!editingScreenshotId) return 0;
+    const screenshot = screenshots.find(item => item.id === editingScreenshotId);
+    return screenshot?.borderWidth ?? 0;
+  });
+
+  let currentBorderColor = $derived.by(() => {
+    if (!editingScreenshotId) return '#000000';
+    const screenshot = screenshots.find(item => item.id === editingScreenshotId);
+    return screenshot?.borderColor ?? '#000000';
+  });
+
+  let currentBorderRadius = $derived.by(() => {
+    if (!editingScreenshotId) return 0;
+    const screenshot = screenshots.find(item => item.id === editingScreenshotId);
+    return screenshot?.borderRadius ?? 0;
+  });
+
   // Checkered pattern for transparent mode (gray/white checkerboard)
   const checkeredPattern = 'repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px';
 
@@ -954,7 +934,7 @@
     switch (paddingFill) {
       case 'inherit': { return 'rgba(34, 197, 94, 0.25)';
       } // Green tint to show it's the padding area
-      case 'solid': { return detectedBgColor;
+      case 'solid': { return currentPaddingColor ?? detectedBgColor;
       }
       case 'transparent': { return checkeredPattern;
       }
@@ -1054,10 +1034,10 @@
     const elementBottom = elementRect.bottom + globalThis.scrollY;
 
     return {
-      top: Math.min(padding.top, elementTop),
-      left: Math.min(padding.left, elementLeft),
-      bottom: Math.min(padding.bottom, documentHeight - elementBottom),
-      right: Math.min(padding.right, documentWidth - elementRight),
+      top: Math.round(Math.min(padding.top, elementTop)),
+      left: Math.round(Math.min(padding.left, elementLeft)),
+      bottom: Math.round(Math.min(padding.bottom, documentHeight - elementBottom)),
+      right: Math.round(Math.min(padding.right, documentWidth - elementRight)),
     };
   }
 
@@ -1187,58 +1167,30 @@
     {#if selectedElement !== null && expandedRect}
       <!-- Selected mode: padding overlays and resize handles -->
 
-      <!-- Padding area overlays (clickable to cycle fill mode) -->
+      <!-- Padding area overlays (visual only - config bar controls fill mode) -->
       {#if hasPadding}
         {#if selectedPadding.top > 0}
           <div
-            role="button"
-            tabindex="-1"
-            class="fixed pointer-events-auto cursor-pointer"
+            class="fixed pointer-events-none"
             style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.top}px;background:{paddingBackground};"
-            onclick={handlePaddingClick}
-            onkeydown={(event) => event.key === 'Enter' && cyclePaddingFill()}
-            onmouseenter={handlePaddingMouseMove}
-            onmousemove={handlePaddingMouseMove}
-            onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
         {#if selectedPadding.bottom > 0}
           <div
-            role="button"
-            tabindex="-1"
-            class="fixed pointer-events-auto cursor-pointer"
+            class="fixed pointer-events-none"
             style="top:{overlayRects.highlight.top + overlayRects.highlight.height}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{selectedPadding.bottom}px;background:{paddingBackground};"
-            onclick={handlePaddingClick}
-            onkeydown={(event) => event.key === 'Enter' && cyclePaddingFill()}
-            onmouseenter={handlePaddingMouseMove}
-            onmousemove={handlePaddingMouseMove}
-            onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
         {#if selectedPadding.left > 0}
           <div
-            role="button"
-            tabindex="-1"
-            class="fixed pointer-events-auto cursor-pointer"
+            class="fixed pointer-events-none"
             style="top:{overlayRects.highlight.top}px;left:{expandedRect.left}px;width:{selectedPadding.left}px;height:{overlayRects.highlight.height}px;background:{paddingBackground};"
-            onclick={handlePaddingClick}
-            onkeydown={(event) => event.key === 'Enter' && cyclePaddingFill()}
-            onmouseenter={handlePaddingMouseMove}
-            onmousemove={handlePaddingMouseMove}
-            onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
         {#if selectedPadding.right > 0}
           <div
-            role="button"
-            tabindex="-1"
-            class="fixed pointer-events-auto cursor-pointer"
+            class="fixed pointer-events-none"
             style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left + overlayRects.highlight.width}px;width:{selectedPadding.right}px;height:{overlayRects.highlight.height}px;background:{paddingBackground};"
-            onclick={handlePaddingClick}
-            onkeydown={(event) => event.key === 'Enter' && cyclePaddingFill()}
-            onmouseenter={handlePaddingMouseMove}
-            onmousemove={handlePaddingMouseMove}
-            onmouseleave={handlePaddingMouseLeave}
           ></div>
         {/if}
 
@@ -1257,13 +1209,45 @@
         {/if}
       {/if}
 
+      <!-- Checkered corners indicator (shows what will be transparent in PNG) -->
+      {#if currentBorderRadius > 0}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="fixed pointer-events-none"
+          style="top:{expandedRect.top}px;left:{expandedRect.left}px;"
+          width={expandedRect.width}
+          height={expandedRect.height}
+        >
+          <defs>
+            <pattern id="heroshot-checkered" width="16" height="16" patternUnits="userSpaceOnUse">
+              <rect width="8" height="8" fill="#ccc" />
+              <rect x="8" y="8" width="8" height="8" fill="#ccc" />
+              <rect x="8" width="8" height="8" fill="#fff" />
+              <rect y="8" width="8" height="8" fill="#fff" />
+            </pattern>
+            <mask id="heroshot-corner-mask">
+              <rect width="100%" height="100%" fill="white" />
+              <rect width="100%" height="100%" rx={currentBorderRadius} fill="black" />
+            </mask>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#heroshot-checkered)" mask="url(#heroshot-corner-mask)" />
+        </svg>
+      {/if}
+
       <!-- Element area - no overlay, clicks handled via document handler to allow text editing -->
       <!-- Text elements get mouseenter/click handlers directly, element clicks detected by exclusion -->
 
-      <!-- Expanded area border -->
+      <!-- User's border (visual preview) -->
+      {#if currentBorderWidth > 0}
+        <div
+          class="fixed pointer-events-none box-border"
+          style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{expandedRect.height}px;border:{currentBorderWidth}px solid {currentBorderColor};border-radius:{currentBorderRadius}px;"
+        ></div>
+      {/if}
+      <!-- Expanded area border (editor indicator) -->
       <div
         class="fixed pointer-events-none box-border" class:border-dashed={hasPadding}
-        style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{expandedRect.height}px;border:1px solid #22c55e;"
+        style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{expandedRect.height}px;border:1px solid #22c55e;border-radius:{currentBorderRadius}px;"
       ></div>
 
       <!-- Resize handles - edge handles -->
@@ -1324,6 +1308,20 @@
         role="button"
         tabindex="0"
       ></div>
+      <!-- Annotation layer -->
+      {#if expandedRect && editingScreenshotId}
+        <AnnotationLayer
+          bind:this={annotationLayer}
+          annotations={currentAnnotations}
+          activeTool={annotationTool}
+          elementRect={{ top: overlayRects.highlight.top, left: overlayRects.highlight.left, width: overlayRects.highlight.width, height: overlayRects.highlight.height }}
+          padding={selectedPadding}
+          borderRadius={currentBorderRadius}
+          onAnnotationsChange={handleAnnotationsChange}
+          onToolDeactivate={onAnnotationToolDeactivate}
+          onSelectionChange={onAnnotationSelectionChange}
+        />
+      {/if}
     {:else}
       <!-- Picker mode: simple cyan border -->
       <div
@@ -1348,9 +1346,6 @@
     {/if}
     {#if tooltipData.padding}
       <span style="color:#22c55e;">padding: {tooltipData.padding}</span>
-    {/if}
-    {#if tooltipData.element}
-      <span style="color:#3b82f6;">element: {tooltipData.element}</span>
     {/if}
     {#if tooltipData.text}
       <span style="color:#ec4899;">{tooltipData.text}</span>

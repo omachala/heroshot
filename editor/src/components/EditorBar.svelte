@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AnnotateIcon from '../icons/AnnotateIcon.svelte';
   import ChevronDownIcon from '../icons/ChevronDownIcon.svelte';
   import ChevronUpIcon from '../icons/ChevronUpIcon.svelte';
   import GripIcon from '../icons/GripIcon.svelte';
@@ -18,6 +19,8 @@
     editingId: string | null;
     draftId: string | null;
     selectedId: string | null;
+    /** Active annotation tool type (null = not annotating) */
+    annotationTool: string | null;
     onTogglePicker: () => void;
     onToggleExpanded: () => void;
     onToggleSettings: () => void;
@@ -27,6 +30,7 @@
     onRename: (id: string, name: string) => void;
     onEditingComplete: () => void;
     onDraftConfirm: (id: string) => void;
+    onToggleAnnotationTool: (tool: string) => void;
   }
 
   let {
@@ -37,6 +41,7 @@
     editingId,
     draftId,
     selectedId,
+    annotationTool,
     onTogglePicker,
     onToggleExpanded,
     onToggleSettings,
@@ -46,10 +51,21 @@
     onRename,
     onEditingComplete,
     onDraftConfirm,
+    onToggleAnnotationTool,
   }: Props = $props();
 
   let localEditingId = $state<string | null>(null);
   let editValue = $state('');
+  let annotationDropdownOpen = $state(false);
+
+  // Whether an element is selected (annotation button only visible when selected)
+  let hasSelectedElement = $derived(selectedId !== null);
+
+  const annotationTools = [
+    { type: 'arrow', label: 'Arrow' },
+    { type: 'rect', label: 'Rectangle' },
+    { type: 'ellipse', label: 'Ellipse' },
+  ];
 
   // Drag state for repositioning
   let isDragging = $state(false);
@@ -245,6 +261,45 @@
         >
           <PickerIcon size={18} />
         </button>
+
+        {#if hasSelectedElement}
+          <div class="relative">
+            <div class="flex">
+              <button
+                type="button"
+                class="w-7 h-8 rounded-l-md flex items-center justify-center transition-colors {annotationTool ? 'bg-orange-500' : 'bg-slate-700 hover:bg-slate-600'}"
+                onclick={() => onToggleAnnotationTool(annotationTool ?? 'arrow')}
+                onpointerdown={(event) => event.stopPropagation()}
+                title="Annotate ({annotationTool ?? 'arrow'})"
+              >
+                <AnnotateIcon size={16} />
+              </button>
+              <button
+                type="button"
+                class="w-5 h-8 rounded-r-md flex items-center justify-center transition-colors border-l border-slate-600 {annotationTool ? 'bg-orange-500' : 'bg-slate-700 hover:bg-slate-600'}"
+                onclick={() => { annotationDropdownOpen = !annotationDropdownOpen; }}
+                onpointerdown={(event) => event.stopPropagation()}
+                title="Choose annotation type"
+              >
+                <ChevronDownIcon size={10} />
+              </button>
+            </div>
+            {#if annotationDropdownOpen}
+              <div class="absolute top-9 left-0 bg-slate-700 rounded-md shadow-lg border border-slate-600 py-1 min-w-28 z-10">
+                {#each annotationTools as tool (tool.type)}
+                  <button
+                    type="button"
+                    class="w-full px-3 py-1.5 text-left text-xs hover:bg-slate-600 transition-colors {annotationTool === tool.type ? 'text-orange-400' : 'text-white'}"
+                    onclick={() => { onToggleAnnotationTool(tool.type); annotationDropdownOpen = false; }}
+                    onpointerdown={(event) => event.stopPropagation()}
+                  >
+                    {tool.label}
+                  </button>
+                {/each}
+              </div>
+            {/if}
+          </div>
+        {/if}
 
         <button
           type="button"
