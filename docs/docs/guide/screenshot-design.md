@@ -393,6 +393,29 @@ Dev tools, debug panels, feature flags - hide them:
 
 Or capture against a production-like environment.
 
+## Highlighting with Annotations
+
+Sometimes a screenshot needs more than just showing the UI - you need to draw attention to a specific button, field, or area. That's what annotations are for.
+
+### Draw Attention to What Matters
+
+Add arrows, rectangles, and ellipses directly in the visual editor. These get baked into the screenshot, so they're always there when you regenerate.
+
+Use annotations when:
+
+- Pointing out a specific button or menu item in a busy UI
+- Circling a setting that's easy to miss
+- Drawing an arrow from a label to the thing it describes
+- Highlighting the result of an action (e.g., "this notification appears")
+
+### Keep It Minimal
+
+One or two annotations per screenshot. If you need more, the screenshot is probably showing too much - split it into multiple focused captures instead.
+
+### Use Consistent Styling
+
+Pick a color and stroke width and stick with them across your docs. The visual editor remembers your last annotation style, which helps with consistency.
+
 ## State and Interaction
 
 ### Show Meaningful States

@@ -44,6 +44,8 @@ Heroshot does the opposite. When your UI changes, that's expected - you _want_ n
 
 **Point and click, not CSS selectors.** Open the visual picker, click on what you want to capture, done. Heroshot figures out the selector for you.
 
+**Visual editor built in.** Adjust padding, style borders, change background colors, edit text, and add annotations - arrows, rectangles, callouts - all without touching config files.
+
 **Light and dark mode in one run.** If your site has themes, heroshot captures both variants automatically. No duplicate config, no manual switching.
 
 **Web components work too.** Shadow DOM piercing with `>> .inner` syntax. Plus XPath, text, and role selectors when CSS isn't enough.

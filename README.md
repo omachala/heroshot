@@ -20,13 +20,13 @@ Your app changes constantly. New features, design tweaks, bug fixes. Meanwhile, 
 
 The manual fix is tedious: open browser, navigate, log in, screenshot, crop, save, commit. Now do that for every image. Now do it again next month.
 
-**Heroshot fixes this.** Define your screenshots once - point and click, no CSS selectors - and regenerate them with one command whenever you need.
+**Heroshot fixes this.** Define your screenshots once - point and click, no CSS selectors. Style them with the visual editor, add annotations to highlight what matters, and regenerate everything with one command.
 
 ```bash
 npx heroshot
 ```
 
-First run opens a browser with a visual picker. Click what you want, name it, done. Screenshots land in `heroshots/`, config saves to `.heroshot/config.json`. Next run regenerates everything headlessly.
+First run opens a browser with a visual editor. Pick elements, adjust padding, style borders, edit text, and add annotations (arrows, rectangles, callouts). Screenshots land in `heroshots/`, config saves to `.heroshot/config.json`. Next run regenerates everything headlessly.
 
 https://github.com/user-attachments/assets/1636d404-1e5f-4151-9aba-d5676ed3ff2a
 

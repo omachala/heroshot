@@ -116,6 +116,7 @@ See the [Browser Settings Reference](./browser-reference) for all options with d
 | `elementFill`   | string   | no       | Element background: `"original"`, `"solid"`               |
 | `viewports`     | string[] | no       | Viewport variants (e.g., `["desktop", "mobile"]`)         |
 | `textOverrides` | object   | no       | Replace text content in elements before capture           |
+| `annotations`   | array    | no       | Arrows, rectangles, and ellipses drawn on the screenshot  |
 | `actions`       | array    | no       | Pre-screenshot actions ([reference](./actions-reference)) |
 
 ::: info Full Reference
