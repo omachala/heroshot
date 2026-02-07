@@ -143,7 +143,7 @@ heroshot
 
 ### `heroshot config`
 
-Opens the visual picker - a browser where you point and click to define screenshots. Use this when you want to add new screenshots, remove old ones, or tweak selectors visually.
+Opens the visual editor - a browser where you point and click to define screenshots, adjust styling, and add annotations. Use this when you want to add new screenshots, remove old ones, tweak selectors, or annotate captures visually.
 
 ```bash
 heroshot config [options]

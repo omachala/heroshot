@@ -27,6 +27,8 @@ A new screenshot entry appears in the sidebar. Give it a name like "Dashboard He
 
 That's it. You just defined your first screenshot.
 
+Want to polish it? The toolbar has everything you need - adjust padding, change the background fill, edit text, or add annotations (arrows, rectangles, ellipses) to highlight important areas.
+
 ## Add a Few More
 
 Keep going. Navigate around your app, pick elements, name them. Maybe:
