@@ -1,11 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseConfig } from './config';
 import type { Config } from './types';
 
 const HEROSHOT_DIRECTORY_NAME = '.heroshot';
 const CONFIG_FILENAME = 'config.json';
-const README_TEMPLATE_PATH = path.join(import.meta.dirname, 'templates', 'heroshotReadme.txt');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const README_TEMPLATE_PATH = path.join(__dirname, 'templates', 'heroshotReadme.txt');
 
 /**
  * Get the .heroshot directory path for a project
