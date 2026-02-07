@@ -8,7 +8,7 @@
 import { expect, test } from 'playwright/test';
 import {
   activatePickerAndSelectElement,
-  clickConfirmButtonForElement,
+  confirmDraftScreenshot,
   getEventsByType,
   injectToolbar,
 } from './utils';
@@ -23,7 +23,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, '[data-testid="submit-btn"]');
-    await clickConfirmButtonForElement(page, '[data-testid="submit-btn"]');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -43,7 +43,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, 'button');
-    await clickConfirmButtonForElement(page, 'button');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -66,7 +66,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, 'button');
-    await clickConfirmButtonForElement(page, 'button');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -86,7 +86,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, 'a[href="/about"]');
-    await clickConfirmButtonForElement(page, 'a[href="/about"]');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -106,7 +106,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, 'span.label');
-    await clickConfirmButtonForElement(page, 'span.label');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -125,7 +125,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, '#main-content');
-    await clickConfirmButtonForElement(page, '#main-content');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -144,7 +144,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, 'span');
-    await clickConfirmButtonForElement(page, 'span');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -165,7 +165,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, '#email');
-    await clickConfirmButtonForElement(page, '#email');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -185,7 +185,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, 'input');
-    await clickConfirmButtonForElement(page, 'input');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
@@ -207,7 +207,7 @@ test.describe('Smart Selector Generation', () => {
 
     await injectToolbar(page);
     await activatePickerAndSelectElement(page, 'input[type="checkbox"]');
-    await clickConfirmButtonForElement(page, 'input[type="checkbox"]');
+    await confirmDraftScreenshot(page);
     await page.waitForTimeout(300);
 
     const events = await getEventsByType(page, 'screenshot-added');
