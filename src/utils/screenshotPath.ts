@@ -25,9 +25,9 @@ type ScreenshotPathOptions = {
 };
 
 /**
- * Slugify a string for use in filenames
+ * Slugify a single path segment for use in filenames
  */
-function slugify(text: string): string {
+function slugifySegment(text: string): string {
   return text
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, '-')
@@ -35,12 +35,17 @@ function slugify(text: string): string {
 }
 
 /**
- * Generate screenshot filename
+ * Generate screenshot filename.
+ * Supports subdirectory paths via forward slashes in the name (e.g., "registry/login-01").
  */
 export function generateScreenshotFilename(options: ScreenshotPathOptions): string {
   const { name, viewport, colorScheme, format = 'png' } = options;
 
-  const parts = [slugify(name)];
+  const segments = name.split('/').map(slugifySegment).filter(Boolean);
+  const directory = segments.length > 1 ? segments.slice(0, -1).join('/') : '';
+  const baseName = segments.at(-1) ?? '';
+
+  const parts = [baseName];
 
   if (viewport) {
     parts.push(viewport);
@@ -51,5 +56,6 @@ export function generateScreenshotFilename(options: ScreenshotPathOptions): stri
   }
 
   const extension = format === 'jpeg' ? 'jpg' : 'png';
-  return `${parts.join('-')}.${extension}`;
+  const filename = `${parts.join('-')}.${extension}`;
+  return directory ? `${directory}/${filename}` : filename;
 }

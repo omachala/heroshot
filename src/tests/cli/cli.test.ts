@@ -461,6 +461,32 @@ describe.concurrent('CLI URL capture', () => {
       ).toBe(true);
     }, 60_000);
 
+    it('creates subdirectories from forward slashes in screenshot name', async () => {
+      const testId = Date.now() + '-' + Math.random().toString(36).slice(2);
+      const heroshotDir = path.join(TEST_OUTPUT_DIR, `.heroshot-subdir-${testId}`);
+      mkdirSync(heroshotDir, { recursive: true });
+      const configPath = path.join(heroshotDir, 'config.json');
+      const outputDir = path.join(TEST_OUTPUT_DIR, `subdir-output-${testId}`);
+
+      const config = {
+        outputDirectory: outputDir,
+        browser: { colorScheme: 'light' },
+        screenshots: [
+          {
+            id: 'subdir-test',
+            name: 'registry/login-01',
+            url: TEST_URL,
+          },
+        ],
+      };
+      writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+      const result = await runCli(`-c ${configPath}`);
+
+      expect(result.success).toBe(true);
+      expect(existsSync(path.join(outputDir, 'registry', 'login-01.png'))).toBe(true);
+    }, 60_000);
+
     it('errors when custom config file not found', async () => {
       const result = await runCli('-c nonexistent-config.json');
 

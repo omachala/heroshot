@@ -26,13 +26,21 @@ interface ConfigJson {
 }
 
 /**
- * Slugify a string for use in filenames
+ * Slugify a single path segment for use in filenames
  */
-function slugify(text: string): string {
+function slugifySegment(text: string): string {
   return text
     .toLowerCase()
     .replaceAll(/[^a-z0-9]+/g, '-')
     .replaceAll(/(?:^-|-$)/g, '');
+}
+
+/**
+ * Slugify a string for use in filenames.
+ * Preserves forward slashes to support subdirectory output paths.
+ */
+function slugify(text: string): string {
+  return text.split('/').map(slugifySegment).filter(Boolean).join('/');
 }
 
 /**

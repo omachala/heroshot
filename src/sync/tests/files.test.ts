@@ -51,6 +51,30 @@ describe('getExistingFiles', () => {
       ['a.png', 'b.jpg'].sort((a, b) => a.localeCompare(b))
     );
   });
+
+  it('returns files from subdirectories with relative paths', () => {
+    const subDir = path.join(TEST_DIR, 'registry');
+    mkdirSync(subDir, { recursive: true });
+    writeFileSync(path.join(TEST_DIR, 'top-level.png'), '');
+    writeFileSync(path.join(subDir, 'login-01-light.png'), '');
+    writeFileSync(path.join(subDir, 'login-01-dark.png'), '');
+
+    const files = getExistingFiles(TEST_DIR);
+    expect([...files].sort((a, b) => a.localeCompare(b))).toEqual([
+      'registry/login-01-dark.png',
+      'registry/login-01-light.png',
+      'top-level.png',
+    ]);
+  });
+
+  it('returns files from deeply nested subdirectories', () => {
+    const deepDir = path.join(TEST_DIR, 'components', 'ui', 'buttons');
+    mkdirSync(deepDir, { recursive: true });
+    writeFileSync(path.join(deepDir, 'primary.png'), '');
+
+    const files = getExistingFiles(TEST_DIR);
+    expect(files).toEqual(['components/ui/buttons/primary.png']);
+  });
 });
 
 describe('deleteStaleFiles', () => {
