@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.13.1
+
+### Patch Changes
+
+- 2563266: Fix Node 18 compatibility by replacing `import.meta.dirname` with `fileURLToPath(import.meta.url)`
+
 ## 0.13.0
 
 ### Minor Changes
