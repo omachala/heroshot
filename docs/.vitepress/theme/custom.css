@@ -157,6 +157,16 @@
   backdrop-filter: blur(12px);
 }
 
+/* Color the gap between content and footer to match footer background */
+:has(.VPContent.is-home) .Layout {
+  background: var(--footer-bg, #f1f5f9);
+}
+
+/* Hide default VitePress footer on home page (replaced by SiteFooter) */
+:has(.VPContent.is-home) .VPFooter {
+  display: none;
+}
+
 /* Hide nav title on home page (redundant with hero) */
 :has(.VPContent.is-home) .VPNavBarTitle {
   display: none;

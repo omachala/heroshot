@@ -162,7 +162,7 @@ features:
 ---
 
 <div class="showcase">
-  <h2>One Config, Many Variants</h2>
+  <h2><svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>One Config, Many Variants</h2>
   <p class="subtitle">This screenshot of the hero section above is captured by Heroshot - desktop, tablet, mobile, light and dark.<br>Resize your browser or toggle the theme - the matching variant loads automatically.</p>
 
   <div class="screenshot-showcase">
@@ -177,13 +177,13 @@ features:
 </div>
 
 <div class="integrations-section">
-  <h2>Works With Your Docs</h2>
+  <h2><svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M8 7h6"/><path d="M8 11h8"/></svg>Works With Your Docs</h2>
 
   <IntegrationTabs />
 </div>
 
 <div class="faq-section">
-<h2>Frequently Asked Questions</h2>
+<h2><svg class="section-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>Frequently Asked Questions</h2>
 <div class="faq-list">
 <details class="faq-item">
 <summary>What is Heroshot and how does it work?</summary>

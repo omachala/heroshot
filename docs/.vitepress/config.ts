@@ -243,8 +243,6 @@ export default defineConfig({
       { icon: 'npm', link: 'https://www.npmjs.com/package/heroshot' },
     ],
 
-    footer: {
-      copyright: '© 2026 Heroshot',
-    },
+    // Footer rendered via custom SiteFooter.vue component
   },
 });
