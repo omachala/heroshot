@@ -22,6 +22,10 @@ export default defineConfig({
         'heroshot/vue': resolve(__dirname, '../../integrations/vue/src/index.ts'),
         'heroshot/react': resolve(__dirname, '../../integrations/react/src/index.ts'),
         'heroshot/docusaurus': resolve(__dirname, '../../integrations/react/src/index.ts'),
+        'heroshot/svelte': resolve(__dirname, '../../integrations/svelte/src/index.ts'),
+        'heroshot/sveltekit': resolve(__dirname, '../../integrations/svelte/src/index.ts'),
+        'heroshot/next': resolve(__dirname, '../../integrations/next/src/index.ts'),
+        'heroshot/nuxt': resolve(__dirname, '../../integrations/vue/src/index.ts'),
       },
     },
   },
@@ -226,10 +230,19 @@ export default defineConfig({
               ],
             },
             {
+              text: 'Meta-Frameworks',
+              items: [
+                { text: 'Next.js', link: '/docs/integrations/nextjs' },
+                { text: 'Nuxt', link: '/docs/integrations/nuxt' },
+                { text: 'SvelteKit', link: '/docs/integrations/sveltekit' },
+              ],
+            },
+            {
               text: 'UI Frameworks',
               items: [
                 { text: 'React', link: '/docs/integrations/react' },
                 { text: 'Vue', link: '/docs/integrations/vue' },
+                { text: 'Svelte', link: '/docs/integrations/sveltekit' },
                 { text: 'Markdown', link: '/docs/integrations/markdown' },
               ],
             },

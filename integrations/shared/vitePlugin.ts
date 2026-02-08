@@ -26,11 +26,16 @@ import { findConfig, loadManifest, emptyManifest } from './getManifest';
 
 /**
  * Normalize outputDirectory for browser URL
- * Strips 'public/' prefix (VitePress/Vite) since public/ is served as root
+ * Strips 'public/' prefix (VitePress/Vite/Nuxt/Next.js) or 'static/' prefix (SvelteKit)
+ * since these directories are served as root
  */
 function normalizeOutputDirectory(dir: string): string {
-  // Strip public/ prefix (VitePress/Vite public directory)
+  // Strip public/ prefix (VitePress/Vite/Nuxt/Next.js public directory)
   if (dir.startsWith('public/')) {
+    return dir.slice(7);
+  }
+  // Strip static/ prefix (SvelteKit static directory)
+  if (dir.startsWith('static/')) {
     return dir.slice(7);
   }
   return dir;
@@ -95,7 +100,8 @@ export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
     load(id): string | undefined {
       if (id === RESOLVED_VIRTUAL_MODULE_ID) {
         // Auto-register manifest when imported (side effect)
-        return `import { setManifest } from 'heroshot/vitepress';
+        // Use heroshot/vue for setManifest — it re-exports from shared, works for all Vite-based frameworks
+        return `import { setManifest } from 'heroshot/vue';
 const manifest = ${JSON.stringify(manifest, null, 2)};
 setManifest(manifest);
 export default manifest;`;

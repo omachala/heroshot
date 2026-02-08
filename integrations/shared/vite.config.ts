@@ -5,7 +5,7 @@ import dts from 'vite-plugin-dts';
 export default defineConfig({
   plugins: [
     dts({
-      include: ['vitePlugin.ts', 'docusaurusPlugin.ts', 'virtual.d.ts'],
+      include: ['vitePlugin.ts', 'docusaurusPlugin.ts', 'nextPlugin.ts', 'virtual.d.ts'],
       outDir: '../../dist/integrations/shared',
       copyDtsFiles: true,
     }),
@@ -15,6 +15,7 @@ export default defineConfig({
       entry: {
         vitePlugin: resolve(__dirname, 'vitePlugin.ts'),
         docusaurusPlugin: resolve(__dirname, 'docusaurusPlugin.ts'),
+        nextPlugin: resolve(__dirname, 'nextPlugin.ts'),
       },
       formats: ['es', 'cjs'],
     },

@@ -1,5 +1,5 @@
 {
-  "ignoreDependencies": ["tailwindcss", "heroshot", "postcss", "plyr"],
+  "ignoreDependencies": ["tailwindcss", "heroshot", "postcss", "plyr", "svelte"],
   "ignore": [
     "editor/**",
     "src/capture.ts",
@@ -19,8 +19,14 @@
     "integrations/react": {
       "entry": ["src/index.ts", "src/__tests__/*.tsx"]
     },
+    "integrations/svelte": {
+      "entry": ["src/index.ts"]
+    },
+    "integrations/next": {
+      "entry": ["src/index.ts"]
+    },
     "integrations/shared": {
-      "entry": ["index.ts", "vitePlugin.ts", "docusaurusPlugin.ts"]
+      "entry": ["index.ts", "vitePlugin.ts", "docusaurusPlugin.ts", "nextPlugin.ts"]
     }
   }
 }

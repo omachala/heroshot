@@ -1,0 +1,15 @@
+{
+  "outputDirectory": "public/heroshots",
+  "outputFormat": "png",
+  "browser": {
+    "deviceScaleFactor": 2
+  },
+  "screenshots": [
+    {
+      "id": "hero-example",
+      "name": "Hero",
+      "url": "https://heroshot.sh/",
+      "selector": "#VPContent > div.VPHome > div.VPHero.has-image:nth-of-type(1)"
+    }
+  ]
+}

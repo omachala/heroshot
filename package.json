@@ -61,6 +61,18 @@
       "types": "./dist/integrations/react/index.d.ts",
       "import": "./dist/integrations/react/index.js"
     },
+    "./svelte": {
+      "types": "./dist/integrations/svelte/index.d.ts",
+      "import": "./dist/integrations/svelte/index.js"
+    },
+    "./sveltekit": {
+      "types": "./dist/integrations/svelte/index.d.ts",
+      "import": "./dist/integrations/svelte/index.js"
+    },
+    "./next": {
+      "types": "./dist/integrations/next/index.d.ts",
+      "import": "./dist/integrations/next/index.js"
+    },
     "./plugins/vite": {
       "types": "./dist/integrations/shared/vitePlugin.d.ts",
       "import": "./dist/integrations/shared/vitePlugin.js"
@@ -69,6 +81,11 @@
       "types": "./dist/integrations/shared/docusaurusPlugin.d.ts",
       "import": "./dist/integrations/shared/docusaurusPlugin.js",
       "require": "./dist/integrations/shared/docusaurusPlugin.cjs"
+    },
+    "./plugins/next": {
+      "types": "./dist/integrations/shared/nextPlugin.d.ts",
+      "import": "./dist/integrations/shared/nextPlugin.js",
+      "require": "./dist/integrations/shared/nextPlugin.cjs"
     },
     "./virtual": {
       "types": "./dist/integrations/shared/virtual.d.ts"
@@ -89,6 +106,8 @@
     "build:integrations": "pnpm --filter './integrations/*' build",
     "build:integrations:vue": "pnpm --filter './integrations/vue' build",
     "build:integrations:react": "pnpm --filter './integrations/react' build",
+    "build:integrations:svelte": "pnpm --filter './integrations/svelte' build",
+    "build:integrations:next": "pnpm --filter './integrations/next' build",
     "test:integrations": "pnpm --filter './integrations/*' test:run",
     "lint:integrations": "pnpm --filter './integrations/react' lint",
     "typecheck:integrations": "pnpm --filter './integrations/vue' --filter './integrations/react' typecheck",
@@ -175,11 +194,15 @@
   },
   "peerDependencies": {
     "react": ">=18.0.0",
+    "svelte": ">=5.0.0",
     "vitepress": ">=1.0.0",
     "vue": ">=3.0.0"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "svelte": {
       "optional": true
     },
     "vue": {
