@@ -9,6 +9,7 @@
 <p align="center"><em>👆 This hero shot of <a href="https://heroshot.sh">heroshot.sh</a> is <a href="https://github.com/omachala/heroshot/blob/main/.github/workflows/update-screenshots.yml#L17">taken</a> by heroshot ⚡️</em></p>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/dt/heroshot?style=for-the-badge" alt="npm downloads"></a>
   <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/v/heroshot?style=for-the-badge&logo=npm" alt="npm version"></a>
   <a href="https://github.com/omachala/heroshot/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/heroshot?style=for-the-badge" alt="license"></a>
   <a href="https://codecov.io/gh/omachala/heroshot"><img src="https://img.shields.io/codecov/c/github/omachala/heroshot?style=for-the-badge" alt="coverage"></a>
