@@ -11,7 +11,6 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/dt/heroshot?style=for-the-badge" alt="npm downloads"></a>
   <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/v/heroshot?style=for-the-badge&logo=npm" alt="npm version"></a>
-  <a href="https://github.com/omachala/heroshot/blob/main/LICENSE"><img src="https://img.shields.io/npm/l/heroshot?style=for-the-badge" alt="license"></a>
   <a href="https://codecov.io/gh/omachala/heroshot"><img src="https://img.shields.io/codecov/c/github/omachala/heroshot?style=for-the-badge" alt="coverage"></a>
   <a href="https://sonarcloud.io/summary/new_code?id=omachala_heroshot"><img src="https://img.shields.io/sonar/quality_gate/omachala_heroshot?server=https%3A%2F%2Fsonarcloud.io&style=for-the-badge&logo=sonarcloud" alt="quality gate"></a>
   <a href="https://heroshot.sh"><img src="https://img.shields.io/badge/docs-heroshot.sh-blue?style=for-the-badge" alt="docs"></a>
