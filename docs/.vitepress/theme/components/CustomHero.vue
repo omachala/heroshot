@@ -312,21 +312,20 @@ const copyCommand = async () => {
             <img src="/icons/sphinx.svg" alt="Sphinx" />
             <span>Sphinx</span>
           </a>
-          <span class="platform-divider"></span>
-          <a href="/docs/integrations/react" class="platform">
+        </div>
+        <div class="platforms-row platforms-row-secondary">
+          <a href="/docs/integrations/react" class="platform platform-sm">
             <img src="/icons/react.svg" alt="React" />
             <span>React</span>
           </a>
-          <a href="/docs/integrations/vue" class="platform">
+          <a href="/docs/integrations/vue" class="platform platform-sm">
             <img src="/icons/vue.svg" alt="Vue" />
             <span>Vue</span>
           </a>
-          <a href="/docs/integrations/sveltekit" class="platform">
+          <a href="/docs/integrations/sveltekit" class="platform platform-sm">
             <img src="/icons/svelte.svg" alt="Svelte" />
             <span>Svelte</span>
           </a>
-        </div>
-        <div class="platforms-row platforms-row-secondary">
           <a href="/docs/integrations/nextjs" class="platform platform-sm">
             <img src="/icons/nextjs.svg" alt="Next.js" />
             <span>Next.js</span>
@@ -622,8 +621,7 @@ const copyCommand = async () => {
 }
 
 .platforms-row-secondary {
-  gap: 20px;
-  padding-left: 4px;
+  gap: 16px;
 }
 
 .platform {
@@ -657,13 +655,6 @@ const copyCommand = async () => {
 
 .platform-sm span {
   font-size: 12px;
-}
-
-.platform-divider {
-  width: 1px;
-  height: 40px;
-  background: var(--vp-c-divider);
-  margin: 0 2px;
 }
 
 /* Responsive */
