@@ -77,7 +77,7 @@ jobs:
         run: pnpm exec playwright install chromium
 
       - name: Update screenshots
-        run: node dist/cli/cli.js
+        run: node dist/cli/cli.js --config docs/.heroshot/config.json
         env:
           HEROSHOT_SESSION_KEY: ${{ secrets.HEROSHOT_SESSION_KEY }}
 
