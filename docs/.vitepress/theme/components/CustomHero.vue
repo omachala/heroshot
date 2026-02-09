@@ -311,15 +311,36 @@ const copyCommand = async () => {
           <img src="/icons/sphinx.svg" alt="Sphinx" />
           <span>Sphinx</span>
         </a>
-        <span class="platform-divider"></span>
-        <a href="/docs/integrations/react" class="platform">
-          <img src="/icons/react.svg" alt="React" />
-          <span>React</span>
-        </a>
-        <a href="/docs/integrations/vue" class="platform">
-          <img src="/icons/vue.svg" alt="Vue" />
-          <span>Vue</span>
-        </a>
+        <div class="frameworks">
+          <div class="framework-row">
+            <a href="/docs/integrations/react" class="framework">
+              <img src="/icons/react.svg" alt="React" />
+              <span>React</span>
+            </a>
+            <a href="/docs/integrations/vue" class="framework">
+              <img src="/icons/vue.svg" alt="Vue" />
+              <span>Vue</span>
+            </a>
+            <a href="/docs/integrations/sveltekit" class="framework">
+              <img src="/icons/svelte.svg" alt="Svelte" />
+              <span>Svelte</span>
+            </a>
+          </div>
+          <div class="framework-row">
+            <a href="/docs/integrations/nextjs" class="framework">
+              <img src="/icons/nextjs.svg" alt="Next" />
+              <span>Next</span>
+            </a>
+            <a href="/docs/integrations/nuxt" class="framework">
+              <img src="/icons/nuxt.svg" alt="Nuxt" />
+              <span>Nuxt</span>
+            </a>
+            <a href="/docs/integrations/sveltekit" class="framework">
+              <img src="/icons/sveltekit.svg" alt="SvelteKit" />
+              <span>SvelteKit</span>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -587,9 +608,9 @@ const copyCommand = async () => {
 /* Platforms */
 .platforms {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  gap: 28px;
+  gap: 20px;
   margin-top: 32px;
 }
 
@@ -617,11 +638,40 @@ const copyCommand = async () => {
   font-weight: 500;
 }
 
-.platform-divider {
-  width: 1px;
-  height: 40px;
-  background: var(--vp-c-divider);
-  margin: 0 4px;
+.frameworks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 180px;
+}
+
+.framework-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 16px;
+}
+
+.framework {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 1 1 0;
+  text-decoration: none;
+  color: var(--vp-c-text-3);
+  transition: color 0.2s;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.framework:hover {
+  color: var(--vp-c-brand-1);
+}
+
+.framework img {
+  width: 20px;
+  height: 20px;
 }
 
 /* Responsive */
@@ -654,6 +704,24 @@ const copyCommand = async () => {
 }
 
 @media (max-width: 640px) {
+  .platforms {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .frameworks {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .framework-row {
+    display: contents;
+  }
+
   .hero-logo {
     width: 80px;
     height: 80px;

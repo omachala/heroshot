@@ -230,19 +230,19 @@ export default defineConfig({
               ],
             },
             {
-              text: 'Meta-Frameworks',
+              text: 'Full Stack',
               items: [
-                { text: 'Next.js', link: '/docs/integrations/nextjs' },
+                { text: 'Next', link: '/docs/integrations/nextjs' },
                 { text: 'Nuxt', link: '/docs/integrations/nuxt' },
                 { text: 'SvelteKit', link: '/docs/integrations/sveltekit' },
               ],
             },
             {
-              text: 'UI Frameworks',
+              text: 'UI',
               items: [
                 { text: 'React', link: '/docs/integrations/react' },
                 { text: 'Vue', link: '/docs/integrations/vue' },
-                { text: 'Svelte', link: '/docs/integrations/sveltekit' },
+                { text: 'Svelte', link: '/docs/integrations/svelte' },
                 { text: 'Markdown', link: '/docs/integrations/markdown' },
               ],
             },

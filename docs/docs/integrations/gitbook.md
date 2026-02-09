@@ -91,37 +91,7 @@ The workflow with GitBook is simple:
 2. Commit and push
 3. GitBook syncs automatically (usually within a few minutes)
 
-For CI automation:
-
-```yaml
-# .github/workflows/screenshots.yml
-name: Update Screenshots
-
-on:
-  workflow_dispatch:
-
-jobs:
-  update:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - run: npx playwright install chromium
-
-      - run: npx heroshot
-
-      - name: Commit
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .gitbook/assets/screenshots/
-          git diff --staged --quiet || git commit -m "docs: update screenshots"
-          git push
-```
+For CI automation, see the [Automated Updates](/docs/guide/automated-updates) guide.
 
 ## One-Shot Mode for Quick Captures
 

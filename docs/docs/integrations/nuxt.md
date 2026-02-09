@@ -27,31 +27,16 @@ This opens a browser with the visual picker. Start your Nuxt dev server (`npm ru
 
 ## Where to Put Screenshots
 
-Nuxt serves anything in `public/` at the root URL. Put screenshots in `public/heroshots/` and reference them as `/heroshots/whatever.png`.
-
-```
-my-app/
-├── pages/
-│   └── index.vue
-├── plugins/
-│   └── heroshot.ts
-├── public/
-│   └── heroshots/    # heroshot outputs here
-├── nuxt.config.ts
-└── package.json
-```
-
-Set the output directory in heroshot config:
+Nuxt serves anything in `public/` at the root URL. Set your heroshot output directory to `public/heroshots` so screenshots are served as `/heroshots/whatever.png`:
 
 ```json
+// .heroshot/config.json
 {
   "outputDirectory": "public/heroshots"
 }
 ```
 
 ## Setting Up the Plugin
-
-Two things: the Vite plugin in your Nuxt config, and a Nuxt plugin to register the manifest.
 
 Add the Vite plugin to your Nuxt config:
 
@@ -69,20 +54,11 @@ export default defineNuxtConfig({
 });
 ```
 
+That's it. The plugin auto-registers the manifest when you import the `<Heroshot>` component.
+
 ::: tip Why `optimizeDeps.exclude`?
 Vite pre-bundles dependencies for faster dev startup. This can split heroshot's manifest store into separate copies, breaking the connection between the plugin and component. Excluding heroshot keeps everything in one module.
 :::
-
-Then create a Nuxt plugin to import the manifest. This runs on both server and client, so SSR works correctly:
-
-```ts
-// plugins/heroshot.ts
-import 'virtual:heroshot-manifest';
-
-export default defineNuxtPlugin(() => {});
-```
-
-That's it. The manifest gets registered before any page component renders.
 
 ## Using Screenshots
 

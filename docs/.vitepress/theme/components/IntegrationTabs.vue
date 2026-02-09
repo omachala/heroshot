@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const activeTab = ref<'vitepress' | 'docusaurus' | 'mkdocs' | 'sphinx'>('docusaurus');
+const activeTab = ref<
+  'vitepress' | 'docusaurus' | 'mkdocs' | 'sphinx' | 'nextjs' | 'nuxt' | 'sveltekit'
+>('docusaurus');
 
 const tabs = [
   { id: 'docusaurus', name: 'Docusaurus' },
   { id: 'vitepress', name: 'VitePress' },
   { id: 'mkdocs', name: 'MkDocs' },
   { id: 'sphinx', name: 'Sphinx' },
+  { id: 'nextjs', name: 'Next' },
+  { id: 'nuxt', name: 'Nuxt' },
+  { id: 'sveltekit', name: 'SvelteKit' },
 ] as const;
 
 // Simple manual syntax highlighting with HTML spans
@@ -113,6 +118,108 @@ import { Heroshot } from 'heroshot/vue';
       lang: 'rst',
       raw: '.. heroshot:: dashboard\n   :alt: Dashboard overview',
       html: '<span class="hl-tag">.. heroshot::</span> dashboard\n   <span class="hl-attr">:alt:</span> <span class="hl-string">Dashboard overview</span>',
+    },
+  },
+  nextjs: {
+    step1: {
+      lang: 'bash',
+      raw: 'npm install heroshot\nheroshot',
+      html: '<span class="hl-cmd">npm</span> install heroshot\nheroshot',
+    },
+    step2: {
+      lang: 'mjs',
+      file: 'next.config.mjs',
+      raw: `import { withHeroshot } from 'heroshot/plugins/next';
+
+export default withHeroshot({});`,
+      html: `<span class="hl-keyword">import</span> { withHeroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/plugins/next'</span>;
+
+<span class="hl-keyword">export default</span> <span class="hl-fn">withHeroshot</span>({});`,
+    },
+    step3: {
+      lang: 'tsx',
+      raw: `import { Heroshot } from 'heroshot/next';
+
+<Heroshot name="Dashboard" alt="Dashboard overview" />`,
+      html: `<span class="hl-keyword">import</span> { Heroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/next'</span>;
+
+<span class="hl-tag">&lt;Heroshot</span> <span class="hl-attr">name</span>=<span class="hl-string">"Dashboard"</span> <span class="hl-attr">alt</span>=<span class="hl-string">"Dashboard overview"</span> <span class="hl-tag">/&gt;</span>`,
+    },
+  },
+  nuxt: {
+    step1: {
+      lang: 'bash',
+      raw: 'npm install heroshot\nheroshot',
+      html: '<span class="hl-cmd">npm</span> install heroshot\nheroshot',
+    },
+    step2: {
+      lang: 'ts',
+      file: 'nuxt.config.ts',
+      raw: `import { heroshot } from 'heroshot/plugins/vite';
+
+export default defineNuxtConfig({
+  vite: { plugins: [heroshot()] }
+});`,
+      html: `<span class="hl-keyword">import</span> { heroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/plugins/vite'</span>;
+
+<span class="hl-keyword">export default</span> <span class="hl-fn">defineNuxtConfig</span>({
+  vite: { plugins: [<span class="hl-fn">heroshot</span>()] }
+});`,
+    },
+    step3: {
+      lang: 'vue',
+      raw:
+        '<' +
+        `script setup>
+import { Heroshot } from 'heroshot/nuxt';
+</` +
+        `script>
+
+<Heroshot name="Dashboard" alt="Dashboard overview" />`,
+      html: `<span class="hl-tag">&lt;script setup&gt;</span>
+<span class="hl-keyword">import</span> { Heroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/nuxt'</span>;
+<span class="hl-tag">&lt;/script&gt;</span>
+
+<span class="hl-tag">&lt;Heroshot</span> <span class="hl-attr">name</span>=<span class="hl-string">"Dashboard"</span> <span class="hl-attr">alt</span>=<span class="hl-string">"Dashboard overview"</span> <span class="hl-tag">/&gt;</span>`,
+    },
+  },
+  sveltekit: {
+    step1: {
+      lang: 'bash',
+      raw: 'npm install heroshot\nheroshot',
+      html: '<span class="hl-cmd">npm</span> install heroshot\nheroshot',
+    },
+    step2: {
+      lang: 'ts',
+      file: 'vite.config.ts',
+      raw: `import { sveltekit } from '@sveltejs/kit/vite';
+import { heroshot } from 'heroshot/plugins/vite';
+
+export default defineConfig({
+  plugins: [sveltekit(), heroshot()]
+});`,
+      html: `<span class="hl-keyword">import</span> { sveltekit } <span class="hl-keyword">from</span> <span class="hl-string">'@sveltejs/kit/vite'</span>;
+<span class="hl-keyword">import</span> { heroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/plugins/vite'</span>;
+
+<span class="hl-keyword">export default</span> <span class="hl-fn">defineConfig</span>({
+  plugins: [<span class="hl-fn">sveltekit</span>(), <span class="hl-fn">heroshot</span>()]
+});`,
+    },
+    step3: {
+      lang: 'svelte',
+      raw:
+        '<' +
+        `script>
+  import { Heroshot } from 'heroshot/sveltekit';
+</` +
+        `script>
+
+<Heroshot name="Dashboard" alt="Dashboard overview" />`,
+      html: `<span class="hl-tag">&lt;script&gt;</span>
+  <span class="hl-keyword">import</span> { Heroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/sveltekit'</span>;
+<span class="hl-tag">&lt;/script&gt;</span>
+
+<span class="hl-tag">&lt;Heroshot</span> <span class="hl-attr">name</span>=<span class="hl-string">"Dashboard"</span> <span class="hl-attr">alt</span>=<span class="hl-string">"Dashboard overview"</span> <span class="hl-tag">/&gt;</span>`,
     },
   },
 };
@@ -326,6 +433,147 @@ function copyCode(code: string, event: MouseEvent) {
         </div>
         <a href="/docs/integrations/sphinx" class="learn-more">Full Sphinx Guide</a>
       </div>
+
+      <!-- Next -->
+      <div v-show="activeTab === 'nextjs'" class="tab-panel">
+        <div class="code-section">
+          <p class="code-label" data-step="1">Install</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">{{ codeBlocks.nextjs.step1.lang }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.nextjs.step1.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.nextjs.step1.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="2">Configure</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="file">{{ codeBlocks.nextjs.step2.file }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.nextjs.step2.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.nextjs.step2.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="3">Use</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">{{ codeBlocks.nextjs.step3.lang }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.nextjs.step3.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.nextjs.step3.html"></code></pre>
+          </div>
+        </div>
+        <a href="/docs/integrations/nextjs" class="learn-more">Full Next Guide</a>
+      </div>
+
+      <!-- Nuxt -->
+      <div v-show="activeTab === 'nuxt'" class="tab-panel">
+        <div class="code-section">
+          <p class="code-label" data-step="1">Install</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">{{ codeBlocks.nuxt.step1.lang }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.nuxt.step1.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.nuxt.step1.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="2">Configure</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="file">{{ codeBlocks.nuxt.step2.file }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.nuxt.step2.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.nuxt.step2.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="3">Use</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">{{ codeBlocks.nuxt.step3.lang }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.nuxt.step3.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.nuxt.step3.html"></code></pre>
+          </div>
+        </div>
+        <a href="/docs/integrations/nuxt" class="learn-more">Full Nuxt Guide</a>
+      </div>
+
+      <!-- SvelteKit -->
+      <div v-show="activeTab === 'sveltekit'" class="tab-panel">
+        <div class="code-section">
+          <p class="code-label" data-step="1">Install</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">{{ codeBlocks.sveltekit.step1.lang }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.sveltekit.step1.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.sveltekit.step1.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="2">Configure</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="file">{{ codeBlocks.sveltekit.step2.file }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.sveltekit.step2.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.sveltekit.step2.html"></code></pre>
+          </div>
+        </div>
+        <div class="code-section">
+          <p class="code-label" data-step="3">Use</p>
+          <div class="code-block">
+            <div class="code-header">
+              <span class="lang">{{ codeBlocks.sveltekit.step3.lang }}</span>
+              <button
+                class="copy"
+                title="Copy Code"
+                @click="copyCode(codeBlocks.sveltekit.step3.raw, $event)"
+              ></button>
+            </div>
+            <pre><code v-html="codeBlocks.sveltekit.step3.html"></code></pre>
+          </div>
+        </div>
+        <a href="/docs/integrations/sveltekit" class="learn-more">Full SvelteKit Guide</a>
+      </div>
     </div>
   </div>
 </template>
@@ -371,11 +619,8 @@ function copyCode(code: string, event: MouseEvent) {
 
 .tabs-content {
   position: relative;
-  background: var(--vp-c-bg);
   border-radius: 12px;
-  padding: 24px;
-  border: 1px solid var(--vp-c-divider);
-  overflow: hidden;
+  padding: 24px 0;
 }
 
 .tab-panel {
@@ -412,8 +657,8 @@ function copyCode(code: string, event: MouseEvent) {
 .code-label {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 15px;
+  gap: 10px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--vp-c-text-1);
   margin: 0;
@@ -421,17 +666,12 @@ function copyCode(code: string, event: MouseEvent) {
 
 .code-label::before {
   content: '';
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--vp-c-brand-soft);
-  border-radius: 8px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 16px;
+  background-size: 20px;
 }
 
 /* Install icon - download arrow */
@@ -451,9 +691,15 @@ function copyCode(code: string, event: MouseEvent) {
 
 .code-block {
   position: relative;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background: var(--vp-code-block-bg);
+  background: white;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.dark .code-block {
+  background: rgba(30, 30, 32, 0.8);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .code-header {
@@ -471,14 +717,14 @@ function copyCode(code: string, event: MouseEvent) {
 .code-header .lang {
   font-size: 12px;
   font-weight: 500;
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-1);
   text-transform: uppercase;
 }
 
 .code-header .file {
   font-size: 12px;
   font-weight: 500;
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-1);
 }
 
 .code-header .copy {
@@ -506,7 +752,7 @@ function copyCode(code: string, event: MouseEvent) {
 
 .code-block pre {
   margin: 0;
-  padding: 16px;
+  padding: 36px 16px;
   overflow-x: auto;
 }
 
@@ -602,7 +848,7 @@ function copyCode(code: string, event: MouseEvent) {
   }
 
   .tabs-content {
-    padding: 10px;
+    padding: 10px 0;
   }
 
   .code-block pre {
