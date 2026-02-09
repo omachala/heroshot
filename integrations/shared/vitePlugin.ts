@@ -60,12 +60,20 @@ export interface HeroshotPluginOptions {
 export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
   let configPath: string | null = null;
   let manifest: Manifest = emptyManifest();
+  let manifestImportSource = 'heroshot/vue';
 
   return {
     name: 'heroshot',
 
     configResolved(config) {
       const root = config.root;
+
+      // Detect framework to use correct manifest import source
+      // SvelteKit and Svelte need heroshot/svelte (separate manifest store)
+      const hasSveltePlugin = config.plugins.some(p => p.name.includes('svelte'));
+      if (hasSveltePlugin) {
+        manifestImportSource = 'heroshot/svelte';
+      }
 
       // Find or use provided config path
       if (options.config) {
@@ -100,8 +108,7 @@ export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
     load(id): string | undefined {
       if (id === RESOLVED_VIRTUAL_MODULE_ID) {
         // Auto-register manifest when imported (side effect)
-        // Use heroshot/vue for setManifest — it re-exports from shared, works for all Vite-based frameworks
-        return `import { setManifest } from 'heroshot/vue';
+        return `import { setManifest } from '${manifestImportSource}';
 const manifest = ${JSON.stringify(manifest, null, 2)};
 setManifest(manifest);
 export default manifest;`;
