@@ -7,7 +7,7 @@ description: Use Heroshot with SvelteKit. Auto-refresh screenshots in dev mode w
 
 > Want to see it working? Check out the [full example on GitHub](https://github.com/omachala/heroshot/tree/main/integrations/examples/sveltekit) - a minimal setup you can clone and run.
 
-[SvelteKit](https://kit.svelte.dev/) is the full-stack framework for Svelte. Heroshot provides a native Svelte component and works with SvelteKit's Vite-based build system out of the box.
+[SvelteKit](https://kit.svelte.dev/) is the full-stack framework for Svelte. Heroshot provides a native Svelte component that works with SvelteKit's Vite-based build system - including SSR, which is nice.
 
 ## Getting Started
 
@@ -33,10 +33,12 @@ SvelteKit serves anything in `static/` at the root URL. Put screenshots in `stat
 my-app/
 ├── src/
 │   └── routes/
+│       ├── +layout.svelte
 │       └── +page.svelte
 ├── static/
 │   └── heroshots/    # heroshot outputs here
 ├── svelte.config.js
+├── vite.config.ts
 └── package.json
 ```
 
@@ -48,21 +50,9 @@ Set the output directory in heroshot config:
 }
 ```
 
-## Using Screenshots
+## Setting Up the Plugin
 
-Standard HTML works fine:
-
-```svelte
-<img src="/heroshots/dashboard-light.png" alt="Dashboard overview" />
-```
-
-For light/dark mode and responsive variants, heroshot provides a `<Heroshot>` component that handles everything automatically:
-
-```svelte
-<Heroshot name="Dashboard" alt="Dashboard overview" />
-```
-
-### Setting Up the Plugin
+Two things to wire up: the Vite plugin and the manifest import.
 
 Add the Vite plugin to your config:
 
@@ -77,7 +67,7 @@ export default defineConfig({
 });
 ```
 
-Import the virtual manifest in your layout:
+Then import the virtual manifest in your root layout - this registers your screenshots globally so the component can find them:
 
 ```svelte
 <!-- src/routes/+layout.svelte -->
@@ -88,16 +78,6 @@ Import the virtual manifest in your layout:
 </script>
 
 {@render children()}
-```
-
-Now use the component anywhere:
-
-```svelte
-<script>
-  import { Heroshot } from 'heroshot/sveltekit';
-</script>
-
-<Heroshot name="Dashboard" alt="Dashboard overview" />
 ```
 
 ::: tip TypeScript support
@@ -113,6 +93,39 @@ Add `"heroshot/virtual"` to your `tsconfig.json` types for autocomplete:
 
 :::
 
+## Using Screenshots
+
+Standard HTML works fine for simple cases:
+
+```svelte
+<img src="/heroshots/dashboard-light.png" alt="Dashboard overview" />
+```
+
+For light/dark mode and responsive variants, use the `<Heroshot>` component - it handles everything automatically:
+
+```svelte
+<script>
+  import { Heroshot } from 'heroshot/sveltekit';
+</script>
+
+<Heroshot name="Dashboard" alt="Dashboard overview" />
+```
+
+The component handles:
+
+- **Light/dark mode** - Automatically switches based on your app's theme
+- **Responsive viewports** - Uses `<picture>` with media queries when you have multiple viewport variants
+- **Lazy loading** - Images load lazily by default
+- **SSR** - Renders the correct image on the server, no flash of wrong content
+
+### Props
+
+| Prop    | Type     | Description                                     |
+| ------- | -------- | ----------------------------------------------- |
+| `name`  | `string` | Screenshot name (as defined in heroshot config) |
+| `alt`   | `string` | Alt text for accessibility                      |
+| `class` | `string` | CSS class to apply to the image                 |
+
 ## Dark Mode Detection
 
 The component detects dark mode by checking:
@@ -124,20 +137,34 @@ It watches for changes via MutationObserver and media query listeners, so theme 
 
 ## Manual Setup (No Plugin)
 
-If you prefer not to use the plugin, pass the manifest directly:
+If you prefer not to use the Vite plugin, you can call `setManifest` directly. You'll need to transform the config into the manifest format yourself:
 
 ```svelte
 <script>
   import { Heroshot, setManifest } from 'heroshot/sveltekit';
-  import config from '../../.heroshot/config.json';
 
-  // You'd need to transform config to manifest format
-  // or use the plugin which does this automatically
+  setManifest({
+    version: 1,
+    outputDirectory: '/heroshots',
+    screenshots: {
+      Dashboard: { slug: 'dashboard', viewports: [], colorSchemes: ['light', 'dark'], format: 'png' },
+    },
+  });
 </script>
 
-<Heroshot name="dashboard" alt="Dashboard" />
+<Heroshot name="Dashboard" alt="Dashboard" />
 ```
+
+The plugin approach is easier - it reads your `.heroshot/config.json` and handles the transformation automatically.
 
 ## Svelte Component
 
-For plain Svelte apps (not SvelteKit), see the same component under `heroshot/svelte`. The setup is identical but uses a standard Vite config instead of SvelteKit's.
+For plain Svelte apps (not SvelteKit), import from `heroshot/svelte` instead. The component is the same, just the import path differs:
+
+```svelte
+<script>
+  import { Heroshot } from 'heroshot/svelte';
+</script>
+
+<Heroshot name="Dashboard" alt="Dashboard" />
+```

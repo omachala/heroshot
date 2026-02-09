@@ -164,26 +164,4 @@ const features = [
 
 ## Nuxt
 
-For Nuxt apps, the setup is similar. Add the Vite plugin to your `nuxt.config.ts`:
-
-```ts
-// nuxt.config.ts
-import { heroshot } from 'heroshot/plugins/vite';
-
-export default defineNuxtConfig({
-  vite: {
-    plugins: [heroshot()],
-  },
-});
-```
-
-Then import the manifest in a plugin:
-
-```ts
-// plugins/heroshot.client.ts
-import 'virtual:heroshot-manifest';
-
-export default defineNuxtPlugin(() => {});
-```
-
-The component works the same way in your Nuxt pages and components.
+For Nuxt apps, see the [Nuxt integration](/docs/integrations/nuxt) - it uses the same Vue component with Nuxt-specific plugin setup for SSR support.

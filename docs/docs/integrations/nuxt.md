@@ -7,7 +7,7 @@ description: Use Heroshot with Nuxt. Auto-refresh screenshots in dev mode with t
 
 > Want to see it working? Check out the [full example on GitHub](https://github.com/omachala/heroshot/tree/main/integrations/examples/nuxt) - a minimal setup you can clone and run.
 
-[Nuxt](https://nuxt.com/) is the full-stack framework for Vue. Since Nuxt uses Vite under the hood, the existing Vue component and Vite plugin work out of the box.
+[Nuxt](https://nuxt.com/) is the full-stack framework for Vue. Since Nuxt uses Vite under the hood, the existing Vue component and Vite plugin work with a bit of wiring.
 
 ## Getting Started
 
@@ -34,7 +34,7 @@ my-app/
 ├── pages/
 │   └── index.vue
 ├── plugins/
-│   └── heroshot.client.ts
+│   └── heroshot.ts
 ├── public/
 │   └── heroshots/    # heroshot outputs here
 ├── nuxt.config.ts
@@ -51,6 +51,8 @@ Set the output directory in heroshot config:
 
 ## Setting Up the Plugin
 
+Two things: the Vite plugin in your Nuxt config, and a Nuxt plugin to register the manifest.
+
 Add the Vite plugin to your Nuxt config:
 
 ```ts
@@ -60,22 +62,27 @@ import { heroshot } from 'heroshot/plugins/vite';
 export default defineNuxtConfig({
   vite: {
     plugins: [heroshot()],
+    optimizeDeps: {
+      exclude: ['heroshot'],
+    },
   },
 });
 ```
 
-Import the virtual manifest in a client plugin:
+::: tip Why `optimizeDeps.exclude`?
+Vite pre-bundles dependencies for faster dev startup. This can split heroshot's manifest store into separate copies, breaking the connection between the plugin and component. Excluding heroshot keeps everything in one module.
+:::
+
+Then create a Nuxt plugin to import the manifest. This runs on both server and client, so SSR works correctly:
 
 ```ts
-// plugins/heroshot.client.ts
+// plugins/heroshot.ts
 import 'virtual:heroshot-manifest';
 
 export default defineNuxtPlugin(() => {});
 ```
 
-::: tip Why a client plugin?
-The `.client.ts` suffix tells Nuxt to only run this plugin on the client side. The manifest import registers screenshots globally so the `<Heroshot>` component can find them.
-:::
+That's it. The manifest gets registered before any page component renders.
 
 ## Using Screenshots
 
@@ -96,6 +103,7 @@ The component handles everything:
 - **Light/dark mode** - Automatically switches based on your app's theme
 - **Responsive viewports** - Uses `<picture>` with media queries when you have multiple viewport variants
 - **Lazy loading** - Images load lazily by default
+- **SSR** - Renders the correct image on the server, no hydration mismatches
 
 ### Props
 
