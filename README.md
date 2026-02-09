@@ -16,7 +16,7 @@
   <a href="https://heroshot.sh"><img src="https://img.shields.io/badge/docs-heroshot.sh-blue?style=for-the-badge" alt="docs"></a>
 </p>
 
-<p align="center">❤️ Like heroshot? Tell your friends — <a href="https://x.com/intent/tweet?url=https%3A%2F%2Fheroshot.sh">X/Twitter</a> · <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fheroshot.sh">LinkedIn</a> · <a href="https://www.reddit.com/submit?url=https%3A%2F%2Fheroshot.sh&title=Heroshot%20%E2%80%93%20Define%20screenshots%20once%2C%20update%20them%20forever">Reddit</a></p>
+<p align="center">Like Heroshot? Share your story — <a href="https://x.com/intent/tweet?url=https%3A%2F%2Fheroshot.sh">X/Twitter</a> · <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fheroshot.sh">LinkedIn</a> · <a href="https://www.reddit.com/submit?url=https%3A%2F%2Fheroshot.sh&title=Heroshot%20%E2%80%93%20Define%20screenshots%20once%2C%20update%20them%20forever">Reddit</a> ❤️</p>
 
 Your app changes constantly. New features, design tweaks, bug fixes. Meanwhile, the screenshots in your README and docs quietly become lies.
 
