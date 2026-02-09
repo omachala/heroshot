@@ -51,7 +51,9 @@ export function generatePath(
   } = {}
 ): string {
   const filename = generateFilename(screenshot, options);
-  return `${manifest.outputDirectory}/${filename}`;
+  const dir = manifest.outputDirectory;
+  const prefix = dir.startsWith('/') ? '' : '/';
+  return `${prefix}${dir}/${filename}`;
 }
 
 /**
