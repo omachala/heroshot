@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.14.1
+
+### Patch Changes
+
+- 4b691f2: Simplify integration setup: auto-inject manifest via Vite plugin, fix Next.js auto-registration
+
 ## 0.14.0
 
 ### Minor Changes
