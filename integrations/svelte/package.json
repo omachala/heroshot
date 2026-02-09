@@ -1,0 +1,21 @@
+{
+  "name": "svelte",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node build.js",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "svelte": "^5.46.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "jsdom": "^27.4.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4",
+    "vitest": "^4.0.17"
+  }
+}

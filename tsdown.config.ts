@@ -2,7 +2,11 @@ import { cpSync } from 'node:fs';
 import { defineConfig } from 'tsdown';
 
 export default defineConfig({
-  entry: ['src/cli/cli.ts', 'src/mcp/index.ts'],
+  entry: {
+    index: 'integrations/shared/configTransform.ts',
+    'cli/cli': 'src/cli/cli.ts',
+    'mcp/index': 'src/mcp/index.ts',
+  },
   format: ['esm'],
   dts: true,
   clean: true,

@@ -26,11 +26,16 @@ import { findConfig, loadManifest, emptyManifest } from './getManifest';
 
 /**
  * Normalize outputDirectory for browser URL
- * Strips 'public/' prefix (VitePress/Vite) since public/ is served as root
+ * Strips 'public/' prefix (VitePress/Vite/Nuxt/Next.js) or 'static/' prefix (SvelteKit)
+ * since these directories are served as root
  */
 function normalizeOutputDirectory(dir: string): string {
-  // Strip public/ prefix (VitePress/Vite public directory)
+  // Strip public/ prefix (VitePress/Vite/Nuxt/Next.js public directory)
   if (dir.startsWith('public/')) {
+    return dir.slice(7);
+  }
+  // Strip static/ prefix (SvelteKit static directory)
+  if (dir.startsWith('static/')) {
     return dir.slice(7);
   }
   return dir;
@@ -55,12 +60,20 @@ export interface HeroshotPluginOptions {
 export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
   let configPath: string | null = null;
   let manifest: Manifest = emptyManifest();
+  let manifestImportSource = 'heroshot/vue';
 
   return {
     name: 'heroshot',
 
     configResolved(config) {
       const root = config.root;
+
+      // Detect framework to use correct manifest import source
+      // SvelteKit and Svelte need heroshot/svelte (separate manifest store)
+      const hasSveltePlugin = config.plugins.some(p => p.name.includes('svelte'));
+      if (hasSveltePlugin) {
+        manifestImportSource = 'heroshot/svelte';
+      }
 
       // Find or use provided config path
       if (options.config) {
@@ -95,7 +108,7 @@ export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
     load(id): string | undefined {
       if (id === RESOLVED_VIRTUAL_MODULE_ID) {
         // Auto-register manifest when imported (side effect)
-        return `import { setManifest } from 'heroshot/vitepress';
+        return `import { setManifest } from '${manifestImportSource}';
 const manifest = ${JSON.stringify(manifest, null, 2)};
 setManifest(manifest);
 export default manifest;`;

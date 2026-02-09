@@ -1,56 +1,16 @@
 /**
- * Transform config.json into manifest structure for components.
+ * Config loading utilities (Node.js APIs - for build tools and plugins).
  *
- * This eliminates the need for a separate manifest.json file -
- * we read config.json directly and extract what the component needs.
+ * For the pure config-to-manifest transform, see configTransform.ts.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import type { Manifest, ScreenshotInfo } from './types';
+import type { Manifest } from './types';
+import { configToManifest, type ConfigJson } from './configTransform';
 
-/**
- * Raw config.json structure (subset of fields we need)
- */
-interface ConfigJson {
-  outputDirectory?: string;
-  outputFormat?: 'png' | 'jpeg';
-  browser?: {
-    colorScheme?: 'light' | 'dark';
-  };
-  screenshots: Array<{
-    id: string;
-    name: string;
-    viewports?: string[];
-  }>;
-}
-
-/**
- * Slugify a single path segment for use in filenames
- */
-function slugifySegment(text: string): string {
-  return text
-    .toLowerCase()
-    .replaceAll(/[^a-z0-9]+/g, '-')
-    .replaceAll(/(?:^-|-$)/g, '');
-}
-
-/**
- * Slugify a string for use in filenames.
- * Preserves forward slashes to support subdirectory output paths.
- */
-function slugify(text: string): string {
-  return text.split('/').map(slugifySegment).filter(Boolean).join('/');
-}
-
-/**
- * Determine color schemes from config
- */
-function getColorSchemes(colorScheme?: 'light' | 'dark'): ('light' | 'dark')[] {
-  if (colorScheme === 'light') return ['light'];
-  if (colorScheme === 'dark') return ['dark'];
-  return ['light', 'dark']; // default: both
-}
+export { configToManifest } from './configTransform';
+export type { ConfigJson } from './configTransform';
 
 /**
  * Standard locations to search for config.json
@@ -68,32 +28,6 @@ export function findConfig(root: string): string | null {
     }
   }
   return null;
-}
-
-/**
- * Transform config.json into manifest structure
- */
-export function configToManifest(config: ConfigJson): Manifest {
-  const colorSchemes = getColorSchemes(config.browser?.colorScheme);
-  const format = config.outputFormat ?? 'png';
-  const outputDirectory = config.outputDirectory ?? 'heroshots';
-
-  const screenshots: Record<string, ScreenshotInfo> = {};
-
-  for (const screenshot of config.screenshots) {
-    screenshots[screenshot.name] = {
-      slug: slugify(screenshot.name),
-      viewports: screenshot.viewports ?? [],
-      colorSchemes,
-      format,
-    };
-  }
-
-  return {
-    version: 1,
-    outputDirectory,
-    screenshots,
-  };
 }
 
 /**

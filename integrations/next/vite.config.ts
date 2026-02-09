@@ -1,18 +1,15 @@
-/// <reference types="vitest" />
 import { resolve } from 'node:path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     dts({
-      include: ['src/index.ts', 'src/components/**/*.tsx'],
-      exclude: ['src/**/*.test.tsx', 'src/setupTests.ts', 'src/main.tsx', 'src/App.tsx'],
-      outDir: '../../dist/integrations/react',
-      tsconfigPath: './tsconfig.app.json',
+      include: ['src/index.ts'],
+      outDir: '../../dist/integrations/next',
+      tsconfigPath: './tsconfig.json',
       entryRoot: 'src',
     }),
   ],
@@ -22,16 +19,15 @@ export default defineConfig({
       formats: ['es'],
       fileName: 'index',
     },
-    outDir: '../../dist/integrations/react',
+    outDir: '../../dist/integrations/next',
     emptyOutDir: true,
     copyPublicDir: false,
     rollupOptions: {
       external: ['react', 'react-dom', 'react/jsx-runtime'],
+      output: {
+        // Preserve 'use client' directive
+        banner: "'use client';",
+      },
     },
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/setupTests.ts'],
   },
 });

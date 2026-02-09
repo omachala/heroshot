@@ -15,6 +15,7 @@ export default defineConfig({
       exclude: ['src/**/*.test.ts', 'src/setupTests.ts', 'src/main.ts', 'src/App.vue'],
       outDir: '../../dist/integrations/vue',
       tsconfigPath: './tsconfig.app.json',
+      entryRoot: 'src',
     }),
   ],
   build: {

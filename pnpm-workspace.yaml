@@ -5,3 +5,5 @@ packages:
   - 'integrations/shared'
   - 'integrations/vue'
   - 'integrations/react'
+  - 'integrations/svelte'
+  - 'integrations/next'
