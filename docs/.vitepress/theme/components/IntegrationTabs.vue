@@ -10,7 +10,7 @@ const tabs = [
   { id: 'vitepress', name: 'VitePress' },
   { id: 'mkdocs', name: 'MkDocs' },
   { id: 'sphinx', name: 'Sphinx' },
-  { id: 'nextjs', name: 'Next.js' },
+  { id: 'nextjs', name: 'Next' },
   { id: 'nuxt', name: 'Nuxt' },
   { id: 'sveltekit', name: 'SvelteKit' },
 ] as const;
@@ -127,14 +127,14 @@ import { Heroshot } from 'heroshot/vue';
       html: '<span class="hl-cmd">npm</span> install heroshot\nheroshot',
     },
     step2: {
-      lang: 'js',
-      file: 'next.config.js',
-      raw: `const { withHeroshot } = require('heroshot/plugins/next');
+      lang: 'mjs',
+      file: 'next.config.mjs',
+      raw: `import { withHeroshot } from 'heroshot/plugins/next';
 
-module.exports = withHeroshot({});`,
-      html: `<span class="hl-keyword">const</span> { withHeroshot } = <span class="hl-fn">require</span>(<span class="hl-string">'heroshot/plugins/next'</span>);
+export default withHeroshot({});`,
+      html: `<span class="hl-keyword">import</span> { withHeroshot } <span class="hl-keyword">from</span> <span class="hl-string">'heroshot/plugins/next'</span>;
 
-module.exports = <span class="hl-fn">withHeroshot</span>({});`,
+<span class="hl-keyword">export default</span> <span class="hl-fn">withHeroshot</span>({});`,
     },
     step3: {
       lang: 'tsx',
@@ -434,7 +434,7 @@ function copyCode(code: string, event: MouseEvent) {
         <a href="/docs/integrations/sphinx" class="learn-more">Full Sphinx Guide</a>
       </div>
 
-      <!-- Next.js -->
+      <!-- Next -->
       <div v-show="activeTab === 'nextjs'" class="tab-panel">
         <div class="code-section">
           <p class="code-label" data-step="1">Install</p>
@@ -478,7 +478,7 @@ function copyCode(code: string, event: MouseEvent) {
             <pre><code v-html="codeBlocks.nextjs.step3.html"></code></pre>
           </div>
         </div>
-        <a href="/docs/integrations/nextjs" class="learn-more">Full Next.js Guide</a>
+        <a href="/docs/integrations/nextjs" class="learn-more">Full Next Guide</a>
       </div>
 
       <!-- Nuxt -->
@@ -619,11 +619,8 @@ function copyCode(code: string, event: MouseEvent) {
 
 .tabs-content {
   position: relative;
-  background: var(--vp-c-bg);
   border-radius: 12px;
-  padding: 24px;
-  border: 1px solid var(--vp-c-divider);
-  overflow: hidden;
+  padding: 24px 0;
 }
 
 .tab-panel {
@@ -660,8 +657,8 @@ function copyCode(code: string, event: MouseEvent) {
 .code-label {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 15px;
+  gap: 10px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--vp-c-text-1);
   margin: 0;
@@ -669,17 +666,12 @@ function copyCode(code: string, event: MouseEvent) {
 
 .code-label::before {
   content: '';
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: var(--vp-c-brand-soft);
-  border-radius: 8px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
   background-repeat: no-repeat;
   background-position: center;
-  background-size: 16px;
+  background-size: 20px;
 }
 
 /* Install icon - download arrow */
@@ -699,9 +691,15 @@ function copyCode(code: string, event: MouseEvent) {
 
 .code-block {
   position: relative;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background: var(--vp-code-block-bg);
+  background: white;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.dark .code-block {
+  background: rgba(30, 30, 32, 0.8);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .code-header {
@@ -719,14 +717,14 @@ function copyCode(code: string, event: MouseEvent) {
 .code-header .lang {
   font-size: 12px;
   font-weight: 500;
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-1);
   text-transform: uppercase;
 }
 
 .code-header .file {
   font-size: 12px;
   font-weight: 500;
-  color: var(--vp-c-text-3);
+  color: var(--vp-c-text-1);
 }
 
 .code-header .copy {
@@ -754,7 +752,7 @@ function copyCode(code: string, event: MouseEvent) {
 
 .code-block pre {
   margin: 0;
-  padding: 16px;
+  padding: 36px 16px;
   overflow-x: auto;
 }
 
@@ -850,7 +848,7 @@ function copyCode(code: string, event: MouseEvent) {
   }
 
   .tabs-content {
-    padding: 10px;
+    padding: 10px 0;
   }
 
   .code-block pre {

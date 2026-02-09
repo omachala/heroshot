@@ -23,7 +23,7 @@ export default defineConfig({
     emptyOutDir: true,
     copyPublicDir: false,
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime'],
+      external: ['react', 'react-dom', 'react/jsx-runtime', '@heroshot/manifest'],
       output: {
         // Preserve 'use client' directive
         banner: "'use client';",

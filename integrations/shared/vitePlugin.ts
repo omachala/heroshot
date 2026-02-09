@@ -98,6 +98,20 @@ export function heroshot(options: HeroshotPluginOptions = {}): Plugin {
       }
     },
 
+    // Auto-inject manifest import into entry modules so users don't need a separate plugin file
+    transform(code, id) {
+      // Only inject into entry-like files (layouts, main entry points)
+      if (id.includes('\0') || id.includes('node_modules')) return undefined;
+      // Check if this file imports from any heroshot component package
+      // Matches heroshot/svelte, heroshot/sveltekit, heroshot/vue, heroshot/nuxt, heroshot/next, etc.
+      if (code.includes("from 'heroshot/") || code.includes('from "heroshot/')) {
+        // Don't inject if already imported
+        if (code.includes(VIRTUAL_MODULE_ID)) return undefined;
+        return `import '${VIRTUAL_MODULE_ID}';\n${code}`;
+      }
+      return undefined;
+    },
+
     resolveId(id): string | undefined {
       if (id === VIRTUAL_MODULE_ID) {
         return RESOLVED_VIRTUAL_MODULE_ID;

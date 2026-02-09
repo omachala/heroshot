@@ -1,5 +1,12 @@
 {
-  "ignoreDependencies": ["tailwindcss", "heroshot", "postcss", "plyr", "svelte"],
+  "ignoreDependencies": [
+    "tailwindcss",
+    "heroshot",
+    "postcss",
+    "plyr",
+    "svelte",
+    "@heroshot/manifest"
+  ],
   "ignore": [
     "editor/**",
     "src/capture.ts",

@@ -107,22 +107,10 @@ export function withHeroshot(
       const manifestPath = join(generatedDir, 'manifest.json');
       writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
 
-      // Write client module that auto-registers manifest
-      const clientModulePath = join(generatedDir, 'client.js');
-      writeFileSync(
-        clientModulePath,
-        `import { setManifest } from 'heroshot/next';
-import manifest from './manifest.json';
-setManifest(manifest);
-export default manifest;
-`
-      );
-
-      // Add webpack alias
+      // Add webpack alias so heroshot/next can import the manifest
       config.resolve ??= {};
       config.resolve.alias ??= {};
       config.resolve.alias['@heroshot/manifest'] = manifestPath;
-      config.resolve.alias['virtual:heroshot-manifest'] = clientModulePath;
 
       // Call user's webpack config if provided
       if (typeof nextConfig.webpack === 'function') {
