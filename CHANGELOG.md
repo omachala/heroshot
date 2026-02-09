@@ -1,5 +1,15 @@
 # heroshot
 
+## 0.14.0
+
+### Minor Changes
+
+- c9b3283: Add SvelteKit, Next.js, and Nuxt integrations. New Svelte display component, Next.js webpack plugin with `withHeroshot()` config wrapper, and `'use client'` entry point for React Server Components. Vite plugin now supports SvelteKit's `static/` directory.
+
+### Patch Changes
+
+- 7ebd099: Support subdirectory paths in screenshot names. Forward slashes in the `name` field (e.g., `"registry/login-01"`) now create subdirectories in the output, producing `registry/login-01-light.png` instead of `registry-login-01-light.png`.
+
 ## 0.13.1
 
 ### Patch Changes
