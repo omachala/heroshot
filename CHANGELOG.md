@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.14.2
+
+### Patch Changes
+
+- 2dd9e04: fix(integrations): ensure generatePath produces absolute paths for framework components
+
 ## 0.14.1
 
 ### Patch Changes
