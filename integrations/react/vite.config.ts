@@ -13,6 +13,7 @@ export default defineConfig({
       exclude: ['src/**/*.test.tsx', 'src/setupTests.ts', 'src/main.tsx', 'src/App.tsx'],
       outDir: '../../dist/integrations/react',
       tsconfigPath: './tsconfig.app.json',
+      entryRoot: 'src',
     }),
   ],
   build: {

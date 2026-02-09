@@ -10,6 +10,7 @@ export default defineConfig({
       include: ['src/index.ts'],
       outDir: '../../dist/integrations/next',
       tsconfigPath: './tsconfig.json',
+      entryRoot: 'src',
     }),
   ],
   build: {

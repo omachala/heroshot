@@ -1,3 +1,4 @@
+import { cpSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
@@ -5,10 +6,18 @@ import dts from 'vite-plugin-dts';
 export default defineConfig({
   plugins: [
     dts({
-      include: ['vitePlugin.ts', 'docusaurusPlugin.ts', 'nextPlugin.ts', 'virtual.d.ts'],
+      include: ['vitePlugin.ts', 'docusaurusPlugin.ts', 'nextPlugin.ts'],
       outDir: '../../dist/integrations/shared',
-      copyDtsFiles: true,
     }),
+    {
+      name: 'copy-virtual-dts',
+      closeBundle() {
+        cpSync(
+          resolve(__dirname, 'virtual.d.ts'),
+          resolve(__dirname, '../../dist/integrations/shared/virtual.d.ts')
+        );
+      },
+    },
   ],
   build: {
     lib: {
