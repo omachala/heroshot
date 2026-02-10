@@ -1011,12 +1011,23 @@ export const HeroDemo: React.FC = () => {
       endDrag();
       setTimeout(() => {
         const titleCenter = getElementCenter('.feature-title', false);
+        // Re-measure ConfigBar input positions (they shift after drag resizes the element)
+        const paddingFillSelect = getElementCenter('select', true);
+        const borderColorInput = getElementCenter('input[title="Border color"]', true);
+        const borderWidthInput = getElementCenter('input[title="Border width (px)"]', true);
+        const borderRadiusInput = getElementCenter('input[title="Border radius (px)"]', true);
+        const updates: Partial<typeof positionsRef.current> = {
+          ...(paddingFillSelect ? { paddingFillSelect } : {}),
+          ...(borderColorInput ? { borderColorInput } : {}),
+          ...(borderWidthInput ? { borderWidthInput } : {}),
+          ...(borderRadiusInput ? { borderRadiusInput } : {}),
+        };
         if (titleCenter) {
-          const arrowEnd = { x: titleCenter.x, y: titleCenter.y + 30 };
-          const arrowStart = { x: titleCenter.x + 100, y: titleCenter.y + 130 };
-          positionsRef.current = { ...positionsRef.current, arrowStart, arrowEnd };
-          setPositions(positionsRef.current);
+          updates.arrowEnd = { x: titleCenter.x, y: titleCenter.y + 30 };
+          updates.arrowStart = { x: titleCenter.x + 100, y: titleCenter.y + 130 };
         }
+        positionsRef.current = { ...positionsRef.current, ...updates };
+        setPositions(positionsRef.current);
       }, 100);
     }
 
