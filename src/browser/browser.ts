@@ -58,16 +58,13 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
   const allScreenshots: ScreenshotData[] = configToScreenshotData(config.screenshots);
 
   let pendingJob: ToolbarJob | null = null;
-  // Track selected screenshot and sidebar state for cross-URL navigation
   let selectedId: string | null = null;
   let sidebarExpanded = false;
-  // Track updated browser settings
   let updatedBrowserSettings: BrowserSettings | null = null;
+  let hiddenElements = config.hiddenElements ?? {};
 
-  // Helper to save config after changes
-  const save = () => {
-    saveCurrentConfig(configPath, allScreenshots, updatedBrowserSettings);
-  };
+  const save = () =>
+    saveCurrentConfig(configPath, allScreenshots, updatedBrowserSettings, hiddenElements);
 
   const { browser, context } = await launchBrowser({
     headless: false,
@@ -109,36 +106,19 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
       }
 
       case 'screenshot-selected': {
-        // User selected a screenshot - create job to highlight it
         const [currentPage] = context.pages();
         if (!currentPage) break;
-
-        // Track selected ID and keep sidebar open for cross-URL navigation
         selectedId = event.id;
         sidebarExpanded = true;
-
-        const currentUrl = currentPage.url();
-
-        if (currentUrl === event.url) {
-          // Already on the right page - send highlight job via event
+        if (currentPage.url() === event.url) {
           pendingJob = { type: 'highlight', selector: event.selector, screenshotId: event.id };
-          // Fire and forget - we don't need to wait for this
           currentPage
-            .evaluate(dispatchHighlightJob, {
-              selector: event.selector,
-              screenshotId: event.id,
-            })
-            // eslint-disable-next-line @typescript-eslint/no-empty-function -- fire and forget, errors handled by toolbar
+            .evaluate(dispatchHighlightJob, { selector: event.selector, screenshotId: event.id })
+            // eslint-disable-next-line @typescript-eslint/no-empty-function -- fire and forget
             .catch(() => {});
         } else {
-          // Navigate to the page - toolbar will get job on inject
-          pendingJob = {
-            type: 'navigate-and-highlight',
-            url: event.url,
-            selector: event.selector,
-            screenshotId: event.id,
-          };
-          // eslint-disable-next-line @typescript-eslint/no-empty-function -- fire and forget navigation
+          pendingJob = { type: 'navigate-and-highlight', url: event.url, selector: event.selector, screenshotId: event.id };
+          // eslint-disable-next-line @typescript-eslint/no-empty-function -- fire and forget
           currentPage.goto(event.url, { waitUntil: 'domcontentloaded' }).catch(() => {});
         }
         break;
@@ -147,6 +127,16 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
       case 'settings-updated': {
         updatedBrowserSettings = event.data;
         verbose(`Settings updated: ${JSON.stringify(event.data)}`);
+        save();
+        break;
+      }
+
+      case 'hidden-elements-updated': {
+        const { domain, selectors } = event;
+        hiddenElements = selectors.length === 0
+          ? Object.fromEntries(Object.entries(hiddenElements).filter(([k]) => k !== domain))
+          : { ...hiddenElements, [domain]: selectors };
+        verbose(`Hidden elements updated for ${domain}: ${selectors.length} selectors`);
         save();
         break;
       }
@@ -186,6 +176,7 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
           pendingJob,
           selectedId,
           sidebarExpanded,
+          hiddenElements,
           onEvent: handleEvent,
         });
         verbose(`Toolbar injected on ${url}`);
@@ -198,8 +189,6 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
     });
   };
 
-  // Close browser when user manually closes the last window
-  // (browser.disconnected only fires when process terminates, not when windows close)
   const handlePageClose = (page: Page) => {
     page.on('close', () => {
       if (context.pages().length === 0) {
@@ -209,17 +198,14 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
     });
   };
 
-  // Handle new pages/tabs
-  context.on('page', page => {
+  const initPage = (page: Page) => {
     setupPage(page);
     handlePageClose(page);
-  });
+  };
+  context.on('page', initPage);
 
-  // Use existing page from context or create one if none exists
-  const existingPages = context.pages();
-  const page = existingPages[0] ?? (await context.newPage());
-  setupPage(page);
-  handlePageClose(page);
+  const page = context.pages()[0] ?? (await context.newPage());
+  initPage(page);
 
   // Navigate to heroshot.sh welcome page
   await page.goto('https://heroshot.sh/welcome', { waitUntil: 'domcontentloaded' });
@@ -231,6 +217,7 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
       pendingJob,
       selectedId,
       sidebarExpanded,
+      hiddenElements,
       onEvent: handleEvent,
     });
     verbose('Toolbar injected on welcome page');
@@ -245,7 +232,6 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
     browser.once('disconnected', () => resolve());
   });
 
-  // Display session key info for CI setup
   if (isNewKey) {
     note(
       'To print your session key:\n  npx heroshot session-key\n\nFor CI, add HEROSHOT_SESSION_KEY as a repository secret.',
@@ -253,6 +239,5 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
     );
   }
 
-  // Return whether there are screenshots to sync
   return { hasScreenshots: allScreenshots.length > 0 };
 }

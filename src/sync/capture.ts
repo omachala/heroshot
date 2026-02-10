@@ -10,6 +10,7 @@ import type { Screenshot } from '../types';
 import { verbose } from '../ui';
 import { generateScreenshotFilename } from '../utils/screenshotPath';
 import { executeActions } from './actions';
+import { executeHide } from './actions/hide';
 import { captureElementWithOptions } from './elementCapture';
 import { applyColorSchemeClass } from './pageScripts';
 import { buildVariantSuffix } from './results';
@@ -112,6 +113,15 @@ export async function captureScreenshot(
   const navResult = await navigateAndPrepare(page, url, variant.colorScheme);
   if (!navResult.success) {
     return { ...navResult, filename };
+  }
+
+  // Apply domain-level hidden elements
+  if (captureOptions.hiddenElements) {
+    const { hiddenElements: hiddenByDomain } = captureOptions;
+    const { hostname } = new URL(url);
+    if (hiddenByDomain[hostname]?.length) {
+      await executeHide(page, { type: 'hide', selectors: hiddenByDomain[hostname] });
+    }
   }
 
   // Execute pre-screenshot actions
