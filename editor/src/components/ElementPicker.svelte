@@ -14,6 +14,8 @@
   type Props = {
     /** Whether picker mode is active */
     active: boolean;
+    /** Whether hide mode is active (clicking hides instead of selects) */
+    hideMode: boolean;
     /** Screenshots list (for loading saved padding) */
     screenshots: ScreenshotItem[];
     /** Active annotation tool (null = not annotating) */
@@ -22,6 +24,8 @@
     onToggle: () => void;
     /** Callback when new element is picked (creates draft) */
     onNewElement: (selector: string) => void;
+    /** Callback when element is picked for hiding */
+    onHideElement: (selector: string) => void;
     /** Callback when existing screenshot padding is updated */
     onPaddingUpdate: (id: string, padding: Padding) => void;
     /** Callback when existing screenshot scroll position is updated */
@@ -50,7 +54,7 @@
     onExpandedRectChange: (rect: { top: number; left: number; width: number; height: number } | null) => void;
   }
 
-  const { active, screenshots, annotationTool, onToggle, onNewElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onAnnotationsUpdate, onAnnotationToolDeactivate, onCancel, onDeselect, onAnnotationSelectionChange, onTextEditChange, onEditingScreenshotChange, onExpandedRectChange }: Props = $props();
+  const { active, hideMode, screenshots, annotationTool, onToggle, onNewElement, onHideElement, onPaddingUpdate, onScrollUpdate, onPaddingFillUpdate, onElementFillUpdate, onTextOverrideUpdate, onAnnotationsUpdate, onAnnotationToolDeactivate, onCancel, onDeselect, onAnnotationSelectionChange, onTextEditChange, onEditingScreenshotChange, onExpandedRectChange }: Props = $props();
 
   // Default padding
   const defaultPadding: Padding = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -238,6 +242,14 @@
 
     if (currentElement) {
       const selector = getSelector(currentElement);
+
+      // Hide mode: hide element and return
+      if (hideMode) {
+        currentElement = null;
+        tooltipData = null;
+        onHideElement(selector);
+        return;
+      }
 
       selectedElement = currentElement;
       selectedPadding = { ...defaultPadding };
@@ -857,9 +869,9 @@
         />
       {/if}
     {:else}
-      <!-- Picker mode: simple cyan border -->
+      <!-- Picker mode: green border / Hide mode: red border -->
       <div
-        class="fixed border-[3px] pointer-events-none box-border border-heroshot-primary bg-heroshot-primary/10"
+        class="fixed border-[3px] pointer-events-none box-border {hideMode ? 'border-red-500 bg-red-500/10' : 'border-heroshot-primary bg-heroshot-primary/10'}"
         style="top:{overlayRects.highlight.top}px;left:{overlayRects.highlight.left}px;width:{overlayRects.highlight.width}px;height:{overlayRects.highlight.height}px;"
       ></div>
     {/if}

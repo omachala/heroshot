@@ -23,6 +23,7 @@ export { SIDEBAR_SELECTORS, TOOLBAR_SELECTORS } from './selectors';
 
 // Test actions
 export {
+  activateHideModeAndHideElement,
   activatePickerAndSelectElement,
   clickCancelButtonForElement,
   clickConfirmButtonForElement,

@@ -117,6 +117,7 @@ export type ToolbarEvent =
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
   | { type: 'settings-updated'; data: BrowserSettings }
+  | { type: 'hidden-elements-updated'; domain: string; selectors: string[] }
   | { type: 'job-complete' }
   | { type: 'done' };
 
@@ -139,6 +140,8 @@ export type HeroshotGlobal = {
   selectedId: string | null;
   /** Whether sidebar should be open on init */
   sidebarVisible: boolean;
+  /** Elements hidden per domain (hostname → CSS selectors) */
+  hiddenElements: Record<string, string[]>;
   emit: (event: ToolbarEvent) => void;
   /** Utility functions for sync script */
   utils?: HeroshotUtilities;

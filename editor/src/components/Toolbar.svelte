@@ -2,6 +2,7 @@
   import { DEFAULT_BORDER_COLOR } from '../constants';
   import { eventInterceptor } from '../lib/eventInterceptor';
   import { generateSmartName, generateUid } from '../lib/naming';
+  import { queryElements } from '../lib/selectorGenerator';
   import type { Annotation, BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, SelectionContext, ToolbarJob } from '../types';
   import ConfigBar from './ConfigBar.svelte';
   import EditorBar from './EditorBar.svelte';
@@ -14,6 +15,7 @@
     pendingJob?: ToolbarJob | null;
     initialSelectedId?: string | null;
     initialSidebarExpanded?: boolean;
+    initialHiddenElements?: Record<string, string[]>;
   }
 
   const props: Props = $props();
@@ -43,6 +45,12 @@
 
   // Annotation state
   let annotationTool = $state<string | null>(null); // null = not annotating, 'arrow' | 'rect' | 'ellipse'
+
+  // Hidden elements state (per domain)
+  let hiddenElements = $state<Record<string, string[]>>({ ...props.initialHiddenElements });
+  let isHideMode = $state(false);
+  let currentDomain = $derived((() => { try { return new URL(globalThis.location.href).hostname; } catch { return ''; } })());
+  let currentHiddenSelectors = $derived(hiddenElements[currentDomain] ?? []);
 
   // Selection tracking for ConfigBar
   let selectedAnnotationId = $state<string | null>(null);
@@ -133,6 +141,10 @@
    * Toggle picker mode
    */
   function togglePicker(): void {
+    // Deactivate hide mode if active
+    if (isHideMode) {
+      isHideMode = false;
+    }
     // Clear selection when activating picker so screen is ready for new pick
     if (!isPickerActive) {
       selectedScreenshotId = null;
@@ -509,6 +521,86 @@
   });
 
   /**
+   * Toggle hide mode - activates picker in hide mode
+   */
+  function toggleHideMode(): void {
+    isHideMode = !isHideMode;
+    if (isHideMode) {
+      // Deactivate normal picker if active
+      if (isPickerActive) {
+        isPickerActive = false;
+      }
+      // Clear current selection
+      selectedScreenshotId = null;
+      elementPicker.clearSelection();
+      // Activate picker for hide mode
+      isPickerActive = true;
+      eventInterceptor.setMode('picker');
+    } else {
+      // Deactivate picker when exiting hide mode
+      if (isPickerActive) {
+        isPickerActive = false;
+        eventInterceptor.setMode('idle');
+      }
+    }
+  }
+
+  /**
+   * Handle element hidden from picker
+   */
+  function handleHideElement(selector: string): void {
+    const domain = currentDomain;
+    if (!domain) return;
+
+    const existing = hiddenElements[domain] ?? [];
+    if (existing.includes(selector)) return;
+
+    hiddenElements = { ...hiddenElements, [domain]: [...existing, selector] };
+    emit({ type: 'hidden-elements-updated', domain, selectors: hiddenElements[domain] ?? [] });
+
+    // Deactivate hide mode after hiding
+    isHideMode = false;
+    isPickerActive = false;
+    eventInterceptor.setMode('idle');
+  }
+
+  /**
+   * Handle element unhidden from sidebar list
+   */
+  function handleUnhideElement(selector: string): void {
+    const domain = currentDomain;
+    if (!domain) return;
+
+    const existing = hiddenElements[domain] ?? [];
+    const updated = existing.filter(s => s !== selector);
+
+    hiddenElements = updated.length === 0
+      ? Object.fromEntries(Object.entries(hiddenElements).filter(([key]) => key !== domain))
+      : { ...hiddenElements, [domain]: updated };
+
+    // Restore element visibility in DOM
+    for (const element of queryElements(selector)) {
+      if (element instanceof HTMLElement) {
+        element.style.display = '';
+      }
+    }
+
+    emit({ type: 'hidden-elements-updated', domain, selectors: updated });
+  }
+
+  // Apply hidden elements to DOM whenever they change
+  $effect(() => {
+    const selectors = currentHiddenSelectors;
+    for (const selector of selectors) {
+      for (const element of queryElements(selector)) {
+        if (element instanceof HTMLElement) {
+          element.style.display = 'none';
+        }
+      }
+    }
+  });
+
+  /**
    * Handle done button
    */
   function handleDone(): void {
@@ -542,10 +634,12 @@
 <ElementPicker
   bind:this={elementPicker}
   active={isPickerActive}
+  hideMode={isHideMode}
   {screenshots}
   {annotationTool}
   onToggle={togglePicker}
   onNewElement={handleNewElement}
+  onHideElement={handleHideElement}
   onPaddingUpdate={handlePaddingUpdate}
   onScrollUpdate={handleScrollUpdate}
   onPaddingFillUpdate={handlePaddingFillUpdate}
@@ -590,13 +684,16 @@
 <EditorBar
   {screenshots}
   pickerActive={isPickerActive}
+  {isHideMode}
   expanded={sidebarExpanded}
   {settingsVisible}
   {editingId}
   {draftId}
   selectedId={selectedScreenshotId}
   {annotationTool}
+  hiddenSelectors={currentHiddenSelectors}
   onTogglePicker={togglePicker}
+  onToggleHideMode={toggleHideMode}
   onToggleExpanded={toggleSidebar}
   onToggleSettings={toggleSettings}
   onDone={handleDone}
@@ -606,6 +703,7 @@
   onEditingComplete={() => editingId = null}
   onDraftConfirm={handleDraftConfirm}
   onToggleAnnotationTool={toggleAnnotationTool}
+  onUnhideElement={handleUnhideElement}
 />
 
 <!-- Settings Modal -->

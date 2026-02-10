@@ -82,6 +82,11 @@ export const toolbarEventSchema: z.ZodType<ToolbarEvent> = z.discriminatedUnion(
     data: browserSettingsSchema,
   }),
   z.object({
+    type: z.literal('hidden-elements-updated'),
+    domain: z.string(),
+    selectors: z.array(z.string()),
+  }),
+  z.object({
     type: z.literal('job-complete'),
   }),
   z.object({

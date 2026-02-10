@@ -21,6 +21,8 @@ export type CaptureOptions = {
   quality: number;
   /** Capture full page (default true) or just viewport */
   fullPage?: boolean;
+  /** Elements to hide per domain (hostname → CSS selectors) */
+  hiddenElements?: Record<string, string[]>;
 };
 
 /** Options for element screenshot capture */

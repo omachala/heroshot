@@ -67,6 +67,7 @@ export type ToolbarEvent =
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
   | { type: 'settings-updated'; data: BrowserSettings }
+  | { type: 'hidden-elements-updated'; domain: string; selectors: string[] }
   | { type: 'job-complete' }
   | { type: 'done' };
 
@@ -80,6 +81,8 @@ export interface InjectOptions {
   selectedId?: string | null;
   /** Whether sidebar should be open on init */
   sidebarVisible?: boolean;
+  /** Hidden elements per domain (hostname → CSS selectors) */
+  hiddenElements?: Record<string, string[]>;
 }
 
 /**
@@ -92,6 +95,7 @@ export async function injectToolbar(page: Page, options: InjectOptions = {}): Pr
     pendingJob = null,
     selectedId = null,
     sidebarVisible = false,
+    hiddenElements = {},
   } = options;
 
   await page.evaluate(
@@ -101,6 +105,7 @@ export async function injectToolbar(page: Page, options: InjectOptions = {}): Pr
       initialJob,
       initialSelectedId,
       initialSidebarVisible,
+      initialHiddenElements,
     }) => {
       // Create event store
       (window as any).__capturedEvents = [];
@@ -113,6 +118,7 @@ export async function injectToolbar(page: Page, options: InjectOptions = {}): Pr
         pendingJob: initialJob,
         selectedId: initialSelectedId,
         sidebarVisible: initialSidebarVisible,
+        hiddenElements: initialHiddenElements,
         emit: (event: any) => {
           (window as any).__capturedEvents.push(event);
           console.log('[Heroshot Event]', JSON.stringify(event));
@@ -130,6 +136,7 @@ export async function injectToolbar(page: Page, options: InjectOptions = {}): Pr
       initialJob: pendingJob,
       initialSelectedId: selectedId,
       initialSidebarVisible: sidebarVisible,
+      initialHiddenElements: hiddenElements,
     }
   );
 

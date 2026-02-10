@@ -9,7 +9,8 @@ import type { BrowserSettings, ScreenshotData } from './types';
 export function saveCurrentConfig(
   configPath: string,
   allScreenshots: ScreenshotData[],
-  browserSettings: BrowserSettings | null
+  browserSettings: BrowserSettings | null,
+  hiddenElements: Record<string, string[]> | null
 ): void {
   const config = loadConfig(configPath);
 
@@ -26,6 +27,13 @@ export function saveCurrentConfig(
         deviceScaleFactor: browserSettings.deviceScaleFactor,
       }),
     };
+  }
+
+  // Update hidden elements
+  if (hiddenElements && Object.keys(hiddenElements).length > 0) {
+    config.hiddenElements = hiddenElements;
+  } else {
+    delete config.hiddenElements;
   }
 
   saveConfig(configPath, config);

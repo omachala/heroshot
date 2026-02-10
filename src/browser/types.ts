@@ -68,6 +68,7 @@ export type ToolbarEvent =
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
   | { type: 'settings-updated'; data: BrowserSettings }
+  | { type: 'hidden-elements-updated'; domain: string; selectors: string[] }
   | { type: 'job-complete' }
   | { type: 'done' };
 
@@ -77,6 +78,7 @@ export type InjectToolbarOptions = {
   pendingJob: ToolbarJob | null;
   selectedId: string | null;
   sidebarExpanded: boolean;
+  hiddenElements: Record<string, string[]>;
   onEvent: (event: ToolbarEvent) => void;
 };
 
