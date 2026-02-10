@@ -12,6 +12,7 @@ __pycache__/
 !docs/.heroshot
 !.video
 !integrations/examples/*/.heroshot
+!integrations/examples/vitepress/.vitepress
 !src/tests/cli/.heroshot
 ha-dashboard.png
 heroshots/

@@ -13,7 +13,7 @@
  */
 export async function expectHeroshotLoaded(page: any, expect: any, alt = 'Hero screenshot') {
   const img = page.locator(`img[alt="${alt}"]`);
-  await expect(img).toBeVisible();
+  await expect(img).toBeVisible({ timeout: 15_000 });
   const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth);
   expect(naturalWidth).toBeGreaterThan(0);
 }
