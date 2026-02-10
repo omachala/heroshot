@@ -16,6 +16,7 @@ export default defineConfig({
         'src/tests/**',
         'src/types.ts',
         'src/browser/browser.ts', // integration code, tested via e2e tests
+        'src/browser/handleEvent.ts', // browser event handler, tested via e2e tests
         'src/browser/injectToolbar.ts', // browser integration, tested via e2e tests
         'src/browser/launchBrowser.ts', // browser integration, tested via e2e tests
         'src/browser/saveCurrentConfig.ts', // browser integration, tested via e2e tests
