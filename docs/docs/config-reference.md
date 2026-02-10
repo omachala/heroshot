@@ -37,6 +37,7 @@ Back to [Configuration overview](./config).
 | ↳ `screenshots[].borderColor`   | string                                       | -             | Border color (hex, default "#000000")                                                                                                                                                                                                   |
 | ↳ `screenshots[].borderRadius`  | number                                       | -             | Corner radius in pixels — rounds the screenshot corners with transparency (PNG only)                                                                                                                                                    |
 | ↳ `screenshots[].actions`       | any[]                                        | -             | Ordered list of actions to execute before capturing. Actions run sequentially.                                                                                                                                                          |
+| `hiddenElements`                | Record                                       | -             | Elements to hide per domain (hostname → CSS selectors)                                                                                                                                                                                  |
 
 ## Example
 
@@ -47,6 +48,7 @@ Back to [Configuration overview](./config).
   "jpegQuality": 80,
   "browser": {},
   "workers": 4,
-  "screenshots": []
+  "screenshots": [],
+  "hiddenElements": {}
 }
 ```
