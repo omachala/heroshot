@@ -141,7 +141,7 @@ const FALLBACK_POSITIONS = {
   pickerButton: { x: 1003, y: 40 },
   featureCard: { x: 700, y: 305 },
   featureCardCorner: { x: 910, y: 485 },
-  annotateButton: { x: 1003, y: 120 },
+  annotateButton: { x: 1037, y: 40 },
   arrowStart: { x: 800, y: 435 },
   arrowEnd: { x: 700, y: 335 },
   doneButton: { x: 1086, y: 40 },
@@ -1070,7 +1070,8 @@ export const HeroDemo: React.FC = () => {
     );
 
     // Re-measure annotate + done button positions before cursor moves there
-    if (frame >= SCENE_START.CONFIGBAR_SETTLE && !positionsRef.current.annotateButton) {
+    // Always re-measure (fallback values may be stale)
+    if (frame >= SCENE_START.CONFIGBAR_SETTLE) {
       const annotateButton = getElementCenter('button[title^="Annotate"]', true);
       const doneButton = getElementCenter('button[title="Done"]', true);
       if (annotateButton || doneButton) {
