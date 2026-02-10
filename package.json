@@ -116,6 +116,7 @@
     "test:cli": "vitest run --config vitest.cli.config.ts",
     "test:editor": "vitest run --config editor/vite.config.ts",
     "test:editor:coverage": "vitest run --config editor/vite.config.ts --coverage",
+    "test:examples": "for dir in sveltekit nextjs nuxt vitepress docusaurus; do echo \"Testing $dir...\" && (cd integrations/examples/$dir && npx playwright test) || exit 1; done",
     "test:editor:e2e": "playwright test --config editor/playwright.config.ts",
     "test:editor:demo": "playwright test --config editor/playwright.demo.config.ts",
     "typecheck": "tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsbuildinfo",

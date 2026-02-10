@@ -308,3 +308,46 @@ jobs:
 
       - name: Run CLI integration tests
         run: pnpm test:cli
+
+  # Integration example E2E tests - verify each framework renders heroshot images
+  integration-e2e:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: [self-hosted, din]
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [sveltekit, nextjs, nuxt, vitepress, docusaurus]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: false
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install workspace dependencies
+        run: pnpm install --prefer-offline
+
+      - name: Install example dependencies
+        run: npm install
+        working-directory: integrations/examples/${{ matrix.example }}
+
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+        working-directory: integrations/examples/${{ matrix.example }}
+
+      - name: Run e2e tests
+        run: npx playwright test
+        working-directory: integrations/examples/${{ matrix.example }}
+
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-e2e-${{ matrix.example }}
+          path: integrations/examples/${{ matrix.example }}/test-results/
+          retention-days: 7
