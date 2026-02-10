@@ -30,7 +30,9 @@ npx heroshot
 
 First run opens a browser with a visual editor. Pick elements, adjust padding, style borders, edit text, and add annotations (arrows, rectangles, callouts). Screenshots land in `heroshots/`, config saves to `.heroshot/config.json`. Next run regenerates everything headlessly.
 
-https://github.com/user-attachments/assets/1636d404-1e5f-4151-9aba-d5676ed3ff2a
+<p align="center">
+  <img src="https://github.com/omachala/heroshot/blob/main/assets/video/demo-v0.13.gif?raw=true" alt="Heroshot demo" width="720">
+</p>
 
 ## Use in Your Docs
 
