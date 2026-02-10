@@ -15,6 +15,8 @@ __pycache__/
 !src/tests/cli/.heroshot
 ha-dashboard.png
 heroshots/
+!integrations/examples/*/static/heroshots/
+!integrations/examples/*/public/heroshots/
 toolbar/test-results/
 test-results/
 *-snapshots/
