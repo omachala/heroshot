@@ -1,6 +1,13 @@
 <script lang="ts">
+  import { DEFAULT_BORDER_COLOR, HIGHLIGHT_MAX_ATTEMPTS, HIGHLIGHT_RETRY_DELAY } from '../constants';
+  import { CHECKERED_BACKGROUND, createBackgroundFillManager } from '../lib/backgroundFill';
   import { deepElementFromPoint, getBackgroundColor, getSelector } from '../lib/dom';
+  import { getOverlayRects } from '../lib/overlayGeometry';
+  import type { ResizeTooltip } from '../lib/paddingResize';
+  import { CORNER_INSET, CORNER_SIZE, EDGE_LONG, EDGE_SHORT, createPaddingResizeManager, getCursor } from '../lib/paddingResize';
   import { findElementBySelector } from '../lib/selector';
+  import type { TextTooltip } from '../lib/textEditing';
+  import { applyTextOverrides, createTextEditingManager } from '../lib/textEditing';
   import type { Annotation, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition } from '../types';
   import AnnotationLayer from './AnnotationLayer.svelte';
 
@@ -75,338 +82,45 @@
   // Detected background color for the selected element (computed when element changes)
   let detectedBgColor = $derived(selectedElement ? getBackgroundColor(selectedElement) : '#ffffff');
 
-  // Track original element styles for restoration
-  let originalElementStyles: { bg: string; bgImage: string; bgSize: string } | null = null;
-  let styledElement: HTMLElement | null = null;
+  // --- Extracted modules ---
+
+  // Background fill manager
+  const bgFillManager = createBackgroundFillManager();
 
   // Apply element background based on elementFill mode
   $effect(() => {
     const element = selectedElement instanceof HTMLElement ? selectedElement : null;
-
-    // If element changed, restore previous element first
-    if (styledElement && styledElement !== element && originalElementStyles) {
-      styledElement.style.backgroundColor = originalElementStyles.bg;
-      styledElement.style.backgroundImage = originalElementStyles.bgImage;
-      styledElement.style.backgroundSize = originalElementStyles.bgSize;
-      originalElementStyles = null;
-      styledElement = null;
-    }
-
-    if (element) {
-      // Store original on first selection
-      if (!originalElementStyles) {
-        originalElementStyles = {
-          bg: element.style.backgroundColor,
-          bgImage: element.style.backgroundImage,
-          bgSize: element.style.backgroundSize,
-        };
-        styledElement = element;
-      }
-
-      // Apply background based on mode
-      switch (elementFill) {
-      case 'original': {
-        element.style.backgroundColor = originalElementStyles.bg;
-        element.style.backgroundImage = originalElementStyles.bgImage;
-        element.style.backgroundSize = originalElementStyles.bgSize;
-      
-      break;
-      }
-      case 'solid': {
-        element.style.backgroundColor = currentElementColor ?? detectedBgColor;
-        element.style.backgroundImage = 'none';
-        element.style.backgroundSize = '';
-
-      break;
-      }
-      case 'transparent': {
-        // Show checkered pattern as background
-        element.style.backgroundColor = 'transparent';
-        element.style.backgroundImage = 'repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%)';
-        element.style.backgroundSize = '16px 16px';
-      
-      break;
-      }
-      // No default
-      }
-    }
+    bgFillManager.applyElementFill(element, elementFill, currentElementColor, detectedBgColor);
   });
 
-  // Track highlighted text elements for cleanup
-  let highlightedTextElements: HTMLElement[] = [];
-  let editingTextElement: HTMLElement | null = null;
-  let editingTextOriginal = '';
-  let hoverOverlay: HTMLElement | null = null;
-  let hoveredTextElement: HTMLElement | null = null;
+  // Text editing tooltip (set via callback from text manager)
+  let textTooltip = $state<TextTooltip | null>(null);
 
-  /**
-   * Create overlay over text element to intercept clicks
-   */
-  function createHoverOverlay(element: HTMLElement): void {
-    removeHoverOverlay();
-
-    const rect = element.getBoundingClientRect();
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-      position: fixed;
-      top: ${rect.top}px;
-      left: ${rect.left}px;
-      width: ${rect.width}px;
-      height: ${rect.height}px;
-      z-index: 2147483645;
-      cursor: text;
-      outline: 2px solid #ec4899;
-      outline-offset: 2px;
-      background: transparent;
-      pointer-events: auto;
-    `;
-    overlay.dataset.heroshotOverlay = 'true';
-
-    overlay.addEventListener('mouseleave', handleTextOverlayMouseLeave);
-    overlay.addEventListener('mousemove', handleTextOverlayMouseMove);
-    overlay.addEventListener('click', handleTextOverlayClick);
-
-    document.body.append(overlay);
-    hoverOverlay = overlay;
-    hoveredTextElement = element;
-  }
-
-  /**
-   * Remove hover overlay
-   */
-  function removeHoverOverlay(): void {
-    if (hoverOverlay) {
-      hoverOverlay.remove();
-      hoverOverlay = null;
-    }
-    hoveredTextElement = null;
-    tooltipData = null;
-  }
-
-  /**
-   * Handle text element hover - create overlay
-   */
-  function handleTextMouseEnter(event: MouseEvent): void {
-    // eslint-disable-next-line no-restricted-syntax -- event.currentTarget type narrowing
-    const element = event.currentTarget as HTMLElement;
-    if (editingTextElement === element) return;
-
-    createHoverOverlay(element);
-    tooltipData = { text: 'Click to edit' };
-    tooltipX = event.clientX;
-    tooltipY = event.clientY;
-  }
-
-  /**
-   * Handle text overlay mouse move - update tooltip
-   */
-  function handleTextOverlayMouseMove(event: MouseEvent): void {
-    tooltipX = event.clientX;
-    tooltipY = event.clientY;
-  }
-
-  /**
-   * Handle text overlay mouse leave - remove overlay
-   */
-  function handleTextOverlayMouseLeave(): void {
-    removeHoverOverlay();
-  }
-
-  /**
-   * Handle text overlay click - enter edit mode on the text element
-   */
-  function handleTextOverlayClick(event: MouseEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const element = hoveredTextElement;
-    if (!element) return;
-
-    // Remove overlay first
-    removeHoverOverlay();
-
-    // Exit previous edit if any
-    if (editingTextElement && editingTextElement !== element) {
-      exitTextEdit(editingTextElement);
-    }
-
-    editingTextElement = element;
-    editingTextOriginal = element.textContent ?? '';
-    element.contentEditable = 'true';
-    element.focus();
-
-    // Select all text
-    const range = document.createRange();
-    range.selectNodeContents(element);
-    const selection = globalThis.getSelection();
-    selection?.removeAllRanges();
-    selection?.addRange(range);
-
-    tooltipData = null;
-    onTextEditChange(true);
-  }
-
-  /**
-   * Generate a selector for textEl relative to containerEl
-   */
-  function getRelativeSelector(textElement: Element, containerElement: Element): string {
-    // Build path from textEl up to containerEl
-    const parts: string[] = [];
-    let current: Element | null = textElement;
-
-    while (current && current !== containerElement) {
-      let selector = current.tagName.toLowerCase();
-
-      // Add id if present
-      if (current.id) {
-        selector = `#${current.id}`;
-        parts.unshift(selector);
-        break; // ID is unique enough
-      }
-
-      // Add classes
-      if (current.classList.length > 0) {
-        selector += '.' + [...current.classList].join('.');
-      }
-
-      // Add nth-child if needed for uniqueness
-      const parent = current.parentElement;
-      if (parent) {
-        const currentTagName = current.tagName;
-        const siblings = [...parent.children].filter(
-          (child) => child.tagName === currentTagName
-        );
-        if (siblings.length > 1) {
-          const index = siblings.indexOf(current) + 1;
-          selector += `:nth-of-type(${index})`;
-        }
-      }
-
-      parts.unshift(selector);
-      current = current.parentElement;
-    }
-
-    return parts.join(' > ');
-  }
-
-  /**
-   * Handle blur on text element - exit edit mode and save if changed
-   */
-  function handleTextBlur(event: FocusEvent): void {
-    // eslint-disable-next-line no-restricted-syntax -- event.currentTarget type narrowing
-    const element = event.currentTarget as HTMLElement;
-    const newText = element.textContent ?? '';
-
-    // Check if text changed and we have a valid context
-    if (newText !== editingTextOriginal && selectedElement && editingScreenshotId) {
-      const relativeSelector = getRelativeSelector(element, selectedElement);
-      onTextOverrideUpdate(editingScreenshotId, relativeSelector, newText);
-    }
-
-    exitTextEdit(element);
-  }
-
-  /**
-   * Handle keydown on text element
-   */
-  function handleTextKeyDown(event: KeyboardEvent): void {
-    event.stopPropagation();
-    if (event.key === 'Escape' || event.key === 'Enter') {
-      event.preventDefault();
-      // eslint-disable-next-line no-restricted-syntax -- event.currentTarget type narrowing
-      const element = event.currentTarget as HTMLElement;
-      element.blur();
-    }
-  }
-
-  /**
-   * Exit text edit mode
-   */
-  function exitTextEdit(element: HTMLElement): void {
-    element.contentEditable = 'false';
-    if (editingTextElement === element) {
-      editingTextElement = null;
-    }
-    onTextEditChange(false);
-  }
-
-  /**
-   * Find and highlight all text elements inside the selected element
-   */
-  function highlightTextElements(container: Element): void {
-    clearTextHighlights();
-
-    // Find all elements that directly contain text
-    const walker = document.createTreeWalker(
-      container,
-      NodeFilter.SHOW_TEXT,
-      {
-        acceptNode: (node) => {
-          const text = node.textContent?.trim();
-          if (!text) return NodeFilter.FILTER_REJECT;
-          // Skip if parent is script/style
-          const parent = node.parentElement;
-          if (!parent) return NodeFilter.FILTER_REJECT;
-          const tagName = parent.tagName.toLowerCase();
-          if (tagName === 'script' || tagName === 'style') return NodeFilter.FILTER_REJECT;
-          return NodeFilter.FILTER_ACCEPT;
-        }
-      }
-    );
-
-    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- not reactive, local to function
-    const textParents = new Set<Element>();
-    while (walker.nextNode()) {
-      const parent = walker.currentNode.parentElement;
-      if (parent && !parent.closest('#heroshot-root')) {
-        textParents.add(parent);
-      }
-    }
-
-    // Add event handlers to each text-containing element (border shown on hover only)
-    for (const element of textParents) {
-      // eslint-disable-next-line no-restricted-syntax -- Element to HTMLElement narrowing
-      const htmlElement = element as HTMLElement;
-      htmlElement.dataset.heroshotTextHighlight = 'true';
-      htmlElement.style.outlineOffset = '2px';
-
-      // Add event listeners
-      htmlElement.addEventListener('mouseenter', handleTextMouseEnter);
-      htmlElement.addEventListener('blur', handleTextBlur);
-      htmlElement.addEventListener('keydown', handleTextKeyDown);
-
-      highlightedTextElements.push(htmlElement);
-    }
-  }
-
-  /**
-   * Remove text highlights
-   */
-  function clearTextHighlights(): void {
-    removeHoverOverlay();
-
-    for (const element of highlightedTextElements) {
-      // Remove event listeners
-      element.removeEventListener('mouseenter', handleTextMouseEnter);
-      element.removeEventListener('blur', handleTextBlur);
-      element.removeEventListener('keydown', handleTextKeyDown);
-
-      // Reset styles
-      delete element.dataset.heroshotTextHighlight;
-      element.style.outlineOffset = '';
-      element.contentEditable = 'false';
-    }
-    highlightedTextElements = [];
-    editingTextElement = null;
-  }
+  // Text editing manager
+  const textManager = createTextEditingManager({
+    onTextEditChange: (editing) => onTextEditChange(editing),
+    onTextOverrideUpdate: (id, sel, text) => onTextOverrideUpdate(id, sel, text),
+    onTooltipChange: (t) => { textTooltip = t; },
+    getContext: () => ({ selectedElement, editingScreenshotId }),
+  });
 
   // Highlight text elements when selection changes
   $effect(() => {
     if (selectedElement) {
-      highlightTextElements(selectedElement);
+      textManager.highlightTextElements(selectedElement);
     } else {
-      clearTextHighlights();
+      textManager.clearHighlights();
     }
+  });
+
+  // Resize tooltip (set via callback from resize manager)
+  let resizeTooltip = $state<ResizeTooltip | null>(null);
+
+  // Padding resize manager
+  const resizeManager = createPaddingResizeManager({
+    onPaddingChange: handlePaddingChange,
+    onTooltipChange: (t) => { resizeTooltip = t; },
+    getSelectedElement: () => selectedElement,
   });
 
   // Push editingScreenshotId changes to parent (Svelte 5 can't track reads through methods)
@@ -419,9 +133,10 @@
     onExpandedRectChange(expandedRect);
   });
 
-  // Scroll tracking for overlay repositioning
+  // Scroll tracking for overlay repositioning (RAF-throttled)
   let scrollY = $state(globalThis.scrollY ?? 0);
   let scrollX = $state(globalThis.scrollX ?? 0);
+  let scrollRafPending = false;
 
   // Derived
   let showOverlay = $derived(
@@ -435,12 +150,36 @@
     document.body.style.cursor = active ? 'crosshair' : '';
   });
 
+  // Cursor tooltip state — merges picker tooltip, text tooltip, and resize tooltip
+  type TooltipData = {
+    size?: string;
+    path?: string;
+    padding?: string;
+    text?: string;
+  }
+  let pickerTooltipData = $state<TooltipData | null>(null);
+  let pickerTooltipX = $state(0);
+  let pickerTooltipY = $state(0);
+
   // Clear tooltip when picker mode deactivates
   $effect(() => {
     if (!active) {
-      tooltipData = null;
+      pickerTooltipData = null;
     }
   });
+
+  // Unified tooltip: resize > text > picker
+  let tooltipData = $derived.by<TooltipData | null>(() => {
+    if (resizeTooltip) {
+      return { size: resizeTooltip.size, padding: resizeTooltip.padding };
+    }
+    if (textTooltip) {
+      return { text: textTooltip.text };
+    }
+    return pickerTooltipData;
+  });
+  let tooltipX = $derived(resizeTooltip?.x ?? textTooltip?.x ?? pickerTooltipX);
+  let tooltipY = $derived(resizeTooltip?.y ?? textTooltip?.y ?? pickerTooltipY);
 
   /**
    * Handle mouse movement - highlight element under cursor
@@ -456,14 +195,13 @@
       !element.closest('#heroshot-overlay')
     ) {
       currentElement = element;
-      // Update tooltip with size + path
       const rect = element.getBoundingClientRect();
-      tooltipData = {
+      pickerTooltipData = {
         size: `${Math.round(rect.width)} x ${Math.round(rect.height)}`,
         path: getSelector(element),
       };
-      tooltipX = event.clientX;
-      tooltipY = event.clientY;
+      pickerTooltipX = event.clientX;
+      pickerTooltipY = event.clientY;
     }
   }
 
@@ -512,7 +250,7 @@
       elementFill = 'original';
       originalElementFill = 'original';
       currentElement = null;
-      tooltipData = null; // Clear tooltip
+      pickerTooltipData = null;
 
       // Deactivate picker mode and notify parent of new element
       onToggle();
@@ -526,7 +264,7 @@
    */
   function handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Delete' || event.key === 'Backspace') {
-      // Don't intercept when typing in an input field (e.g., StyleEditor)
+      // Don't intercept when typing in an input field (e.g., ConfigBar)
       // Use composedPath to pierce shadow DOM boundary (event.target is retargeted to shadow host)
       const origin = event.composedPath()[0];
       if (origin instanceof HTMLInputElement || origin instanceof HTMLTextAreaElement) return;
@@ -573,29 +311,35 @@
   });
 
   /**
-   * Handle scroll for overlay repositioning and tracking
+   * Handle scroll for overlay repositioning and tracking.
+   * Throttled via requestAnimationFrame to avoid excessive state updates.
    */
   function handleScroll(): void {
-    scrollY = globalThis.scrollY;
-    scrollX = globalThis.scrollX;
+    if (scrollRafPending) return;
+    scrollRafPending = true;
+    globalThis.requestAnimationFrame(() => {
+      scrollRafPending = false;
+      scrollY = globalThis.scrollY;
+      scrollX = globalThis.scrollX;
 
-    // Update scroll position for selected element
-    if (selectedElement) {
-      const newScroll = { x: scrollX, y: scrollY };
-      selectedScroll = newScroll;
+      // Update scroll position for selected element
+      if (selectedElement) {
+        const newScroll = { x: scrollX, y: scrollY };
+        selectedScroll = newScroll;
 
-      // Auto-save for existing screenshots (not new drafts)
-      if (editingScreenshotId && !isNewElement) {
-        onScrollUpdate(editingScreenshotId, newScroll);
+        // Auto-save for existing screenshots (not new drafts)
+        if (editingScreenshotId && !isNewElement) {
+          onScrollUpdate(editingScreenshotId, newScroll);
+        }
       }
-    }
+    });
   }
 
   /**
    * Handle cancel
    */
   function handleCancel(): void {
-    clearTextHighlights();
+    textManager.clearHighlights();
     selectedElement = null;
     selectedPadding = { ...defaultPadding };
     originalPadding = { ...defaultPadding };
@@ -615,13 +359,35 @@
    */
   function handleOverlayClick(): void {
     if (selectedElement && !isNewElement) {
-      // Clear selection for existing screenshot
       clearSelection();
       onDeselect();
     } else if (selectedElement && isNewElement) {
-      // Cancel new element draft
       handleCancel();
     }
+  }
+
+  /**
+   * Handle keyboard resize on padding handles (arrow keys adjust padding by 1px)
+   */
+  type ResizeEdge = 'top' | 'bottom' | 'left' | 'right';
+  function handleResizeKeyDown(event: KeyboardEvent, edge: ResizeEdge): void {
+    const step = event.shiftKey ? 10 : 1;
+    let delta = 0;
+    if (edge === 'top' || edge === 'bottom') {
+      if (event.key === 'ArrowUp') delta = -step;
+      else if (event.key === 'ArrowDown') delta = step;
+      else return;
+    } else {
+      if (event.key === 'ArrowLeft') delta = -step;
+      else if (event.key === 'ArrowRight') delta = step;
+      else return;
+    }
+    event.preventDefault();
+    // For top/left: grow means delta > 0, shrink means delta < 0
+    // For bottom/right: same convention
+    const newPadding = { ...selectedPadding };
+    newPadding[edge] = Math.max(0, newPadding[edge] + delta);
+    handlePaddingChange(newPadding);
   }
 
   /**
@@ -645,24 +411,10 @@
     }
   }
 
-
-  /**
-   * Apply text overrides to the DOM
-   */
-  function applyTextOverrides(containerElement: Element, textOverrides: Record<string, string>): void {
-    for (const [relativeSelector, newText] of Object.entries(textOverrides)) {
-      const textElement = containerElement.querySelector(relativeSelector);
-      if (textElement) {
-        textElement.textContent = newText;
-      }
-    }
-  }
-
   /**
    * Highlight element by selector (for sidebar selection)
    */
   export function highlightElement(selector: string, screenshotId?: string, attempt = 1): void {
-    const maxAttempts = 5;
     const element = findElementBySelector(selector);
 
     if (element) {
@@ -696,8 +448,10 @@
         // Just highlighting (no edit mode)
         currentElement = element;
       }
-    } else if (attempt < maxAttempts) {
-      globalThis.setTimeout(() => highlightElement(selector, screenshotId, attempt + 1), 1000);
+    } else if (attempt < HIGHLIGHT_MAX_ATTEMPTS) {
+      globalThis.setTimeout(() => highlightElement(selector, screenshotId, attempt + 1), HIGHLIGHT_RETRY_DELAY);
+    } else {
+      globalThis.console.warn(`[heroshot] Element not found after ${HIGHLIGHT_MAX_ATTEMPTS} attempts: ${selector}`);
     }
   }
 
@@ -712,7 +466,7 @@
    * Clear any selection (without triggering cancel callback)
    */
   export function clearSelection(): void {
-    clearTextHighlights();
+    textManager.clearHighlights();
     selectedElement = null;
     selectedPadding = { ...defaultPadding };
     originalPadding = { ...defaultPadding };
@@ -830,56 +584,8 @@
     return detectedBgColor;
   }
 
-  /**
-   * Calculate overlay rectangles
-   */
-  function getOverlayRects(element: Element | null, _scrollX: number, _scrollY: number, padding?: Padding) {
-    if (!element) return null;
-
-    const rect = element.getBoundingClientRect();
-    const { innerWidth, innerHeight } = globalThis;
-
-    const expandedTop = rect.top - (padding?.top ?? 0);
-    const expandedLeft = rect.left - (padding?.left ?? 0);
-    const expandedRight = rect.right + (padding?.right ?? 0);
-    const expandedBottom = rect.bottom + (padding?.bottom ?? 0);
-    const expandedHeight = expandedBottom - expandedTop;
-
-    return {
-      top: { top: 0, left: 0, width: innerWidth, height: expandedTop },
-      bottom: { top: expandedBottom, left: 0, width: innerWidth, height: innerHeight - expandedBottom },
-      left: { top: expandedTop, left: 0, width: expandedLeft, height: expandedHeight },
-      right: { top: expandedTop, left: expandedRight, width: innerWidth - expandedRight, height: expandedHeight },
-      highlight: { top: rect.top, left: rect.left, width: rect.width, height: rect.height },
-    };
-  }
-
   let overlayPadding = $derived(selectedElement ? selectedPadding : undefined);
   let overlayRects = $derived(getOverlayRects(activeElement, scrollX, scrollY, overlayPadding));
-
-  // Resize handle state
-  let isDragging = $state(false);
-  let dragHandle = $state<string | null>(null);
-  let dragStartX = $state(0);
-  let dragStartY = $state(0);
-  let dragStartPadding = $state<Padding>({ top: 0, right: 0, bottom: 0, left: 0 });
-
-  // Cursor tooltip state
-  type TooltipData = {
-    size?: string;    // e.g., "300 x 400"
-    path?: string;    // e.g., "div.container >>> ha-card"
-    padding?: string; // e.g., "24" (resize handle drag)
-    text?: string;    // e.g., "Click to edit"
-  }
-  let tooltipData = $state<TooltipData | null>(null);
-  let tooltipX = $state(0);
-  let tooltipY = $state(0);
-
-  // Handle sizes
-  const edgeLong = 20;
-  const edgeShort = 10;
-  const cornerSize = 10;
-  const cornerInset = 2;
 
   // Computed expanded rect (element + padding) for resize handles
   let expandedRect = $derived(
@@ -915,9 +621,9 @@
   });
 
   let currentBorderColor = $derived.by(() => {
-    if (!editingScreenshotId) return '#000000';
+    if (!editingScreenshotId) return DEFAULT_BORDER_COLOR;
     const screenshot = screenshots.find(item => item.id === editingScreenshotId);
-    return screenshot?.borderColor ?? '#000000';
+    return screenshot?.borderColor ?? DEFAULT_BORDER_COLOR;
   });
 
   let currentBorderRadius = $derived.by(() => {
@@ -926,198 +632,17 @@
     return screenshot?.borderRadius ?? 0;
   });
 
-  // Checkered pattern for transparent mode (gray/white checkerboard)
-  const checkeredPattern = 'repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 16px 16px';
-
   // Background styles for different fill modes
   let paddingBackground = $derived.by(() => {
     switch (paddingFill) {
       case 'inherit': { return 'rgba(34, 197, 94, 0.25)';
-      } // Green tint to show it's the padding area
+      }
       case 'solid': { return currentPaddingColor ?? detectedBgColor;
       }
-      case 'transparent': { return checkeredPattern;
+      case 'transparent': { return CHECKERED_BACKGROUND;
       }
     }
   });
-
-
-  /**
-   * Start dragging a resize handle
-   */
-  function handleResizeMouseDown(event: MouseEvent, handle: string): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    isDragging = true;
-    dragHandle = handle;
-    dragStartX = event.clientX;
-    dragStartY = event.clientY;
-    dragStartPadding = { ...selectedPadding };
-
-    // Use capture phase so mouseup is received before heroshot-root's bubble handler stops propagation
-    globalThis.addEventListener('mousemove', handleResizeMouseMove, { capture: true });
-    globalThis.addEventListener('mouseup', handleResizeMouseUp, { capture: true });
-  }
-
-  /**
-   * Calculate corner resize padding based on drag deltas
-   */
-  function calculateCornerResize(
-    handle: string,
-    deltaX: number,
-    deltaY: number,
-    startPadding: Padding,
-    shiftHeld: boolean
-  ): Padding {
-    const newPadding = { ...startPadding };
-    const [vertical, horizontal] = handle.split('-');
-
-    if (shiftHeld) {
-      // Shift: only resize the 2 paddings of this corner
-      if (vertical === 'top') newPadding.top = Math.max(0, Math.round(startPadding.top - deltaY));
-      if (vertical === 'bottom') newPadding.bottom = Math.max(0, Math.round(startPadding.bottom + deltaY));
-      if (horizontal === 'left') newPadding.left = Math.max(0, Math.round(startPadding.left - deltaX));
-      if (horizontal === 'right') newPadding.right = Math.max(0, Math.round(startPadding.right + deltaX));
-    } else {
-      // Default: proportional resize (all 4 sides equally)
-      let expansion = vertical === 'top' ? -deltaY : deltaY;
-      if (horizontal === 'left') expansion = Math.max(expansion, -deltaX);
-      if (horizontal === 'right') expansion = Math.max(expansion, deltaX);
-      expansion = Math.round(expansion);
-
-      newPadding.top = Math.max(0, startPadding.top + expansion);
-      newPadding.right = Math.max(0, startPadding.right + expansion);
-      newPadding.bottom = Math.max(0, startPadding.bottom + expansion);
-      newPadding.left = Math.max(0, startPadding.left + expansion);
-    }
-    return newPadding;
-  }
-
-  /**
-   * Calculate edge resize padding based on drag deltas
-   */
-  function calculateEdgeResize(
-    handle: string,
-    deltaX: number,
-    deltaY: number,
-    startPadding: Padding,
-    shiftHeld: boolean
-  ): Padding {
-    const newPadding = { ...startPadding };
-    const edgeDeltas: Record<string, { key: keyof Padding; opposite: keyof Padding; delta: number }> = {
-      top: { key: 'top', opposite: 'bottom', delta: Math.round(-deltaY) },
-      bottom: { key: 'bottom', opposite: 'top', delta: Math.round(deltaY) },
-      left: { key: 'left', opposite: 'right', delta: Math.round(-deltaX) },
-      right: { key: 'right', opposite: 'left', delta: Math.round(deltaX) },
-    };
-
-    const edge = edgeDeltas[handle];
-    if (edge) {
-      newPadding[edge.key] = Math.max(0, startPadding[edge.key] + edge.delta);
-      if (!shiftHeld) {
-        newPadding[edge.opposite] = Math.max(0, startPadding[edge.opposite] + edge.delta);
-      }
-    }
-    return newPadding;
-  }
-
-  /**
-   * Clamp padding to document boundaries
-   */
-  function clampPaddingToBounds(padding: Padding, elementRect: DOMRect): Padding {
-    const documentWidth = document.documentElement.scrollWidth;
-    const documentHeight = document.documentElement.scrollHeight;
-    const elementLeft = elementRect.left + globalThis.scrollX;
-    const elementTop = elementRect.top + globalThis.scrollY;
-    const elementRight = elementRect.right + globalThis.scrollX;
-    const elementBottom = elementRect.bottom + globalThis.scrollY;
-
-    return {
-      top: Math.round(Math.min(padding.top, elementTop)),
-      left: Math.round(Math.min(padding.left, elementLeft)),
-      bottom: Math.round(Math.min(padding.bottom, documentHeight - elementBottom)),
-      right: Math.round(Math.min(padding.right, documentWidth - elementRight)),
-    };
-  }
-
-  /**
-   * Generate padding string for tooltip display
-   */
-  function getPaddingTooltipString(padding: Padding, handle: string): string {
-    if (handle.includes('-')) {
-      const allSame = padding.top === padding.right &&
-                      padding.right === padding.bottom &&
-                      padding.bottom === padding.left;
-      return allSame
-        ? `${padding.top}`
-        : `${padding.top} ${padding.right} ${padding.bottom} ${padding.left}`;
-    }
-    if (handle === 'top' || handle === 'right' || handle === 'bottom' || handle === 'left') {
-      return `${padding[handle]}`;
-    }
-    return '';
-  }
-
-  /**
-   * Handle mouse move during resize drag
-   */
-  function handleResizeMouseMove(event: MouseEvent): void {
-    if (!isDragging || !dragHandle || !selectedElement) return;
-
-    const deltaX = event.clientX - dragStartX;
-    const deltaY = event.clientY - dragStartY;
-    const shiftHeld = event.shiftKey;
-
-    // Calculate new padding based on handle type
-    const isCorner = dragHandle.includes('-');
-    let newPadding = isCorner
-      ? calculateCornerResize(dragHandle, deltaX, deltaY, dragStartPadding, shiftHeld)
-      : calculateEdgeResize(dragHandle, deltaX, deltaY, dragStartPadding, shiftHeld);
-
-    // Clamp to document boundaries
-    const rect = selectedElement.getBoundingClientRect();
-    newPadding = clampPaddingToBounds(newPadding, rect);
-
-    // Update tooltip
-    const totalWidth = Math.round(rect.width + newPadding.left + newPadding.right);
-    const totalHeight = Math.round(rect.height + newPadding.top + newPadding.bottom);
-
-    tooltipData = {
-      size: `${totalWidth} x ${totalHeight}`,
-      padding: getPaddingTooltipString(newPadding, dragHandle),
-    };
-    tooltipX = event.clientX;
-    tooltipY = event.clientY;
-
-    handlePaddingChange(newPadding);
-  }
-
-  /**
-   * End resize drag
-   */
-  function handleResizeMouseUp(): void {
-    isDragging = false;
-    dragHandle = null;
-    tooltipData = null; // Clear tooltip
-    globalThis.removeEventListener('mousemove', handleResizeMouseMove, { capture: true });
-    globalThis.removeEventListener('mouseup', handleResizeMouseUp, { capture: true });
-  }
-
-  const cursorMap: Record<string, string> = {
-    'top': 'ns-resize',
-    'bottom': 'ns-resize',
-    'left': 'ew-resize',
-    'right': 'ew-resize',
-    'top-left': 'nwse-resize',
-    'bottom-right': 'nwse-resize',
-    'top-right': 'nesw-resize',
-    'bottom-left': 'nesw-resize',
-  };
-
-  function getCursor(handle: string): string {
-    return cursorMap[handle] ?? 'move';
-  }
 </script>
 
 <svelte:window onscroll={handleScroll} />
@@ -1234,9 +759,6 @@
         </svg>
       {/if}
 
-      <!-- Element area - no overlay, clicks handled via document handler to allow text editing -->
-      <!-- Text elements get mouseenter/click handlers directly, element clicks detected by exclusion -->
-
       <!-- User's border (visual preview) -->
       {#if currentBorderWidth > 0}
         <div
@@ -1250,63 +772,75 @@
         style="top:{expandedRect.top}px;left:{expandedRect.left}px;width:{expandedRect.width}px;height:{expandedRect.height}px;border:1px solid #22c55e;border-radius:{currentBorderRadius}px;"
       ></div>
 
-      <!-- Resize handles - edge handles -->
+      <!-- Resize handles - edge handles (arrow keys adjust padding, Shift+arrow for 10px) -->
       <div
         class="fixed bg-white rounded-sm pointer-events-auto -translate-x-1/2 -translate-y-1/2"
-        style="border:1px solid #555;width:{edgeLong}px;height:{edgeShort}px;top:{expandedRect.top}px;left:{expandedRect.left + expandedRect.width / 2}px;cursor:{getCursor('top')};"
-        onmousedown={(event) => handleResizeMouseDown(event, 'top')}
+        style="border:1px solid #555;width:{EDGE_LONG}px;height:{EDGE_SHORT}px;top:{expandedRect.top}px;left:{expandedRect.left + expandedRect.width / 2}px;cursor:{getCursor('top')};"
+        onmousedown={(event) => resizeManager.startResize(event, 'top', selectedPadding)}
+        onkeydown={(event) => handleResizeKeyDown(event, 'top')}
         role="button"
         tabindex="0"
+        aria-label="Resize top padding ({selectedPadding.top}px)"
       ></div>
       <div
         class="fixed bg-white rounded-sm pointer-events-auto -translate-x-1/2 -translate-y-1/2"
-        style="border:1px solid #555;width:{edgeLong}px;height:{edgeShort}px;top:{expandedRect.top + expandedRect.height}px;left:{expandedRect.left + expandedRect.width / 2}px;cursor:{getCursor('bottom')};"
-        onmousedown={(event) => handleResizeMouseDown(event, 'bottom')}
+        style="border:1px solid #555;width:{EDGE_LONG}px;height:{EDGE_SHORT}px;top:{expandedRect.top + expandedRect.height}px;left:{expandedRect.left + expandedRect.width / 2}px;cursor:{getCursor('bottom')};"
+        onmousedown={(event) => resizeManager.startResize(event, 'bottom', selectedPadding)}
+        onkeydown={(event) => handleResizeKeyDown(event, 'bottom')}
         role="button"
         tabindex="0"
+        aria-label="Resize bottom padding ({selectedPadding.bottom}px)"
       ></div>
       <div
         class="fixed bg-white rounded-sm pointer-events-auto -translate-x-1/2 -translate-y-1/2"
-        style="border:1px solid #555;width:{edgeShort}px;height:{edgeLong}px;top:{expandedRect.top + expandedRect.height / 2}px;left:{expandedRect.left}px;cursor:{getCursor('left')};"
-        onmousedown={(event) => handleResizeMouseDown(event, 'left')}
+        style="border:1px solid #555;width:{EDGE_SHORT}px;height:{EDGE_LONG}px;top:{expandedRect.top + expandedRect.height / 2}px;left:{expandedRect.left}px;cursor:{getCursor('left')};"
+        onmousedown={(event) => resizeManager.startResize(event, 'left', selectedPadding)}
+        onkeydown={(event) => handleResizeKeyDown(event, 'left')}
         role="button"
         tabindex="0"
+        aria-label="Resize left padding ({selectedPadding.left}px)"
       ></div>
       <div
         class="fixed bg-white rounded-sm pointer-events-auto -translate-x-1/2 -translate-y-1/2"
-        style="border:1px solid #555;width:{edgeShort}px;height:{edgeLong}px;top:{expandedRect.top + expandedRect.height / 2}px;left:{expandedRect.left + expandedRect.width}px;cursor:{getCursor('right')};"
-        onmousedown={(event) => handleResizeMouseDown(event, 'right')}
+        style="border:1px solid #555;width:{EDGE_SHORT}px;height:{EDGE_LONG}px;top:{expandedRect.top + expandedRect.height / 2}px;left:{expandedRect.left + expandedRect.width}px;cursor:{getCursor('right')};"
+        onmousedown={(event) => resizeManager.startResize(event, 'right', selectedPadding)}
+        onkeydown={(event) => handleResizeKeyDown(event, 'right')}
         role="button"
         tabindex="0"
+        aria-label="Resize right padding ({selectedPadding.right}px)"
       ></div>
       <!-- Resize handles - corner handles -->
       <div
         class="fixed bg-white rounded-sm pointer-events-auto -translate-x-1/2 -translate-y-1/2"
-        style="border:1px solid #555;width:{cornerSize}px;height:{cornerSize}px;top:{expandedRect.top + cornerInset}px;left:{expandedRect.left + cornerInset}px;cursor:{getCursor('top-left')};"
-        onmousedown={(event) => handleResizeMouseDown(event, 'top-left')}
+        style="border:1px solid #555;width:{CORNER_SIZE}px;height:{CORNER_SIZE}px;top:{expandedRect.top + CORNER_INSET}px;left:{expandedRect.left + CORNER_INSET}px;cursor:{getCursor('top-left')};"
+        onmousedown={(event) => resizeManager.startResize(event, 'top-left', selectedPadding)}
         role="button"
         tabindex="0"
+        aria-label="Resize top-left corner"
       ></div>
       <div
         class="fixed bg-white rounded-sm pointer-events-auto -translate-x-1/2 -translate-y-1/2"
-        style="border:1px solid #555;width:{cornerSize}px;height:{cornerSize}px;top:{expandedRect.top + cornerInset}px;left:{expandedRect.left + expandedRect.width - cornerInset}px;cursor:{getCursor('top-right')};"
-        onmousedown={(event) => handleResizeMouseDown(event, 'top-right')}
+        style="border:1px solid #555;width:{CORNER_SIZE}px;height:{CORNER_SIZE}px;top:{expandedRect.top + CORNER_INSET}px;left:{expandedRect.left + expandedRect.width - CORNER_INSET}px;cursor:{getCursor('top-right')};"
+        onmousedown={(event) => resizeManager.startResize(event, 'top-right', selectedPadding)}
         role="button"
         tabindex="0"
+        aria-label="Resize top-right corner"
       ></div>
       <div
         class="fixed bg-white rounded-sm pointer-events-auto -translate-x-1/2 -translate-y-1/2"
-        style="border:1px solid #555;width:{cornerSize}px;height:{cornerSize}px;top:{expandedRect.top + expandedRect.height - cornerInset}px;left:{expandedRect.left + cornerInset}px;cursor:{getCursor('bottom-left')};"
-        onmousedown={(event) => handleResizeMouseDown(event, 'bottom-left')}
+        style="border:1px solid #555;width:{CORNER_SIZE}px;height:{CORNER_SIZE}px;top:{expandedRect.top + expandedRect.height - CORNER_INSET}px;left:{expandedRect.left + CORNER_INSET}px;cursor:{getCursor('bottom-left')};"
+        onmousedown={(event) => resizeManager.startResize(event, 'bottom-left', selectedPadding)}
         role="button"
         tabindex="0"
+        aria-label="Resize bottom-left corner"
       ></div>
       <div
         class="fixed bg-white rounded-sm pointer-events-auto -translate-x-1/2 -translate-y-1/2"
-        style="border:1px solid #555;width:{cornerSize}px;height:{cornerSize}px;top:{expandedRect.top + expandedRect.height - cornerInset}px;left:{expandedRect.left + expandedRect.width - cornerInset}px;cursor:{getCursor('bottom-right')};"
-        onmousedown={(event) => handleResizeMouseDown(event, 'bottom-right')}
+        style="border:1px solid #555;width:{CORNER_SIZE}px;height:{CORNER_SIZE}px;top:{expandedRect.top + expandedRect.height - CORNER_INSET}px;left:{expandedRect.left + expandedRect.width - CORNER_INSET}px;cursor:{getCursor('bottom-right')};"
+        onmousedown={(event) => resizeManager.startResize(event, 'bottom-right', selectedPadding)}
         role="button"
         tabindex="0"
+        aria-label="Resize bottom-right corner"
       ></div>
       <!-- Annotation layer -->
       {#if expandedRect && editingScreenshotId}

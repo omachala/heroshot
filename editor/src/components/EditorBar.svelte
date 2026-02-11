@@ -258,6 +258,8 @@
           onclick={onTogglePicker}
           onpointerdown={(event) => event.stopPropagation()}
           title="Pick element"
+          aria-label="Pick element"
+          aria-pressed={pickerActive}
         >
           <PickerIcon size={18} />
         </button>
@@ -271,6 +273,7 @@
                 onclick={() => onToggleAnnotationTool(annotationTool ?? 'arrow')}
                 onpointerdown={(event) => event.stopPropagation()}
                 title="Annotate ({annotationTool ?? 'arrow'})"
+                aria-label="Annotate ({annotationTool ?? 'arrow'})"
               >
                 <AnnotateIcon size={16} />
               </button>
@@ -280,6 +283,8 @@
                 onclick={() => { annotationDropdownOpen = !annotationDropdownOpen; }}
                 onpointerdown={(event) => event.stopPropagation()}
                 title="Choose annotation type"
+                aria-label="Choose annotation type"
+                aria-expanded={annotationDropdownOpen}
               >
                 <ChevronDownIcon size={10} />
               </button>
@@ -307,6 +312,7 @@
           onclick={onToggleSettings}
           onpointerdown={(event) => event.stopPropagation()}
           title="Settings"
+          aria-label="Settings"
         >
           <SettingsIcon size={18} />
         </button>
@@ -329,6 +335,8 @@
         onclick={onToggleExpanded}
         onpointerdown={(event) => event.stopPropagation()}
         title={expanded ? 'Collapse list' : 'Expand list'}
+        aria-label={expanded ? 'Collapse screenshot list' : 'Expand screenshot list'}
+        aria-expanded={expanded}
       >
         {#if expanded}
           <ChevronUpIcon size={14} />

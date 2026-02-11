@@ -7,6 +7,7 @@
 
 import { mount, unmount } from 'svelte';
 import Toolbar from './components/Toolbar.svelte';
+import { Z_INDEX_OVERLAY } from './constants';
 import { getBackgroundColor } from './lib/dom';
 import { eventInterceptor } from './lib/eventInterceptor';
 import styles from './styles.css?inline';
@@ -58,7 +59,7 @@ export function initToolbar(): (() => void) | null {
   // Make the host cover the entire viewport so fixed-position children render correctly.
   // pointer-events:none allows clicks to pass through to the page beneath.
   // Children (toolbar, sidebar) have pointer-events:auto to receive their own clicks.
-  host.style.cssText = 'position:fixed;inset:0;z-index:2147483646;pointer-events:none;';
+  host.style.cssText = `position:fixed;inset:0;z-index:${Z_INDEX_OVERLAY};pointer-events:none;`;
   document.body.append(host);
 
   const shadow = host.attachShadow({ mode: 'open' });
