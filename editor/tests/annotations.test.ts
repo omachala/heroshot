@@ -100,8 +100,10 @@ test('draw arrow annotation', async ({ page }) => {
   // Verify annotation was created
   const annotations = await getLatestAnnotations(page);
   expect(annotations).toHaveLength(1);
-  expect(annotations[0].type).toBe('arrow');
-  expect(annotations[0].points).toHaveLength(4);
+  const ann = annotations[0];
+  expect(ann).toBeDefined();
+  expect(ann!.type).toBe('arrow');
+  expect(ann!.points).toHaveLength(4);
 });
 
 test('draw rectangle annotation', async ({ page }) => {
@@ -117,8 +119,10 @@ test('draw rectangle annotation', async ({ page }) => {
   // Verify annotation was created
   const annotations = await getLatestAnnotations(page);
   expect(annotations).toHaveLength(1);
-  expect(annotations[0].type).toBe('rect');
-  expect(annotations[0].points).toHaveLength(4);
+  const ann = annotations[0];
+  expect(ann).toBeDefined();
+  expect(ann!.type).toBe('rect');
+  expect(ann!.points).toHaveLength(4);
 });
 
 test('draw ellipse annotation', async ({ page }) => {
@@ -134,8 +138,10 @@ test('draw ellipse annotation', async ({ page }) => {
   // Verify annotation was created
   const annotations = await getLatestAnnotations(page);
   expect(annotations).toHaveLength(1);
-  expect(annotations[0].type).toBe('ellipse');
-  expect(annotations[0].points).toHaveLength(4);
+  const ann = annotations[0];
+  expect(ann).toBeDefined();
+  expect(ann!.type).toBe('ellipse');
+  expect(ann!.points).toHaveLength(4);
 });
 
 test('delete annotation with Delete key', async ({ page }) => {
@@ -193,7 +199,9 @@ test('move annotation by dragging', async ({ page }) => {
   // Get original annotation points
   let annotations = await getLatestAnnotations(page);
   expect(annotations).toHaveLength(1);
-  const originalPoints = [...annotations[0].points];
+  const first = annotations[0];
+  expect(first).toBeDefined();
+  const originalPoints = [...first!.points];
 
   // Move annotation by dragging from center of the annotation
   const centerX = heroRect.left + (50 + 200) / 2;
@@ -210,11 +218,13 @@ test('move annotation by dragging', async ({ page }) => {
   // Verify points changed (moved)
   annotations = await getLatestAnnotations(page);
   expect(annotations).toHaveLength(1);
+  const moved = annotations[0];
+  expect(moved).toBeDefined();
   // Arrow points are [x1, y1, x2, y2] — both endpoints should shift by moveX/moveY
-  expect(annotations[0].points[0]).toBeCloseTo(originalPoints[0] + moveX, 0);
-  expect(annotations[0].points[1]).toBeCloseTo(originalPoints[1] + moveY, 0);
-  expect(annotations[0].points[2]).toBeCloseTo(originalPoints[2] + moveX, 0);
-  expect(annotations[0].points[3]).toBeCloseTo(originalPoints[3] + moveY, 0);
+  expect(moved!.points[0]).toBeCloseTo(originalPoints[0]! + moveX, 0);
+  expect(moved!.points[1]).toBeCloseTo(originalPoints[1]! + moveY, 0);
+  expect(moved!.points[2]).toBeCloseTo(originalPoints[2]! + moveX, 0);
+  expect(moved!.points[3]).toBeCloseTo(originalPoints[3]! + moveY, 0);
 });
 
 test('multiple annotations coexist', async ({ page }) => {
@@ -235,10 +245,14 @@ test('multiple annotations coexist', async ({ page }) => {
   // Both annotations should exist
   const annotations = await getLatestAnnotations(page);
   expect(annotations).toHaveLength(2);
-  expect(annotations[0].type).toBe('arrow');
-  expect(annotations[1].type).toBe('arrow');
+  const first = annotations[0];
+  const second = annotations[1];
+  expect(first).toBeDefined();
+  expect(second).toBeDefined();
+  expect(first!.type).toBe('arrow');
+  expect(second!.type).toBe('arrow');
   // They should have different IDs
-  expect(annotations[0].id).not.toBe(annotations[1].id);
+  expect(first!.id).not.toBe(second!.id);
 });
 
 test('escape deselects annotation without deleting', async ({ page }) => {
@@ -291,7 +305,9 @@ test('draw annotation with pre-existing annotations preserves them', async ({ pa
   // Both annotations should exist
   const annotations = await getLatestAnnotations(page);
   expect(annotations).toHaveLength(2);
-  expect(annotations[0].id).toBe('existing-1');
+  const first = annotations[0];
+  expect(first).toBeDefined();
+  expect(first!.id).toBe('existing-1');
 });
 
 test('small drag does not create annotation', async ({ page }) => {
