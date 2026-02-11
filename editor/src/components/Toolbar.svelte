@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_BORDER_COLOR } from '../constants';
   import { eventInterceptor } from '../lib/eventInterceptor';
   import { generateSmartName, generateUid } from '../lib/naming';
   import type { Annotation, BrowserSettings, ElementFill, Padding, PaddingFill, ScreenshotItem, ScrollPosition, SelectionContext, ToolbarJob } from '../types';
@@ -106,7 +107,7 @@
   let currentPaddingColor = $derived(currentScreenshot?.paddingColor);
   let currentElementColor = $derived(currentScreenshot?.elementColor);
   let currentBorderWidth = $derived(currentScreenshot?.borderWidth ?? 0);
-  let currentBorderColor = $derived(currentScreenshot?.borderColor ?? '#000000');
+  let currentBorderColor = $derived(currentScreenshot?.borderColor ?? DEFAULT_BORDER_COLOR);
   let currentBorderRadius = $derived(currentScreenshot?.borderRadius ?? 0);
 
   // Current annotation style (from annotation layer)

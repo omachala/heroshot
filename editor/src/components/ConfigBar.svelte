@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { DEFAULT_BORDER_COLOR } from '../constants';
   import type { ElementFill, PaddingFill, SelectionContext } from '../types';
 
   type Props = {
@@ -171,6 +172,7 @@
           <select
             class="bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
             value={paddingFill ?? 'inherit'}
+            aria-label="Padding fill mode"
             onchange={(event) => {
               if (event.target instanceof HTMLSelectElement && isPaddingFill(event.target.value)) {
                 onPaddingFillChange?.(event.target.value);
@@ -189,6 +191,7 @@
               type="color"
               class="w-7 h-7 bg-slate-700 border border-slate-600 rounded cursor-pointer p-0"
               value={paddingColor ?? detectedBgColor ?? '#ffffff'}
+              aria-label="Padding fill color"
               oninput={(event) => {
                 if (event.target instanceof HTMLInputElement) {
                   onPaddingColorChange?.(event.target.value);
@@ -203,6 +206,7 @@
           <select
             class="bg-slate-700 border border-slate-600 rounded px-1.5 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
             value={elementFill ?? 'original'}
+            aria-label="Element fill mode"
             onchange={(event) => {
               if (event.target instanceof HTMLSelectElement && isElementFill(event.target.value)) {
                 onElementFillChange?.(event.target.value);
@@ -221,6 +225,7 @@
               type="color"
               class="w-7 h-7 bg-slate-700 border border-slate-600 rounded cursor-pointer p-0"
               value={elementColor ?? detectedBgColor ?? '#ffffff'}
+              aria-label="Element fill color"
               oninput={(event) => {
                 if (event.target instanceof HTMLInputElement) {
                   onElementColorChange?.(event.target.value);
@@ -239,7 +244,7 @@
             min="0"
             max="20"
             step="1"
-            title="Border width (px)"
+            aria-label="Border width (px)"
             oninput={(event) => {
               if (event.target instanceof HTMLInputElement) {
                 onBorderWidthChange?.(Number(event.target.value));
@@ -250,8 +255,8 @@
           <input
             type="color"
             class="w-7 h-7 bg-slate-700 border border-slate-600 rounded cursor-pointer p-0"
-            value={borderColor ?? '#000000'}
-            title="Border color"
+            value={borderColor ?? DEFAULT_BORDER_COLOR}
+            aria-label="Border color"
             oninput={(event) => {
               if (event.target instanceof HTMLInputElement) {
                 onBorderColorChange?.(event.target.value);
@@ -269,7 +274,7 @@
             min="0"
             max="100"
             step="1"
-            title="Border radius (px)"
+            aria-label="Border radius (px)"
             oninput={(event) => {
               if (event.target instanceof HTMLInputElement) {
                 onBorderRadiusChange?.(Number(event.target.value));

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { Z_INDEX_ANNOTATION } from '../constants';
   import { getAnnotationType } from '../lib/annotations/registry';
   import type { ResizeHandle } from '../lib/annotations/types';
   import { DEFAULT_STYLE } from '../lib/annotations/types';
@@ -314,7 +315,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="fixed pointer-events-none overflow-hidden"
-  style="top:{svgTop}px;left:{svgLeft}px;width:{svgWidth}px;height:{svgHeight}px;z-index:2147483645;{borderRadius > 0 ? `border-radius:${borderRadius}px;` : ''}"
+  style="top:{svgTop}px;left:{svgLeft}px;width:{svgWidth}px;height:{svgHeight}px;z-index:{Z_INDEX_ANNOTATION};{borderRadius > 0 ? `border-radius:${borderRadius}px;` : ''}"
 >
   <!-- Drawing interaction layer - ONLY shown when a drawing tool is active -->
   {#if activeTool !== null}

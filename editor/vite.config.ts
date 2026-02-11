@@ -52,6 +52,11 @@ export default defineConfig({
         'src/lib/selector.ts',
         // annotations are visual SVG drawing functions, tested via e2e
         'src/lib/annotations/**',
+        // Extracted ElementPicker modules - browser-only DOM code, tested via e2e
+        'src/lib/textEditing.ts',
+        'src/lib/paddingResize.ts',
+        'src/lib/backgroundFill.ts',
+        'src/lib/overlayGeometry.ts',
       ],
       thresholds: {
         lines: 90,
