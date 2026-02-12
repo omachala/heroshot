@@ -26,7 +26,8 @@ import {
 /** Selectors for hidden elements UI */
 const HIDDEN_SELECTORS = {
   section: '#heroshot-root >> h3:has-text("Hidden")',
-  unhideButton: (index: number) => `#heroshot-root >> button[title="Show element"] >> nth=${index}`,
+  unhideButton: (index: number) =>
+    `#heroshot-root >> button[title="Remove from hidden"] >> nth=${index}`,
 } as const;
 
 /** Check whether a page element is visible (visibility !== hidden) */
