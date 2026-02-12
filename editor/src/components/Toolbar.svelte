@@ -581,7 +581,7 @@
     // Restore element visibility in DOM
     for (const element of queryElements(selector)) {
       if (element instanceof HTMLElement) {
-        element.style.display = '';
+        element.style.removeProperty('visibility');
       }
     }
 
@@ -594,7 +594,7 @@
     for (const selector of selectors) {
       for (const element of queryElements(selector)) {
         if (element instanceof HTMLElement) {
-          element.style.display = 'none';
+          element.style.setProperty('visibility', 'hidden', 'important');
         }
       }
     }

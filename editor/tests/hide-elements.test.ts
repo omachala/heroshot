@@ -29,12 +29,12 @@ const HIDDEN_SELECTORS = {
   unhideButton: (index: number) => `#heroshot-root >> button[title="Show element"] >> nth=${index}`,
 } as const;
 
-/** Check whether a page element is visible (display !== none) */
+/** Check whether a page element is visible (visibility !== hidden) */
 async function isElementVisible(page: Page, selector: string): Promise<boolean> {
   return page.evaluate(sel => {
     const element = document.querySelector(sel);
     if (!element || !(element instanceof HTMLElement)) return false;
-    return element.style.display !== 'none';
+    return element.style.visibility !== 'hidden';
   }, selector);
 }
 
