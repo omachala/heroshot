@@ -120,7 +120,7 @@ features:
   - icon:
       src: /icons/paintbrush.svg
     title: Visual Editor
-    details: Adjust padding, style borders, change background colors, and edit text - all visually. What you see is what you screenshot.
+    details: Adjust padding, style borders, change backgrounds, hide distracting elements, and edit text - all visually. What you see is what you screenshot.
     link: /docs/guide/screenshot-design
     linkText: Open the editor
   - icon:
