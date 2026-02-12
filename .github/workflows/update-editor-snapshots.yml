@@ -1,0 +1,65 @@
+name: Update Editor Snapshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to update snapshots on (defaults to current branch)'
+        required: false
+      reason:
+        description: 'Reason for updating snapshots'
+        required: false
+        default: 'Update editor snapshots'
+
+jobs:
+  update-snapshots:
+    runs-on: [self-hosted, din]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
+          clean: false
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: pnpm install --prefer-offline
+
+      - name: Build editor
+        run: pnpm build:editor
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium
+
+      - name: Update editor snapshots
+        run: pnpm test:editor:e2e -- --update-snapshots
+        env:
+          CI: true
+
+      - name: Check for snapshot changes
+        id: changes
+        run: |
+          if [ -n "$(git status --porcelain editor/tests/snapshots/)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Snapshot changes detected:"
+            git status --porcelain editor/tests/snapshots/
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No snapshot changes"
+          fi
+
+      - name: Commit and push updated snapshots
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add editor/tests/snapshots/
+          git commit -m "test: update editor e2e snapshots
+
+          Reason: ${{ github.event.inputs.reason }}
+          Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          git push
