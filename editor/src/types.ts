@@ -99,6 +99,14 @@ export type BrowserSettings = {
   colorScheme?: ColorScheme;
   /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
   deviceScaleFactor?: number;
+  /** Output directory for screenshots (relative to config file) */
+  outputDirectory?: string;
+  /** Image format for all screenshots */
+  outputFormat?: 'png' | 'jpeg';
+  /** JPEG compression quality (1-100) */
+  jpegQuality?: number;
+  /** Number of parallel capture workers */
+  workers?: number;
 };
 
 /**

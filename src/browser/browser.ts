@@ -13,7 +13,7 @@ import { DEFAULT_VIEWPORT } from './constants';
 import { type BrowserState, createEventHandler } from './handleEvent';
 import { injectToolbar } from './injectToolbar';
 import { launchBrowser } from './launchBrowser';
-import type { ScreenshotData, SetupOptions } from './types';
+import type { BrowserSettings, ScreenshotData, SetupOptions } from './types';
 
 export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshots: boolean }> {
   const setupSpinner = spinner();
@@ -43,6 +43,18 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
 
   const allScreenshots: ScreenshotData[] = configToScreenshotData(config.screenshots);
 
+  const initialSettings: BrowserSettings = {
+    viewport,
+    ...(options.colorScheme && { colorScheme: options.colorScheme }),
+    ...(config.browser?.deviceScaleFactor && {
+      deviceScaleFactor: config.browser.deviceScaleFactor,
+    }),
+    outputDirectory: config.outputDirectory,
+    outputFormat: config.outputFormat,
+    jpegQuality: config.jpegQuality,
+    workers: config.workers,
+  };
+
   const browserState: BrowserState = {
     allScreenshots,
     pendingJob: null,
@@ -67,6 +79,7 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
 
   const injectOptions = () => ({
     screenshots: browserState.allScreenshots,
+    settings: initialSettings,
     pendingJob: browserState.pendingJob,
     selectedId: browserState.selectedId,
     sidebarExpanded: browserState.sidebarExpanded,

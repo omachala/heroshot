@@ -16,6 +16,10 @@
   let lightSelected = $state(true);
   let darkSelected = $state(true);
   let deviceScaleFactor = $state<number | undefined>();
+  let outputDirectory = $state('heroshots');
+  let outputFormat = $state<'png' | 'jpeg'>('png');
+  let jpegQuality = $state(80);
+  let workers = $state<number | undefined>();
 
   // Update local state when settings prop changes or modal opens
   $effect(() => {
@@ -23,6 +27,10 @@
       width = props.settings.viewport.width;
       height = props.settings.viewport.height;
       deviceScaleFactor = props.settings.deviceScaleFactor;
+      outputDirectory = props.settings.outputDirectory ?? 'heroshots';
+      outputFormat = props.settings.outputFormat ?? 'png';
+      jpegQuality = props.settings.jpegQuality ?? 80;
+      workers = props.settings.workers;
 
       // Convert colorScheme to selection state
       const scheme = props.settings.colorScheme;
@@ -81,6 +89,10 @@
       viewport: { width, height },
       colorScheme: getColorSchemeValue(),
       deviceScaleFactor,
+      outputDirectory: outputDirectory || undefined,
+      outputFormat: outputFormat === 'png' ? undefined : outputFormat,
+      jpegQuality: outputFormat === 'jpeg' ? jpegQuality : undefined,
+      workers,
     });
     props.onClose();
   }
@@ -178,7 +190,7 @@
       </div>
 
       <!-- Color Scheme -->
-      <div class="mb-6">
+      <div class="mb-4">
         <span class="block text-sm text-slate-400 mb-2">Color Scheme</span>
         <div class="flex gap-2">
           <button
@@ -196,6 +208,70 @@
             Dark
           </button>
         </div>
+      </div>
+
+      <!-- Divider -->
+      <hr class="border-slate-600 my-4" />
+
+      <!-- Output Directory -->
+      <div class="mb-4">
+        <label class="block text-sm text-slate-400 mb-2" for="output-directory">Output Directory</label>
+        <input
+          id="output-directory"
+          type="text"
+          bind:value={outputDirectory}
+          class="w-full px-2 py-1 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none text-sm"
+          placeholder="heroshots"
+        />
+      </div>
+
+      <!-- Output Format -->
+      <div class="mb-4">
+        <span class="block text-sm text-slate-400 mb-2">Output Format</span>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded text-sm transition-colors {outputFormat === 'png' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            onclick={() => outputFormat = 'png'}
+          >
+            PNG
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1.5 rounded text-sm transition-colors {outputFormat === 'jpeg' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            onclick={() => outputFormat = 'jpeg'}
+          >
+            JPEG
+          </button>
+        </div>
+      </div>
+
+      <!-- JPEG Quality (shown only when format is jpeg) -->
+      {#if outputFormat === 'jpeg'}
+        <div class="mb-4">
+          <label class="block text-sm text-slate-400 mb-2" for="jpeg-quality">JPEG Quality</label>
+          <input
+            id="jpeg-quality"
+            type="number"
+            bind:value={jpegQuality}
+            class="w-20 px-2 py-1 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
+            min="1"
+            max="100"
+          />
+        </div>
+      {/if}
+
+      <!-- Workers -->
+      <div class="mb-6">
+        <label class="block text-sm text-slate-400 mb-2" for="workers">Workers</label>
+        <input
+          id="workers"
+          type="number"
+          bind:value={workers}
+          class="w-20 px-2 py-1 bg-slate-700 text-white rounded border border-slate-600 focus:border-blue-500 focus:outline-none"
+          min="1"
+          placeholder="1"
+        />
       </div>
 
       <!-- Actions -->

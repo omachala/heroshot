@@ -2,11 +2,12 @@
   import AnnotateIcon from '../icons/AnnotateIcon.svelte';
   import ChevronDownIcon from '../icons/ChevronDownIcon.svelte';
   import ChevronUpIcon from '../icons/ChevronUpIcon.svelte';
-  import EyeIcon from '../icons/EyeIcon.svelte';
-  import EyeSlashIcon from '../icons/EyeSlashIcon.svelte';
+  import EraserIcon from '../icons/EraserIcon.svelte';
   import GripIcon from '../icons/GripIcon.svelte';
   import PickerIcon from '../icons/PickerIcon.svelte';
   import SettingsIcon from '../icons/SettingsIcon.svelte';
+  import TrashIcon from '../icons/TrashIcon.svelte';
+  import { queryElements } from '../lib/selectorGenerator';
   import type { ScreenshotItem } from '../types';
   import ScreenshotItemComponent from './ScreenshotItem.svelte';
 
@@ -248,7 +249,7 @@
   role="complementary"
   aria-label="Heroshot editor panel"
 >
-  <div class="w-64 max-h-[calc(100vh-32px)] bg-slate-800 rounded-xl shadow-2xl font-sans text-white flex flex-col overflow-hidden">
+  <div class="w-72 max-h-[calc(100vh-32px)] bg-slate-800 rounded-xl shadow-2xl font-sans text-white flex flex-col overflow-hidden">
     <!-- Header with drag handle and toolbar buttons -->
     <div
       class="flex items-center justify-between px-2 py-2 border-b border-slate-700"
@@ -284,7 +285,7 @@
           onpointerdown={(event) => event.stopPropagation()}
           title="Hide element"
         >
-          <EyeSlashIcon size={16} />
+          <EraserIcon size={16} />
         </button>
 
         {#if hasSelectedElement}
@@ -415,21 +416,40 @@
             onpointerdown={(event) => event.stopPropagation()}
           >
             <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400">Hidden</h3>
-            <span class="bg-red-600 text-white text-xs font-bold min-w-5 h-5 px-1 rounded-full flex items-center justify-center">{hiddenSelectors.length}</span>
+            <span class="bg-red-600/50 text-white text-xs font-bold min-w-5 h-5 px-1 rounded-full flex items-center justify-center">{hiddenSelectors.length}</span>
+            <span class="ml-auto text-slate-400">
+              {#if hiddenExpanded}
+                <ChevronUpIcon size={14} />
+              {:else}
+                <ChevronDownIcon size={14} />
+              {/if}
+            </span>
           </button>
           {#if hiddenExpanded}
             <ul class="px-2 pb-2 space-y-1">
               {#each hiddenSelectors as selector (selector)}
-                <li class="flex items-center gap-1 p-1.5 rounded-lg bg-slate-700/50 group">
+                <li
+                  class="flex items-center gap-1 p-1.5 rounded-lg bg-slate-700/50 group"
+                  onmouseenter={() => {
+                    for (const element of queryElements(selector)) {
+                      if (element instanceof HTMLElement) element.style.removeProperty('visibility');
+                    }
+                  }}
+                  onmouseleave={() => {
+                    for (const element of queryElements(selector)) {
+                      if (element instanceof HTMLElement) element.style.setProperty('visibility', 'hidden', 'important');
+                    }
+                  }}
+                >
                   <span class="flex-1 text-xs text-slate-300 truncate font-mono" title={selector}>{selector}</span>
                   <button
                     type="button"
-                    class="w-5 h-5 rounded flex items-center justify-center text-slate-400 opacity-60 group-hover:opacity-100 hover:text-green-400 transition-colors"
+                    class="w-5 h-5 rounded flex items-center justify-center text-slate-400 opacity-60 group-hover:opacity-100 hover:text-red-400 transition-colors"
                     onclick={() => onUnhideElement(selector)}
                     onpointerdown={(event) => event.stopPropagation()}
-                    title="Show element"
+                    title="Remove from hidden"
                   >
-                    <EyeIcon size={14} />
+                    <TrashIcon size={14} />
                   </button>
                 </li>
               {/each}

@@ -68,7 +68,15 @@ export async function injectToolbar(page: Page, options: InjectToolbarOptions): 
 }
 
 async function doInjectToolbar(page: Page, options: InjectToolbarOptions): Promise<void> {
-  const { screenshots, pendingJob, selectedId, sidebarExpanded, hiddenElements, onEvent } = options;
+  const {
+    screenshots,
+    settings,
+    pendingJob,
+    selectedId,
+    sidebarExpanded,
+    hiddenElements,
+    onEvent,
+  } = options;
 
   // Expose event handler to page (only once per page lifetime).
   // All toolbar events flow through this single channel.
@@ -110,11 +118,12 @@ async function doInjectToolbar(page: Page, options: InjectToolbarOptions): Promi
   const scriptContent = readFileSync(scriptPath, 'utf8');
 
   await page.evaluate(
-    `(function(screenshots, pendingJob, selectedId, sidebarExpanded, hiddenElements, scriptContent) {
+    `(function(screenshots, settings, pendingJob, selectedId, sidebarExpanded, hiddenElements, scriptContent) {
       // Initialize __heroshot global namespace
       globalThis.__heroshot = {
         initialized: false,
         screenshots: screenshots,
+        settings: settings,
         pendingJob: pendingJob,
         selectedId: selectedId,
         sidebarExpanded: sidebarExpanded,
@@ -132,6 +141,6 @@ async function doInjectToolbar(page: Page, options: InjectToolbarOptions): Promi
       var script = document.createElement('script');
       script.textContent = scriptContent;
       document.body.appendChild(script);
-    })(${JSON.stringify(screenshots)}, ${JSON.stringify(pendingJob)}, ${JSON.stringify(selectedId)}, ${JSON.stringify(sidebarExpanded)}, ${JSON.stringify(hiddenElements)}, ${JSON.stringify(scriptContent)})`
+    })(${JSON.stringify(screenshots)}, ${JSON.stringify(settings)}, ${JSON.stringify(pendingJob)}, ${JSON.stringify(selectedId)}, ${JSON.stringify(sidebarExpanded)}, ${JSON.stringify(hiddenElements)}, ${JSON.stringify(scriptContent)})`
   );
 }

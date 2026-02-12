@@ -27,6 +27,24 @@ export function saveCurrentConfig(
         deviceScaleFactor: browserSettings.deviceScaleFactor,
       }),
     };
+
+    // Apply config-level settings
+    if (browserSettings.outputDirectory) {
+      config.outputDirectory = browserSettings.outputDirectory;
+    }
+    if (browserSettings.outputFormat) {
+      config.outputFormat = browserSettings.outputFormat;
+    } else {
+      delete config.outputFormat;
+    }
+    if (browserSettings.jpegQuality && browserSettings.outputFormat === 'jpeg') {
+      config.jpegQuality = browserSettings.jpegQuality;
+    }
+    if (browserSettings.workers) {
+      config.workers = browserSettings.workers;
+    } else {
+      delete config.workers;
+    }
   }
 
   // Update hidden elements

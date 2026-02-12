@@ -55,6 +55,10 @@ export const browserSettingsSchema: z.ZodType<BrowserSettings> = z.object({
   }),
   colorScheme: z.enum(['light', 'dark']).optional(),
   deviceScaleFactor: z.number().optional(),
+  outputDirectory: z.string().optional(),
+  outputFormat: z.enum(['png', 'jpeg']).optional(),
+  jpegQuality: z.number().int().min(1).max(100).optional(),
+  workers: z.number().int().min(1).optional(),
 });
 
 /** Schema for toolbar events (discriminated union) */
