@@ -10,6 +10,7 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   clean: true,
+  inlineOnly: false,
   shims: true,
   banner: {
     js: '#!/usr/bin/env node',
