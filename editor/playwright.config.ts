@@ -16,6 +16,9 @@ export default defineConfig({
   // Update snapshots with: npx playwright test --update-snapshots
   updateSnapshots: 'none',
 
+  // Skip visual regression on CI (Docker container renders fonts differently than host)
+  ignoreSnapshots: !!process.env.CI,
+
   use: {
     baseURL: 'https://heroshot.sh',
     trace: 'on-first-retry',
