@@ -1,5 +1,15 @@
 # heroshot
 
+## 0.15.0
+
+### Minor Changes
+
+- 9f0d8f5: Add per-domain element hiding for screenshots
+
+### Patch Changes
+
+- 311f56f: Improved editor code quality and reliability
+
 ## 0.14.2
 
 ### Patch Changes
