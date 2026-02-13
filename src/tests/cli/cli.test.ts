@@ -6,10 +6,10 @@ import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 
 const execAsync = promisify(exec);
-import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { PNG } from 'pngjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import sharp from 'sharp';
 
 const TEST_URL = 'https://heroshot.sh/__tests__/toolbar.html';
 const TEST_OUTPUT_DIR = path.join(import.meta.dirname, '../../../.test-output-cli');
@@ -34,13 +34,11 @@ async function runCli(
   }
 }
 
-/** Get image dimensions using sharp */
-async function getImageDimensions(filePath: string): Promise<{ width: number; height: number }> {
-  const metadata = await sharp(filePath).metadata();
-  return {
-    width: metadata.width ?? 0,
-    height: metadata.height ?? 0,
-  };
+/** Get PNG image dimensions using pngjs */
+function getImageDimensions(filePath: string): { width: number; height: number } {
+  const buffer = readFileSync(filePath);
+  const png = PNG.sync.read(buffer);
+  return { width: png.width, height: png.height };
 }
 
 describe.concurrent('CLI URL capture', () => {
@@ -69,7 +67,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBe(1280);
     }, 60_000);
 
@@ -82,7 +80,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       // Mobile viewport is 430, but scrollbar width varies by platform
       expect(dimensions.width).toBeGreaterThanOrEqual(430);
       expect(dimensions.width).toBeLessThan(475);
@@ -97,7 +95,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBe(1024);
     }, 60_000);
   });
@@ -112,7 +110,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBeLessThanOrEqual(1280);
       expect(dimensions.height).toBeLessThan(800);
     }, 60_000);
@@ -129,7 +127,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       // Button should be smaller than full page
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBeLessThan(300);
       expect(dimensions.height).toBeLessThan(100);
     }, 60_000);
@@ -146,7 +144,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       // Button should be smaller than full page
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBeLessThan(300);
       expect(dimensions.height).toBeLessThan(100);
     }, 60_000);
@@ -168,8 +166,8 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPathPadded)).toBe(true);
 
-      const dimWithout = await getImageDimensions(outputPathNoPad);
-      const dimWith = await getImageDimensions(outputPathPadded);
+      const dimWithout = getImageDimensions(outputPathNoPad);
+      const dimWith = getImageDimensions(outputPathPadded);
 
       expect(dimWith.width).toBe(dimWithout.width + 40);
       expect(dimWith.height).toBe(dimWithout.height + 40);
@@ -186,7 +184,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       // Mobile (430) at 2x = 860, but scrollbar width varies by platform
       expect(dimensions.width).toBeGreaterThanOrEqual(860);
       expect(dimensions.width).toBeLessThan(950);
@@ -203,8 +201,11 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const metadata = await sharp(outputPath).metadata();
-      expect(metadata.format).toBe('jpeg');
+      // JPEG files start with magic bytes FF D8 FF
+      const header = readFileSync(outputPath).subarray(0, 3);
+      expect(header[0]).toBe(0xff);
+      expect(header[1]).toBe(0xd8);
+      expect(header[2]).toBe(0xff);
     }, 60_000);
   });
 
@@ -230,7 +231,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       // Tablet viewport is 768
       expect(dimensions.width).toBeGreaterThanOrEqual(768);
       expect(dimensions.width).toBeLessThan(820);
@@ -245,7 +246,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBe(1280);
     }, 60_000);
   });
@@ -283,7 +284,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       // Mobile (430) at 1x
       expect(dimensions.width).toBeGreaterThanOrEqual(430);
       expect(dimensions.width).toBeLessThan(475);
@@ -298,7 +299,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       // Mobile (430) at 3x = 1290
       expect(dimensions.width).toBeGreaterThanOrEqual(1290);
       expect(dimensions.width).toBeLessThan(1425);
@@ -315,7 +316,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       // Default viewport is 1280x800, so height should be exactly 800
       expect(dimensions.width).toBe(1280);
       expect(dimensions.height).toBe(800);
@@ -366,7 +367,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       // Tablet (768) at 2x = 1536
       expect(dimensions.width).toBeGreaterThanOrEqual(1536);
       expect(dimensions.width).toBeLessThan(1640);
@@ -384,7 +385,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       // Element should be captured with padding on mobile viewport
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBeLessThanOrEqual(450); // 430 + 20 padding
     }, 60_000);
 
@@ -399,7 +400,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(result.success).toBe(true);
       expect(existsSync(outputPath)).toBe(true);
 
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBe(800);
       expect(dimensions.height).toBe(600);
     }, 60_000);
@@ -536,7 +537,7 @@ describe.concurrent('CLI URL capture', () => {
       expect(existsSync(outputPath)).toBe(true);
 
       // Verify we got a reasonable element screenshot
-      const dimensions = await getImageDimensions(outputPath);
+      const dimensions = getImageDimensions(outputPath);
       expect(dimensions.width).toBeGreaterThan(100);
       expect(dimensions.height).toBeGreaterThan(50);
     }, 60_000);

@@ -186,12 +186,13 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0",
-    "@modelcontextprotocol/sdk": "^1.12.1",
     "commander": "^12.1.0",
     "p-limit": "^7.2.0",
     "playwright": "^1.49.0",
-    "sharp": "^0.33.0",
     "zod": "^4.3.5"
+  },
+  "optionalDependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
