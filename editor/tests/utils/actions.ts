@@ -158,6 +158,16 @@ export async function clickConfirmButtonForElement(page: Page, selector: string)
 }
 
 /**
+ * Activate hide mode and click an element to hide it
+ */
+export async function activateHideModeAndHideElement(page: Page, selector: string): Promise<void> {
+  await clickToolbarButton(page, 'hide');
+  await page.waitForTimeout(200);
+  await clickPageElement(page, selector);
+  await page.waitForTimeout(300);
+}
+
+/**
  * Click the cancel button on the highlight overlay for a selected element
  */
 export async function clickCancelButtonForElement(page: Page, selector: string): Promise<void> {

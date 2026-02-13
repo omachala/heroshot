@@ -2,9 +2,12 @@
   import AnnotateIcon from '../icons/AnnotateIcon.svelte';
   import ChevronDownIcon from '../icons/ChevronDownIcon.svelte';
   import ChevronUpIcon from '../icons/ChevronUpIcon.svelte';
+  import EraserIcon from '../icons/EraserIcon.svelte';
   import GripIcon from '../icons/GripIcon.svelte';
   import PickerIcon from '../icons/PickerIcon.svelte';
   import SettingsIcon from '../icons/SettingsIcon.svelte';
+  import TrashIcon from '../icons/TrashIcon.svelte';
+  import { queryElements } from '../lib/selectorGenerator';
   import type { ScreenshotItem } from '../types';
   import ScreenshotItemComponent from './ScreenshotItem.svelte';
 
@@ -12,6 +15,8 @@
     screenshots: ScreenshotItem[];
     /** Whether picker mode is active */
     pickerActive: boolean;
+    /** Whether hide mode is active */
+    isHideMode: boolean;
     /** Whether the screenshot list is expanded */
     expanded: boolean;
     /** Whether settings modal is visible */
@@ -21,7 +26,10 @@
     selectedId: string | null;
     /** Active annotation tool type (null = not annotating) */
     annotationTool: string | null;
+    /** Hidden element selectors for current domain */
+    hiddenSelectors: string[];
     onTogglePicker: () => void;
+    onToggleHideMode: () => void;
     onToggleExpanded: () => void;
     onToggleSettings: () => void;
     onDone: () => void;
@@ -31,18 +39,22 @@
     onEditingComplete: () => void;
     onDraftConfirm: (id: string) => void;
     onToggleAnnotationTool: (tool: string) => void;
+    onUnhideElement: (selector: string) => void;
   }
 
   let {
     screenshots,
     pickerActive,
+    isHideMode,
     expanded,
     settingsVisible,
     editingId,
     draftId,
     selectedId,
     annotationTool,
+    hiddenSelectors,
     onTogglePicker,
+    onToggleHideMode,
     onToggleExpanded,
     onToggleSettings,
     onDone,
@@ -52,11 +64,13 @@
     onEditingComplete,
     onDraftConfirm,
     onToggleAnnotationTool,
+    onUnhideElement,
   }: Props = $props();
 
   let localEditingId = $state<string | null>(null);
   let editValue = $state('');
   let annotationDropdownOpen = $state(false);
+  let hiddenExpanded = $state(false);
 
   // Whether an element is selected (annotation button only visible when selected)
   let hasSelectedElement = $derived(selectedId !== null);
@@ -235,7 +249,7 @@
   role="complementary"
   aria-label="Heroshot editor panel"
 >
-  <div class="w-64 max-h-[calc(100vh-32px)] bg-slate-800 rounded-xl shadow-2xl font-sans text-white flex flex-col overflow-hidden">
+  <div class="w-72 max-h-[calc(100vh-32px)] bg-slate-800 rounded-xl shadow-2xl font-sans text-white flex flex-col overflow-hidden">
     <!-- Header with drag handle and toolbar buttons -->
     <div
       class="flex items-center justify-between px-2 py-2 border-b border-slate-700"
@@ -254,7 +268,7 @@
       <div class="flex items-center gap-1">
         <button
           type="button"
-          class="w-8 h-8 rounded-md flex items-center justify-center transition-colors {pickerActive ? 'bg-green-500' : 'bg-slate-700 hover:bg-slate-600'}"
+          class="w-8 h-8 rounded-md flex items-center justify-center transition-colors {pickerActive && !isHideMode ? 'bg-green-500' : 'bg-slate-700 hover:bg-slate-600'}"
           onclick={onTogglePicker}
           onpointerdown={(event) => event.stopPropagation()}
           title="Pick element"
@@ -262,6 +276,16 @@
           aria-pressed={pickerActive}
         >
           <PickerIcon size={18} />
+        </button>
+
+        <button
+          type="button"
+          class="w-8 h-8 rounded-md flex items-center justify-center transition-colors {isHideMode ? 'bg-red-500' : 'bg-slate-700 hover:bg-slate-600'}"
+          onclick={onToggleHideMode}
+          onpointerdown={(event) => event.stopPropagation()}
+          title="Hide element"
+        >
+          <EraserIcon size={16} />
         </button>
 
         {#if hasSelectedElement}
@@ -381,6 +405,58 @@
           </ul>
         {/if}
       </div>
+
+      <!-- Hidden Elements section -->
+      {#if hiddenSelectors.length > 0}
+        <div class="border-t border-slate-700/50">
+          <button
+            type="button"
+            class="flex items-center gap-1.5 px-3 py-2 w-full text-left"
+            onclick={() => { hiddenExpanded = !hiddenExpanded; }}
+            onpointerdown={(event) => event.stopPropagation()}
+          >
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-slate-400">Hidden</h3>
+            <span class="bg-red-600/50 text-white text-xs font-bold min-w-5 h-5 px-1 rounded-full flex items-center justify-center">{hiddenSelectors.length}</span>
+            <span class="ml-auto text-slate-400">
+              {#if hiddenExpanded}
+                <ChevronUpIcon size={14} />
+              {:else}
+                <ChevronDownIcon size={14} />
+              {/if}
+            </span>
+          </button>
+          {#if hiddenExpanded}
+            <ul class="px-2 pb-2 space-y-1">
+              {#each hiddenSelectors as selector (selector)}
+                <li
+                  class="flex items-center gap-1 p-1.5 rounded-lg bg-slate-700/50 group"
+                  onmouseenter={() => {
+                    for (const element of queryElements(selector)) {
+                      if (element instanceof HTMLElement) element.style.removeProperty('visibility');
+                    }
+                  }}
+                  onmouseleave={() => {
+                    for (const element of queryElements(selector)) {
+                      if (element instanceof HTMLElement) element.style.setProperty('visibility', 'hidden', 'important');
+                    }
+                  }}
+                >
+                  <span class="flex-1 text-xs text-slate-300 truncate font-mono" title={selector}>{selector}</span>
+                  <button
+                    type="button"
+                    class="w-5 h-5 rounded flex items-center justify-center text-slate-400 opacity-60 group-hover:opacity-100 hover:text-red-400 transition-colors"
+                    onclick={() => onUnhideElement(selector)}
+                    onpointerdown={(event) => event.stopPropagation()}
+                    title="Remove from hidden"
+                  >
+                    <TrashIcon size={14} />
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+        </div>
+      {/if}
     </div>
     {/if}
   </div>

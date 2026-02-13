@@ -170,6 +170,13 @@ export class SelectorGenerator {
   }
 
   /**
+   * Query all elements matching a selector (public API)
+   */
+  query(selector: string): Element[] {
+    return this.queryAll(selector);
+  }
+
+  /**
    * Query all elements matching a selector (supports Playwright formats)
    */
   private queryAll(selector: string): Element[] {
@@ -559,4 +566,11 @@ const defaultGenerator = new SelectorGenerator();
  */
 export function generateSelector(element: Element): string {
   return defaultGenerator.generate(element);
+}
+
+/**
+ * Query elements by selector (supports Playwright-style selectors like text=, role=, >>)
+ */
+export function queryElements(selector: string): Element[] {
+  return defaultGenerator.query(selector);
 }

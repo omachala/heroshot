@@ -265,4 +265,8 @@ export const configSchema = z.object({
     .optional()
     .describe('Number of parallel capture workers (default: 1)'),
   screenshots: z.array(screenshotSchema).default([]).describe('Screenshot definitions'),
+  hiddenElements: z
+    .record(z.string(), z.array(z.string()))
+    .optional()
+    .describe('Elements to hide per domain (hostname → CSS selectors)'),
 });

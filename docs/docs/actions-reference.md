@@ -341,9 +341,9 @@ Resize the browser viewport mid-flow.
 
 Hide elements from screenshot. Use to remove cookie banners, chat widgets, ads.
 
-| Property    | Type     | Required | Description                               |
-| ----------- | -------- | -------- | ----------------------------------------- |
-| `selectors` | string[] | yes      | Element selectors to hide (display: none) |
+| Property    | Type     | Required | Description                                    |
+| ----------- | -------- | -------- | ---------------------------------------------- |
+| `selectors` | string[] | yes      | Element selectors to hide (visibility: hidden) |
 
 ```json
 {

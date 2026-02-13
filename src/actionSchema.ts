@@ -139,7 +139,7 @@ export const resizeActionSchema = z
 export const hideActionSchema = z
   .object({
     type: z.literal('hide'),
-    selectors: z.array(z.string()).describe('Element selectors to hide (display: none)'),
+    selectors: z.array(z.string()).describe('Element selectors to hide (visibility: hidden)'),
   })
   .describe('Hide elements from screenshot. Use to remove cookie banners, chat widgets, ads.');
 

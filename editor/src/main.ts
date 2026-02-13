@@ -32,6 +32,7 @@ export function initToolbar(): (() => void) | null {
       pendingJob: null,
       selectedId: null,
       sidebarVisible: false,
+      hiddenElements: {},
       emit: () => {
         // No-op if not injected by CLI
       },
@@ -90,6 +91,7 @@ export function initToolbar(): (() => void) | null {
         pendingJob: heroshot.pendingJob,
         initialSelectedId: heroshot.selectedId,
         initialSidebarVisible: heroshot.sidebarVisible,
+        initialHiddenElements: { ...heroshot.hiddenElements },
       },
     });
   } catch {

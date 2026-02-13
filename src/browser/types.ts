@@ -59,6 +59,14 @@ export type BrowserSettings = {
   viewport: { width: number; height: number };
   colorScheme?: 'light' | 'dark';
   deviceScaleFactor?: number;
+  /** Output directory for screenshots (relative to config file) */
+  outputDirectory?: string;
+  /** Image format for all screenshots */
+  outputFormat?: 'png' | 'jpeg';
+  /** JPEG compression quality (1-100) */
+  jpegQuality?: number;
+  /** Number of parallel capture workers */
+  workers?: number;
 };
 
 /** Events that toolbar sends to CLI */
@@ -68,15 +76,18 @@ export type ToolbarEvent =
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
   | { type: 'settings-updated'; data: BrowserSettings }
+  | { type: 'hidden-elements-updated'; domain: string; selectors: string[] }
   | { type: 'job-complete' }
   | { type: 'done' };
 
 /** Options for injecting toolbar into page */
 export type InjectToolbarOptions = {
   screenshots: ScreenshotData[];
+  settings: BrowserSettings;
   pendingJob: ToolbarJob | null;
   selectedId: string | null;
   sidebarExpanded: boolean;
+  hiddenElements: Record<string, string[]>;
   onEvent: (event: ToolbarEvent) => void;
 };
 

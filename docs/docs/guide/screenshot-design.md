@@ -393,6 +393,21 @@ Dev tools, debug panels, feature flags - hide them:
 
 Or capture against a production-like environment.
 
+### Hide Elements Per Domain
+
+Some elements are distracting on every screenshot from a domain - cookie banners, chat widgets, navigation bars. Instead of adding hide actions to each screenshot, hide them once at the domain level:
+
+```json
+{
+  "hiddenElements": {
+    "app.example.com": [".cookie-banner", ".chat-widget"],
+    "docs.example.com": [".announcement-bar"]
+  }
+}
+```
+
+These elements are hidden automatically for all screenshots captured from that domain. You can manage them visually in the editor using the eraser tool in the sidebar.
+
 ## Highlighting with Annotations
 
 Sometimes a screenshot needs more than just showing the UI - you need to draw attention to a specific button, field, or area. That's what annotations are for.

@@ -55,6 +55,10 @@ export const browserSettingsSchema: z.ZodType<BrowserSettings> = z.object({
   }),
   colorScheme: z.enum(['light', 'dark']).optional(),
   deviceScaleFactor: z.number().optional(),
+  outputDirectory: z.string().optional(),
+  outputFormat: z.enum(['png', 'jpeg']).optional(),
+  jpegQuality: z.number().int().min(1).max(100).optional(),
+  workers: z.number().int().min(1).optional(),
 });
 
 /** Schema for toolbar events (discriminated union) */
@@ -80,6 +84,11 @@ export const toolbarEventSchema: z.ZodType<ToolbarEvent> = z.discriminatedUnion(
   z.object({
     type: z.literal('settings-updated'),
     data: browserSettingsSchema,
+  }),
+  z.object({
+    type: z.literal('hidden-elements-updated'),
+    domain: z.string(),
+    selectors: z.array(z.string()),
   }),
   z.object({
     type: z.literal('job-complete'),

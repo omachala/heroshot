@@ -62,6 +62,7 @@ export function buildCaptureOptions(config: Config, viewportOnly?: boolean): Cap
     format: config.outputFormat ?? 'png',
     quality: config.jpegQuality,
     fullPage: !viewportOnly,
+    hiddenElements: config.hiddenElements,
   };
 }
 

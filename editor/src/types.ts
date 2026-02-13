@@ -99,6 +99,14 @@ export type BrowserSettings = {
   colorScheme?: ColorScheme;
   /** Device scale factor for retina/high-DPI screenshots (1 = standard, 2 = retina) */
   deviceScaleFactor?: number;
+  /** Output directory for screenshots (relative to config file) */
+  outputDirectory?: string;
+  /** Image format for all screenshots */
+  outputFormat?: 'png' | 'jpeg';
+  /** JPEG compression quality (1-100) */
+  jpegQuality?: number;
+  /** Number of parallel capture workers */
+  workers?: number;
 };
 
 /**
@@ -117,6 +125,7 @@ export type ToolbarEvent =
   | { type: 'screenshot-selected'; id: string; url: string; selector: string }
   | { type: 'screenshot-removed'; id: string }
   | { type: 'settings-updated'; data: BrowserSettings }
+  | { type: 'hidden-elements-updated'; domain: string; selectors: string[] }
   | { type: 'job-complete' }
   | { type: 'done' };
 
@@ -139,6 +148,8 @@ export type HeroshotGlobal = {
   selectedId: string | null;
   /** Whether sidebar should be open on init */
   sidebarVisible: boolean;
+  /** Elements hidden per domain (hostname → CSS selectors) */
+  hiddenElements: Record<string, string[]>;
   emit: (event: ToolbarEvent) => void;
   /** Utility functions for sync script */
   utils?: HeroshotUtilities;
