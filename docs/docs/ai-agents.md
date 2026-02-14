@@ -27,7 +27,7 @@ Add to your `~/.claude/claude_code_config.json`:
   "mcpServers": {
     "heroshot": {
       "command": "npx",
-      "args": ["-y", "heroshot-mcp"]
+      "args": ["--package=heroshot", "-y", "heroshot-mcp"]
     }
   }
 }
@@ -40,7 +40,7 @@ Or with a local installation:
   "mcpServers": {
     "heroshot": {
       "command": "node",
-      "args": ["/path/to/node_modules/heroshot/dist/mcp/index.js"]
+      "args": ["./node_modules/heroshot/dist/mcp/index.js"]
     }
   }
 }
@@ -56,7 +56,7 @@ Add to your Cursor MCP settings (Settings > MCP Servers > Add Server):
 {
   "heroshot": {
     "command": "npx",
-    "args": ["-y", "heroshot-mcp"]
+    "args": ["--package=heroshot", "-y", "heroshot-mcp"]
   }
 }
 ```
@@ -68,7 +68,7 @@ Or add directly to `.cursor/mcp.json` in your project:
   "mcpServers": {
     "heroshot": {
       "command": "npx",
-      "args": ["-y", "heroshot-mcp"]
+      "args": ["--package=heroshot", "-y", "heroshot-mcp"]
     }
   }
 }
@@ -83,7 +83,7 @@ For VS Code with GitHub Copilot, add to your `.vscode/mcp.json`:
   "servers": {
     "heroshot": {
       "command": "npx",
-      "args": ["-y", "heroshot-mcp"]
+      "args": ["--package=heroshot", "-y", "heroshot-mcp"]
     }
   }
 }
@@ -98,7 +98,7 @@ Add to your Windsurf MCP configuration:
   "mcpServers": {
     "heroshot": {
       "command": "npx",
-      "args": ["-y", "heroshot-mcp"]
+      "args": ["--package=heroshot", "-y", "heroshot-mcp"]
     }
   }
 }
