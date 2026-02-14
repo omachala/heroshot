@@ -48,7 +48,7 @@ const platforms = [
     command: `{
   "heroshot": {
     "command": "npx",
-    "args": ["-y", "heroshot-mcp"]
+    "args": ["--package=heroshot", "-y", "heroshot-mcp"]
   }
 }`,
     multiline: true,
