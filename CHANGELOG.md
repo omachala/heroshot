@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.16.0
+
+### Minor Changes
+
+- 4664d80: Dependency updates and internal build improvements
+
 ## 0.15.0
 
 ### Minor Changes
