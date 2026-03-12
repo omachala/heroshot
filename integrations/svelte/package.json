@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "svelte": "^5.46.1"
+    "svelte": "^5.46.4"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
