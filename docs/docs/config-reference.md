@@ -38,7 +38,7 @@ Back to [Configuration overview](./config).
 | ↳ `screenshots[].borderRadius`  | number                                       | -             | Corner radius in pixels — rounds the screenshot corners with transparency (PNG only)                                                                                                                                                    |
 | ↳ `screenshots[].actions`       | any[]                                        | -             | Ordered list of actions to execute before capturing. Actions run sequentially.                                                                                                                                                          |
 | `hiddenElements`                | Record                                       | -             | Elements to hide per domain (hostname → CSS selectors)                                                                                                                                                                                  |
-| `locales`                       | string[]                                     | -             | Locale codes to capture (e.g., `["en", "de"]`). Generates one screenshot per locale. See [Locale screenshots](#locale-screenshots).                                                                                                     |
+| `locales`                       | string[]                                     | -             | Locale codes (e.g., ["en", "de"]).                                                                                                                                                                                                      |
 
 ## Example
 
@@ -50,7 +50,8 @@ Back to [Configuration overview](./config).
   "browser": {},
   "workers": 4,
   "screenshots": [],
-  "hiddenElements": {}
+  "hiddenElements": {},
+  "locales": []
 }
 ```
 
