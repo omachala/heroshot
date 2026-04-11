@@ -117,10 +117,8 @@ async function executeBatch(
 ): Promise<ScreenshotResult[]> {
   const results: ScreenshotResult[] = [];
 
-  // All jobs in a batch share the same locale (guaranteed by groupJobsByUrl grouping)
-  const batchLocale = jobs[0]?.locale;
-
   // Launch browser for this batch (locale is a context-level setting)
+  // All jobs in a batch share the same locale (guaranteed by groupJobsByUrl grouping)
   const { browser, context } = await launchBrowser({
     headless: !browserOptions.headed,
     viewport: browserOptions.viewport,
@@ -129,7 +127,7 @@ async function executeBatch(
     bypassCSP: browserOptions.bypassCSP,
     reducedMotion: browserOptions.reducedMotion,
     userAgent: browserOptions.userAgent,
-    locale: batchLocale,
+    locale: jobs[0]?.locale,
   });
 
   const page = await context.newPage();
@@ -244,11 +242,8 @@ export async function captureParallel(
     progress,
   } = options;
 
-  // Group jobs by URL to minimize page navigations within each worker
-  const urlGroups = groupJobsByUrl(jobs);
-
-  // Distribute URL groups across workers (same-URL jobs stay together)
-  const batches = distributeBatches(urlGroups, workers);
+  // Group jobs by URL + locale, then distribute across workers (same URL+locale stay together)
+  const batches = distributeBatches(groupJobsByUrl(jobs), workers);
 
   const allResults: ScreenshotResult[] = [];
   const limit = pLimit(workers);
