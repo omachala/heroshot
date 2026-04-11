@@ -42,13 +42,18 @@ export function resolveOutputDirectory(
 /**
  * Calculate total number of captures needed.
  */
-export function calculateTotalCaptures(screenshots: Screenshot[], schemeCount: number): number {
+export function calculateTotalCaptures(
+  screenshots: Screenshot[],
+  schemeCount: number,
+  localeCount = 1
+): number {
   let total = 0;
   const adjustedSchemeCount = Math.max(1, schemeCount);
+  const adjustedLocaleCount = Math.max(1, localeCount);
 
   for (const screenshot of screenshots) {
     const viewportCount = screenshot.viewports?.length ?? 1;
-    total += viewportCount * adjustedSchemeCount;
+    total += viewportCount * adjustedSchemeCount * adjustedLocaleCount;
   }
 
   return total;

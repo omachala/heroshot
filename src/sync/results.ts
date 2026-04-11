@@ -12,17 +12,22 @@ import type { ScreenshotResult, SyncResult } from './types';
 export function buildDisplayName(
   name: string,
   viewportName?: string,
-  colorScheme?: string
+  colorScheme?: string,
+  locale?: string
 ): string {
-  const suffix = [viewportName, colorScheme].filter(Boolean).join('-');
+  const suffix = [locale, viewportName, colorScheme].filter(Boolean).join('-');
   return suffix ? `${name} (${suffix})` : name;
 }
 
 /**
  * Build a variant ID suffix.
  */
-export function buildVariantSuffix(viewportName?: string, colorScheme?: string): string {
-  return [viewportName, colorScheme].filter(Boolean).join('-');
+export function buildVariantSuffix(
+  viewportName?: string,
+  colorScheme?: string,
+  locale?: string
+): string {
+  return [locale, viewportName, colorScheme].filter(Boolean).join('-');
 }
 
 /**

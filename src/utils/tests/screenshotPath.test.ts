@@ -98,4 +98,41 @@ describe('generateScreenshotFilename', () => {
   it('handles trailing and leading slashes', () => {
     expect(generateScreenshotFilename({ name: '/registry/login/' })).toBe('registry/login.png');
   });
+
+  it('prepends locale as directory prefix', () => {
+    expect(generateScreenshotFilename({ name: 'Home', locale: 'de' })).toBe('de/home.png');
+  });
+
+  it('no locale prefix when locale is not set', () => {
+    expect(generateScreenshotFilename({ name: 'Home' })).toBe('home.png');
+  });
+
+  it('combines locale directory with viewport suffix', () => {
+    expect(generateScreenshotFilename({ name: 'Home', locale: 'de', viewport: 'mobile' })).toBe(
+      'de/home-mobile.png'
+    );
+  });
+
+  it('combines locale directory with color scheme suffix', () => {
+    expect(generateScreenshotFilename({ name: 'Home', locale: 'fr', colorScheme: 'dark' })).toBe(
+      'fr/home-dark.png'
+    );
+  });
+
+  it('combines locale directory with viewport and color scheme', () => {
+    expect(
+      generateScreenshotFilename({
+        name: 'Home',
+        locale: 'de',
+        viewport: 'mobile',
+        colorScheme: 'dark',
+      })
+    ).toBe('de/home-mobile-dark.png');
+  });
+
+  it('locale directory is outermost prefix, before name subdirectory', () => {
+    expect(generateScreenshotFilename({ name: 'docs/home', locale: 'de' })).toBe(
+      'de/docs/home.png'
+    );
+  });
 });

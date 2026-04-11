@@ -38,6 +38,7 @@ Back to [Configuration overview](./config).
 | ↳ `screenshots[].borderRadius`  | number                                       | -             | Corner radius in pixels — rounds the screenshot corners with transparency (PNG only)                                                                                                                                                    |
 | ↳ `screenshots[].actions`       | any[]                                        | -             | Ordered list of actions to execute before capturing. Actions run sequentially.                                                                                                                                                          |
 | `hiddenElements`                | Record                                       | -             | Elements to hide per domain (hostname → CSS selectors)                                                                                                                                                                                  |
+| `locales`                       | string[]                                     | -             | Locale codes (e.g., ["en", "de"]).                                                                                                                                                                                                      |
 
 ## Example
 
@@ -49,6 +50,46 @@ Back to [Configuration overview](./config).
   "browser": {},
   "workers": 4,
   "screenshots": [],
-  "hiddenElements": {}
+  "hiddenElements": {},
+  "locales": []
 }
 ```
+
+## Locale Screenshots
+
+Use `locales` to automatically generate screenshots in multiple languages. Each locale gets its own output subdirectory.
+
+```json
+{
+  "locales": ["en", "de", "fr"],
+  "screenshots": [
+    {
+      "name": "home",
+      "url": "http://localhost:5173/{locale}/"
+    },
+    {
+      "name": "about",
+      "url": "http://localhost:5173/{locale}/about"
+    }
+  ]
+}
+```
+
+This generates:
+
+```
+heroshots/
+  en/home.png
+  en/about.png
+  de/home.png
+  de/about.png
+  fr/home.png
+  fr/about.png
+```
+
+**How it works:**
+
+- **`{locale}` in URL** — replaced with the locale code per capture. Use this for path-based routing (VitePress, Next.js i18n sub-paths, Docusaurus).
+- **No `{locale}` in URL** — URL is used as-is, but the browser's locale and `Accept-Language` header are set to the locale code. Use this for apps that detect locale via JavaScript (`navigator.language`, `Intl`) or server-side `Accept-Language` negotiation.
+- **Single locale** — no subdirectory is added (same output as without `locales`).
+- **Multiple locales** — each locale outputs to its own subdirectory named after the locale code.

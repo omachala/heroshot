@@ -269,4 +269,5 @@ export const configSchema = z.object({
     .record(z.string(), z.array(z.string()))
     .optional()
     .describe('Elements to hide per domain (hostname → CSS selectors)'),
+  locales: z.array(z.string().min(1)).optional().describe('Locale codes (e.g., ["en", "de"]).'),
 });

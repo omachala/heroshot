@@ -102,15 +102,19 @@ export async function captureScreenshot(
     name,
     viewport: variant.viewportName,
     colorScheme: variant.colorScheme,
+    locale: variant.locale,
     format,
   });
 
-  const suffix = buildVariantSuffix(variant.viewportName, variant.colorScheme);
+  const suffix = buildVariantSuffix(variant.viewportName, variant.colorScheme, variant.locale);
   const suffixDisplay = suffix ? ` (${suffix})` : '';
   verbose(`Capturing: ${name}${suffixDisplay}`);
 
+  // Use locale-transformed URL if available
+  const effectiveUrl = variant.localeUrl ?? url;
+
   // Navigate and prepare page (element scroll handled by findElement)
-  const navResult = await navigateAndPrepare(page, url, variant.colorScheme);
+  const navResult = await navigateAndPrepare(page, effectiveUrl, variant.colorScheme);
   if (!navResult.success) {
     return { ...navResult, filename };
   }
@@ -118,7 +122,7 @@ export async function captureScreenshot(
   // Apply domain-level hidden elements
   if (captureOptions.hiddenElements) {
     const { hiddenElements: hiddenByDomain } = captureOptions;
-    const { hostname } = new URL(url);
+    const { hostname } = new URL(effectiveUrl);
     if (hiddenByDomain[hostname]?.length) {
       await executeHide(page, { type: 'hide', selectors: hiddenByDomain[hostname] });
     }
@@ -199,7 +203,7 @@ export async function captureAndLog(
     }
   }
 
-  const suffix = buildVariantSuffix(variant.viewportName, variant.colorScheme);
+  const suffix = buildVariantSuffix(variant.viewportName, variant.colorScheme, variant.locale);
   const displayName = suffix ? `${screenshot.name} (${suffix})` : screenshot.name;
   const idSuffix = suffix ? `-${suffix}` : '';
 
