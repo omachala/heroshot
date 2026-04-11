@@ -36,6 +36,7 @@ type CaptureContext = {
     headed?: boolean;
   };
   schemes: ('light' | 'dark')[];
+  locales: string[];
   workers: number;
   captureSpinner: ReturnType<typeof spinner>;
   progress: { captured: number; total: number };
@@ -51,13 +52,14 @@ async function executeCapture(context: CaptureContext): Promise<ScreenshotResult
     captureOptions,
     browserOptions,
     schemes,
+    locales,
     workers,
     captureSpinner,
     progress,
   } = context;
 
   if (workers > 1) {
-    const jobs = buildCaptureJobs(screenshots, schemes);
+    const jobs = buildCaptureJobs(screenshots, schemes, locales);
     return captureParallel({
       jobs,
       outputDirectory,
@@ -69,22 +71,27 @@ async function executeCapture(context: CaptureContext): Promise<ScreenshotResult
     });
   }
 
-  // Sequential capture
+  // Sequential capture — one browser launch per (colorScheme, locale) combination
   const results: ScreenshotResult[] = [];
   const schemesToCapture = schemes.length === 0 ? [undefined] : schemes;
+  const localesToCapture = locales.length === 0 ? [undefined] : locales;
 
-  for (const colorScheme of schemesToCapture) {
-    const schemeResults = await captureWithScheme({
-      screenshots,
-      outputDirectory,
-      captureOptions,
-      browserOptions,
-      colorScheme,
-      schemes,
-      captureSpinner,
-      progress,
-    });
-    results.push(...schemeResults);
+  for (const locale of localesToCapture) {
+    for (const colorScheme of schemesToCapture) {
+      const schemeResults = await captureWithScheme({
+        screenshots,
+        outputDirectory,
+        captureOptions,
+        browserOptions,
+        colorScheme,
+        schemes,
+        locale,
+        locales,
+        captureSpinner,
+        progress,
+      });
+      results.push(...schemeResults);
+    }
   }
 
   return results;
@@ -131,8 +138,13 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
   );
   const storageState = loadEncryptedSession(options.sessionKey);
   const schemes = getColorSchemes(config.browser?.colorScheme);
+  const locales = config.locales ?? [];
   const captureOptions = buildCaptureOptions(config, options.viewportOnly);
-  const totalToCapture = calculateTotalCaptures(screenshots, schemes.length);
+  const totalToCapture = calculateTotalCaptures(
+    screenshots,
+    schemes.length,
+    Math.max(1, locales.length)
+  );
 
   // Browser options
   const browserOptions = {
@@ -155,6 +167,7 @@ export async function sync(options: SyncOptions = {}): Promise<SyncResult> {
       captureOptions,
       browserOptions,
       schemes,
+      locales,
       workers,
       captureSpinner,
       progress: { captured: 0, total: totalToCapture },

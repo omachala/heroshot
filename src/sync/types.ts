@@ -54,6 +54,10 @@ export type CaptureVariant = {
   viewportName?: string;
   /** Color scheme for filename suffix (only if multiple schemes) */
   colorScheme?: 'light' | 'dark';
+  /** Locale code for output subdirectory (only if multiple locales) */
+  locale?: string;
+  /** URL with {locale} placeholder replaced (used for navigation) */
+  localeUrl?: string;
 };
 
 /** Result of a single screenshot capture */

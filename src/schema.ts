@@ -269,4 +269,10 @@ export const configSchema = z.object({
     .record(z.string(), z.array(z.string()))
     .optional()
     .describe('Elements to hide per domain (hostname → CSS selectors)'),
+  locales: z
+    .array(z.string().min(1))
+    .optional()
+    .describe(
+      'Locale codes to capture (e.g., ["en", "de"]). Use {locale} in screenshot URLs for path-based routing. Sets browser locale and Accept-Language header per locale.'
+    ),
 });

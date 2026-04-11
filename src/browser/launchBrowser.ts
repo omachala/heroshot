@@ -75,6 +75,8 @@ export async function launchBrowser(
     ...(options.colorScheme && { colorScheme: options.colorScheme }),
     ...(options.reducedMotion && { reducedMotion: options.reducedMotion }),
     ...(options.userAgent && { userAgent: options.userAgent }),
+    ...(options.locale && { locale: options.locale }),
+    ...(options.locale && { extraHTTPHeaders: { 'Accept-Language': options.locale } }),
   });
 
   return { browser, context };

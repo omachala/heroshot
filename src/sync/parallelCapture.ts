@@ -7,6 +7,7 @@ import type { BrowserContextOptions } from 'playwright';
 import { launchBrowser } from '../browser/launchBrowser';
 import type { Screenshot } from '../types';
 import type { spinner } from '../ui';
+import { applyLocale } from '../utils/localeUrl';
 import { parseViewport } from '../utils/parseViewport';
 import { captureAndLog } from './capture';
 import type { CaptureOptions, CaptureVariant, ScreenshotResult } from './types';
@@ -18,6 +19,12 @@ export type CaptureJob = {
   viewport?: { name: string; width: number; height: number };
   hasMultipleSchemes: boolean;
   hasMultipleViewports: boolean;
+  /** Current locale code for this job (undefined = no locale) */
+  locale?: string;
+  /** All configured locales — used to determine whether locale goes in filename */
+  locales?: string[];
+  /** URL with {locale} placeholder replaced, if applicable */
+  localeUrl?: string;
 };
 
 /** Options for parallel capture */
@@ -40,41 +47,56 @@ export type ParallelCaptureOptions = {
 };
 
 /**
- * Build capture jobs from screenshots and schemes.
+ * Build capture jobs from screenshots, schemes, and locales.
  * Each job represents a single screenshot capture task.
  */
 export function buildCaptureJobs(
   screenshots: Screenshot[],
-  schemes: ('light' | 'dark')[]
+  schemes: ('light' | 'dark')[],
+  locales: string[] = []
 ): CaptureJob[] {
   const jobs: CaptureJob[] = [];
   const hasMultipleSchemes = schemes.length > 1;
   const schemesToCapture = schemes.length === 0 ? [undefined] : schemes;
+  const localesToCapture = locales.length === 0 ? [undefined] : locales;
 
   for (const screenshot of screenshots) {
     const viewportVariants = screenshot.viewports ?? [];
     const hasMultipleViewports = viewportVariants.length > 1;
 
-    for (const scheme of schemesToCapture) {
-      if (viewportVariants.length === 0) {
-        // No viewports specified - use default
-        jobs.push({
-          screenshot,
-          colorScheme: scheme,
-          hasMultipleSchemes,
-          hasMultipleViewports: false,
-        });
-      } else {
-        // Create job for each viewport
-        for (const viewportVariant of viewportVariants) {
-          const parsedViewport = parseViewport(viewportVariant);
+    for (const locale of localesToCapture) {
+      const localeUrl =
+        locale && screenshot.url.includes('{locale}')
+          ? applyLocale(screenshot.url, locale)
+          : undefined;
+
+      for (const scheme of schemesToCapture) {
+        if (viewportVariants.length === 0) {
+          // No viewports specified - use default
           jobs.push({
             screenshot,
             colorScheme: scheme,
-            viewport: parsedViewport,
             hasMultipleSchemes,
-            hasMultipleViewports,
+            hasMultipleViewports: false,
+            locale,
+            locales,
+            localeUrl,
           });
+        } else {
+          // Create job for each viewport
+          for (const viewportVariant of viewportVariants) {
+            const parsedViewport = parseViewport(viewportVariant);
+            jobs.push({
+              screenshot,
+              colorScheme: scheme,
+              viewport: parsedViewport,
+              hasMultipleSchemes,
+              hasMultipleViewports,
+              locale,
+              locales,
+              localeUrl,
+            });
+          }
         }
       }
     }
@@ -95,7 +117,10 @@ async function executeBatch(
 ): Promise<ScreenshotResult[]> {
   const results: ScreenshotResult[] = [];
 
-  // Launch browser for this batch
+  // All jobs in a batch share the same locale (guaranteed by groupJobsByUrl grouping)
+  const batchLocale = jobs[0]?.locale;
+
+  // Launch browser for this batch (locale is a context-level setting)
   const { browser, context } = await launchBrowser({
     headless: !browserOptions.headed,
     viewport: browserOptions.viewport,
@@ -104,13 +129,22 @@ async function executeBatch(
     bypassCSP: browserOptions.bypassCSP,
     reducedMotion: browserOptions.reducedMotion,
     userAgent: browserOptions.userAgent,
+    locale: batchLocale,
   });
 
   const page = await context.newPage();
 
   try {
     for (const job of jobs) {
-      const { screenshot, colorScheme, viewport, hasMultipleSchemes, hasMultipleViewports } = job;
+      const {
+        screenshot,
+        colorScheme,
+        viewport,
+        hasMultipleSchemes,
+        hasMultipleViewports,
+        locale,
+        locales,
+      } = job;
 
       // Set viewport if specified
       if (viewport) {
@@ -125,6 +159,8 @@ async function executeBatch(
       const variant: CaptureVariant = {
         viewportName: hasMultipleViewports ? viewport?.name : undefined,
         colorScheme: hasMultipleSchemes ? colorScheme : undefined,
+        locale: (locales ?? []).length > 1 ? locale : undefined,
+        localeUrl: job.localeUrl,
       };
 
       const result = await captureAndLog(
@@ -146,17 +182,17 @@ async function executeBatch(
 }
 
 /**
- * Group jobs by URL to minimize page navigations.
- * Jobs for the same URL are kept together.
+ * Group jobs by effective URL + locale to minimize page navigations.
+ * Jobs for the same URL AND same locale are kept together.
+ * Locale is a browser context-level setting, so different locales must be separate groups.
  */
 export function groupJobsByUrl(jobs: CaptureJob[]): Map<string, CaptureJob[]> {
   const groups = new Map<string, CaptureJob[]>();
   for (const job of jobs) {
-    // eslint-disable-next-line prefer-destructuring -- already destructured
-    const { url } = job.screenshot;
-    const group = groups.get(url) ?? [];
+    const key = `${job.localeUrl ?? job.screenshot.url}::${job.locale ?? ''}`;
+    const group = groups.get(key) ?? [];
     group.push(job);
-    groups.set(url, group);
+    groups.set(key, group);
   }
   return groups;
 }
@@ -233,12 +269,10 @@ export async function captureParallel(
 
   const settledResults = await Promise.allSettled(batchPromises);
 
+  // Rejected batches (e.g., browser launch failure) are silently skipped
+  // Individual capture failures are already recorded in results with success: false
   for (const settled of settledResults) {
-    if (settled.status === 'fulfilled') {
-      allResults.push(...settled.value);
-    }
-    // Rejected batches (e.g., browser launch failure) are silently skipped
-    // Individual capture failures are already recorded in results with success: false
+    if (settled.status === 'fulfilled') allResults.push(...settled.value);
   }
 
   return allResults;

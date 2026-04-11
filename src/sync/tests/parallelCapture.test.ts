@@ -248,14 +248,60 @@ describe('buildCaptureJobs', () => {
       });
     });
   });
+
+  describe('with locales', () => {
+    it('creates jobs for each locale', () => {
+      const screenshots: Screenshot[] = [{ ...baseScreenshot, id: '1', name: 'Screenshot 1' }];
+
+      const jobs = buildCaptureJobs(screenshots, [], ['en', 'de']);
+
+      expect(jobs).toHaveLength(2);
+      expect(jobs[0]).toMatchObject({ locale: 'en', locales: ['en', 'de'] });
+      expect(jobs[1]).toMatchObject({ locale: 'de', locales: ['en', 'de'] });
+    });
+
+    it('replaces {locale} placeholder in URL', () => {
+      const screenshots: Screenshot[] = [
+        { ...baseScreenshot, id: '1', name: 'Screenshot 1', url: 'http://localhost/{locale}/' },
+      ];
+
+      const jobs = buildCaptureJobs(screenshots, [], ['en', 'de']);
+
+      expect(jobs[0]).toMatchObject({ locale: 'en', localeUrl: 'http://localhost/en/' });
+      expect(jobs[1]).toMatchObject({ locale: 'de', localeUrl: 'http://localhost/de/' });
+    });
+
+    it('sets localeUrl to undefined when URL has no placeholder', () => {
+      const screenshots: Screenshot[] = [{ ...baseScreenshot, id: '1', name: 'Screenshot 1' }];
+
+      const jobs = buildCaptureJobs(screenshots, [], ['en', 'de']);
+
+      expect(jobs[0]?.localeUrl).toBeUndefined();
+      expect(jobs[1]?.localeUrl).toBeUndefined();
+    });
+
+    it('creates jobs for each (locale × scheme × viewport) combination', () => {
+      const screenshots: Screenshot[] = [
+        { ...baseScreenshot, id: '1', name: 'Screenshot 1', viewports: ['desktop', 'mobile'] },
+      ];
+
+      const jobs = buildCaptureJobs(screenshots, ['light', 'dark'], ['en', 'de']);
+
+      // 2 locales × 2 schemes × 2 viewports = 8 jobs
+      expect(jobs).toHaveLength(8);
+    });
+  });
 });
 
 describe('groupJobsByUrl', () => {
-  const createJob = (url: string, id: string): CaptureJob => ({
+  const createJob = (url: string, id: string, locale?: string): CaptureJob => ({
     screenshot: { id, name: `Screenshot ${id}`, url },
     colorScheme: undefined,
     hasMultipleSchemes: false,
     hasMultipleViewports: false,
+    locale,
+    locales: [],
+    localeUrl: undefined,
   });
 
   it('groups jobs with same URL together', () => {
@@ -269,8 +315,9 @@ describe('groupJobsByUrl', () => {
     const groups = groupJobsByUrl(jobs);
 
     expect(groups.size).toBe(2);
-    expect(groups.get('https://example.com/page1')).toHaveLength(2);
-    expect(groups.get('https://example.com/page2')).toHaveLength(2);
+    // key format: {url}::{locale}
+    expect(groups.get('https://example.com/page1::')).toHaveLength(2);
+    expect(groups.get('https://example.com/page2::')).toHaveLength(2);
   });
 
   it('handles unique URLs', () => {
@@ -295,7 +342,21 @@ describe('groupJobsByUrl', () => {
     const groups = groupJobsByUrl(jobs);
 
     expect(groups.size).toBe(1);
-    expect(groups.get('https://example.com')).toHaveLength(3);
+    expect(groups.get('https://example.com::')).toHaveLength(3);
+  });
+
+  it('separates jobs with same URL but different locales into different groups', () => {
+    const jobs: CaptureJob[] = [
+      createJob('https://example.com', '1', 'en'),
+      createJob('https://example.com', '2', 'de'),
+      createJob('https://example.com', '3', 'en'),
+    ];
+
+    const groups = groupJobsByUrl(jobs);
+
+    expect(groups.size).toBe(2);
+    expect(groups.get('https://example.com::en')).toHaveLength(2);
+    expect(groups.get('https://example.com::de')).toHaveLength(1);
   });
 });
 
@@ -305,6 +366,9 @@ describe('distributeBatches', () => {
     colorScheme: undefined,
     hasMultipleSchemes: false,
     hasMultipleViewports: false,
+    locale: undefined,
+    locales: [],
+    localeUrl: undefined,
   });
 
   it('keeps same-URL jobs in same batch', () => {
