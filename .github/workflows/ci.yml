@@ -337,6 +337,8 @@ jobs:
             echo "::group::$example"
             echo "Installing $example dependencies..."
             (cd integrations/examples/$example && npm install --prefer-offline)
+            echo "Installing $example Playwright browsers..."
+            (cd integrations/examples/$example && npx playwright install chromium)
             echo "Running $example e2e tests..."
             (cd integrations/examples/$example && npx playwright test)
             echo "::endgroup::"
