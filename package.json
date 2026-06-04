@@ -1,6 +1,6 @@
 {
   "name": "heroshot",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "Define your screenshots once, update them forever with one command",
   "type": "module",
   "author": "Ondrej Machala",

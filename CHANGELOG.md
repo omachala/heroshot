@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.17.1
+
+### Patch Changes
+
+- Fix critical security vulnerabilities in vitest and update dependencies
+
 ## 0.17.0
 
 ### Minor Changes
