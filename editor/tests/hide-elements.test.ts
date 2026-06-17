@@ -72,7 +72,7 @@ test('clicking element in hide mode hides it and emits event', async ({ page }) 
   // Verify hidden-elements-updated event was emitted
   const events = await getEventsByType(page, 'hidden-elements-updated');
   expect(events.length).toBe(1);
-  expect(events[0]?.domain).toBe('heroshot.sh');
+  expect(events[0]?.domain).toBe('heroshot.dev');
   expect(events[0]?.selectors.length).toBe(1);
   expect(events[0]?.selectors[0]).toBeTruthy();
 });
@@ -134,7 +134,7 @@ test('unhide element restores visibility and emits event', async ({ page }) => {
   const allEvents = await getEventsByType(page, 'hidden-elements-updated');
   expect(allEvents.length).toBe(2); // hide + unhide
   const lastEvent = allEvents.at(-1);
-  expect(lastEvent?.domain).toBe('heroshot.sh');
+  expect(lastEvent?.domain).toBe('heroshot.dev');
   expect(lastEvent?.selectors.length).toBe(0);
 
   // Hidden section should disappear when no hidden elements remain
@@ -146,7 +146,7 @@ test('pre-loaded hidden elements are applied on init', async ({ page }) => {
 
   // Inject toolbar with pre-existing hidden elements for the test domain
   await injectToolbar(page, {
-    hiddenElements: { 'heroshot.sh': ['#hero', '#primary-btn'] },
+    hiddenElements: { 'heroshot.dev': ['#hero', '#primary-btn'] },
   });
 
   // Wait for $effect to apply

@@ -43,6 +43,6 @@ Use in RST:
 
 ## Links
 
-- [MkDocs Documentation](https://heroshot.sh/docs/integrations/mkdocs)
-- [Sphinx Documentation](https://heroshot.sh/docs/integrations/sphinx)
+- [MkDocs Documentation](https://heroshot.dev/docs/integrations/mkdocs)
+- [Sphinx Documentation](https://heroshot.dev/docs/integrations/sphinx)
 - [GitHub](https://github.com/omachala/heroshot)

@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/playwright:v1.52.0-noble
 # Labels
 LABEL org.opencontainers.image.title="heroshot"
 LABEL org.opencontainers.image.description="Screenshot automation CLI - define screenshots once, update them forever"
-LABEL org.opencontainers.image.url="https://heroshot.sh"
+LABEL org.opencontainers.image.url="https://heroshot.dev"
 LABEL org.opencontainers.image.source="https://github.com/omachala/heroshot"
 LABEL org.opencontainers.image.licenses="MIT"
 

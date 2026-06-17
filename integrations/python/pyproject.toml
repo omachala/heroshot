@@ -41,9 +41,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://heroshot.sh"
+Homepage = "https://heroshot.dev"
 Repository = "https://github.com/omachala/heroshot"
-Documentation = "https://heroshot.sh/docs/integrations/mkdocs"
+Documentation = "https://heroshot.dev/docs/integrations/mkdocs"
 Issues = "https://github.com/omachala/heroshot/issues"
 
 [project.optional-dependencies]

@@ -114,7 +114,7 @@ test('cross-URL navigation preserves sidebar state and selected item', async ({ 
       id: 'shot-1',
       name: 'Hero Section',
       selector: '#hero',
-      url: 'https://heroshot.sh/other-page', // Different URL
+      url: 'https://heroshot.dev/other-page', // Different URL
       createdAt: Date.now() - 1000,
     }),
     createMockScreenshot({

@@ -10,7 +10,7 @@
       "id": "5dytme8m",
       "viewports": ["desktop", "tablet", "mobile"],
       "name": "Hero",
-      "url": "https://heroshot.sh/",
+      "url": "https://heroshot.dev/",
       "selector": ".custom-hero",
       "scroll": {
         "x": 0,

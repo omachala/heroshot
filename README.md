@@ -1,22 +1,22 @@
 <p align="center">
-  <a href="https://heroshot.sh">
+  <a href="https://heroshot.dev">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/omachala/heroshot/refs/heads/main/docs/public/screenshots/hero-desktop-dark.png">
       <img src="https://raw.githubusercontent.com/omachala/heroshot/refs/heads/main/docs/public/screenshots/hero-desktop-light.png" alt="heroshot">
     </picture>
   </a>
 </p>
-<p align="center"><em>👆 This hero shot of <a href="https://heroshot.sh">heroshot.sh</a> is <a href="https://github.com/omachala/heroshot/blob/main/.github/workflows/update-screenshots.yml#L17">taken</a> by heroshot ⚡️</em></p>
+<p align="center"><em>👆 This hero shot of <a href="https://heroshot.dev">heroshot.dev</a> is <a href="https://github.com/omachala/heroshot/blob/main/.github/workflows/update-screenshots.yml#L17">taken</a> by heroshot ⚡️</em></p>
 
 <p align="center">
   <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/dt/heroshot?style=for-the-badge" alt="npm downloads"></a>
   <a href="https://www.npmjs.com/package/heroshot"><img src="https://img.shields.io/npm/v/heroshot?style=for-the-badge&logo=npm" alt="npm version"></a>
   <a href="https://codecov.io/gh/omachala/heroshot"><img src="https://img.shields.io/codecov/c/github/omachala/heroshot?style=for-the-badge" alt="coverage"></a>
   <a href="https://sonarcloud.io/summary/new_code?id=omachala_heroshot"><img src="https://img.shields.io/sonar/quality_gate/omachala_heroshot?server=https%3A%2F%2Fsonarcloud.io&style=for-the-badge&logo=sonarcloud" alt="quality gate"></a>
-  <a href="https://heroshot.sh"><img src="https://img.shields.io/badge/docs-heroshot.sh-blue?style=for-the-badge" alt="docs"></a>
+  <a href="https://heroshot.dev"><img src="https://img.shields.io/badge/docs-heroshot.dev-blue?style=for-the-badge" alt="docs"></a>
 </p>
 
-<p align="center">Like Heroshot? Share your story — <a href="https://x.com/intent/tweet?url=https%3A%2F%2Fheroshot.sh">X/Twitter</a> · <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fheroshot.sh">LinkedIn</a> · <a href="https://www.reddit.com/submit?url=https%3A%2F%2Fheroshot.sh&title=Heroshot%20%E2%80%93%20Define%20screenshots%20once%2C%20update%20them%20forever">Reddit</a> ❤️</p>
+<p align="center">Like Heroshot? Share your story — <a href="https://x.com/intent/tweet?url=https%3A%2F%2Fheroshot.dev">X/Twitter</a> · <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fheroshot.dev">LinkedIn</a> · <a href="https://www.reddit.com/submit?url=https%3A%2F%2Fheroshot.dev&title=Heroshot%20%E2%80%93%20Define%20screenshots%20once%2C%20update%20them%20forever">Reddit</a> ❤️</p>
 
 Your app changes constantly. New features, design tweaks, bug fixes. Meanwhile, the screenshots in your README and docs quietly become lies.
 
@@ -36,7 +36,7 @@ First run opens a browser with a visual editor. Pick elements, adjust padding, s
 
 ## Use in Your Docs
 
-**VitePress** · [Full guide](https://heroshot.sh/docs/integrations/vitepress)
+**VitePress** · [Full guide](https://heroshot.dev/docs/integrations/vitepress)
 
 ```ts
 // .vitepress/config.ts
@@ -52,7 +52,7 @@ import { Heroshot } from 'heroshot/vue';
 <Heroshot name="dashboard" alt="Dashboard" />
 ```
 
-**Docusaurus** · [Full guide](https://heroshot.sh/docs/integrations/docusaurus)
+**Docusaurus** · [Full guide](https://heroshot.dev/docs/integrations/docusaurus)
 
 ```js
 // docusaurus.config.js
@@ -64,7 +64,7 @@ import { Heroshot } from 'heroshot/docusaurus';
 <Heroshot name="dashboard" alt="Dashboard" />;
 ```
 
-**MkDocs** · [Full guide](https://heroshot.sh/docs/integrations/mkdocs)
+**MkDocs** · [Full guide](https://heroshot.dev/docs/integrations/mkdocs)
 
 ```yaml
 # mkdocs.yml
@@ -100,13 +100,13 @@ One component/macro, all variants - light/dark mode switches automatically, resp
 
 ## Learn More
 
-|                     |                                                                       |
-| ------------------- | --------------------------------------------------------------------- |
-| **Documentation**   | [heroshot.sh](https://heroshot.sh)                                    |
-| **Getting Started** | [Quick start guide](https://heroshot.sh/docs/getting-started)         |
-| **Configuration**   | [Config options](https://heroshot.sh/docs/config)                     |
-| **CI/CD Setup**     | [Automated updates](https://heroshot.sh/docs/guide/automated-updates) |
-| **CLI Reference**   | [All commands & flags](https://heroshot.sh/docs/cli)                  |
+|                     |                                                                        |
+| ------------------- | ---------------------------------------------------------------------- |
+| **Documentation**   | [heroshot.dev](https://heroshot.dev)                                   |
+| **Getting Started** | [Quick start guide](https://heroshot.dev/docs/getting-started)         |
+| **Configuration**   | [Config options](https://heroshot.dev/docs/config)                     |
+| **CI/CD Setup**     | [Automated updates](https://heroshot.dev/docs/guide/automated-updates) |
+| **CLI Reference**   | [All commands & flags](https://heroshot.dev/docs/cli)                  |
 
 ## Support the Project
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Heroshot installer script
-# Usage: curl -fsSL https://heroshot.sh/install.sh | sh
+# Usage: curl -fsSL https://heroshot.dev/install.sh | sh
 #
 # Environment variables:
 #   HEROSHOT_INSTALL_DIR - Override install directory (default: ~/.local/bin or /usr/local/bin)

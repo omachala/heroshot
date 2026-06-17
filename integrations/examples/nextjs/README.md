@@ -19,7 +19,7 @@ Open http://localhost:3000
 
 ## Turbopack Mode
 
-This example uses the `withHeroshot()` webpack config wrapper. For Turbopack mode (`next dev --turbopack`), see the [Next.js integration docs](https://heroshot.sh/docs/integrations/nextjs) for manual setup.
+This example uses the `withHeroshot()` webpack config wrapper. For Turbopack mode (`next dev --turbopack`), see the [Next.js integration docs](https://heroshot.dev/docs/integrations/nextjs) for manual setup.
 
 ## Capture Screenshots
 

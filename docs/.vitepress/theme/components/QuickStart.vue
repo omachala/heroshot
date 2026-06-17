@@ -4,7 +4,7 @@ import { ref } from 'vue';
 const platforms = [
   { id: 'npx', label: 'npx', command: 'npx heroshot' },
   { id: 'npm', label: 'npm', command: 'npm install -g heroshot' },
-  { id: 'curl', label: 'curl', command: 'curl -fsSL https://heroshot.sh/install.sh | bash' },
+  { id: 'curl', label: 'curl', command: 'curl -fsSL https://heroshot.dev/install.sh | bash' },
   { id: 'brew', label: 'Homebrew', command: 'brew install heroshot' },
   { id: 'docker', label: 'Docker', command: 'docker run -it heroshot/heroshot' },
 ];

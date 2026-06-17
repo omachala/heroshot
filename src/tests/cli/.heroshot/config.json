@@ -6,7 +6,7 @@
     {
       "id": "jbo08sr5",
       "name": "hero filled padding",
-      "url": "https://heroshot.sh/__tests__/toolbar",
+      "url": "https://heroshot.dev/__tests__/toolbar",
       "selector": "#hero > h1",
       "padding": {
         "top": 50,

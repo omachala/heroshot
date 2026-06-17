@@ -120,7 +120,7 @@ export async function setup(options: SetupOptions = {}): Promise<{ hasScreenshot
   const page = context.pages()[0] ?? (await context.newPage());
   initPage(page);
 
-  await page.goto('https://heroshot.sh/welcome', { waitUntil: 'domcontentloaded' });
+  await page.goto('https://heroshot.dev/welcome', { waitUntil: 'domcontentloaded' });
 
   try {
     await injectToolbar(page, injectOptions());

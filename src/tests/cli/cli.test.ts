@@ -11,7 +11,7 @@ import path from 'node:path';
 import { PNG } from 'pngjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-const TEST_URL = 'https://heroshot.sh/__tests__/toolbar.html';
+const TEST_URL = 'https://heroshot.dev/__tests__/toolbar.html';
 const TEST_OUTPUT_DIR = path.join(import.meta.dirname, '../../../.test-output-cli');
 const CLI_PATH = path.join(import.meta.dirname, '../../../dist/cli/cli.js');
 
@@ -516,7 +516,7 @@ describe.concurrent('CLI URL capture', () => {
             actions: [
               { type: 'click', selector: '#primary-btn' },
               { type: 'type', selector: '#username', text: 'heroshot-user' },
-              { type: 'type', selector: '#email', text: 'test@heroshot.sh' },
+              { type: 'type', selector: '#email', text: 'test@heroshot.dev' },
               { type: 'select_option', selector: '#country', values: ['cz'] },
               { type: 'press_key', key: 'Tab' },
               {

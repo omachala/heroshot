@@ -10,7 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const execAsync = promisify(exec);
 
-const TEST_URL = 'https://heroshot.sh/__tests__/toolbar.html';
+const TEST_URL = 'https://heroshot.dev/__tests__/toolbar.html';
 const TEST_OUTPUT_DIR = path.join(import.meta.dirname, '../../../.test-output-locale');
 const CONFIG_DIR = path.join(TEST_OUTPUT_DIR, '.heroshot');
 const CONFIG_PATH = path.join(CONFIG_DIR, 'config.json');

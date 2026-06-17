@@ -54,7 +54,7 @@ test('complete flow: pick element, confirm, edit name, click done', async ({ pag
   // Smart selector may use text, role, or ID depending on element properties
   const selector = addedEvents[0]?.data.selector;
   expect(selector).toBeTruthy();
-  expect(addedEvents[0]?.data.url).toContain('heroshot.sh');
+  expect(addedEvents[0]?.data.url).toContain('heroshot.dev');
 
   // Step 4: Click on the name span to enter edit mode (item is already selected after confirm)
   const sidebarItemName = page

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /welcome.html
 
-Sitemap: https://heroshot.sh/sitemap.xml
+Sitemap: https://heroshot.dev/sitemap.xml

@@ -20,7 +20,7 @@ export default defineConfig({
   ignoreSnapshots: !!process.env.CI,
 
   use: {
-    baseURL: 'https://heroshot.sh',
+    baseURL: 'https://heroshot.dev',
     trace: 'on-first-retry',
   },
 

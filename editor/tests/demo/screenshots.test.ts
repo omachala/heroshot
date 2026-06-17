@@ -2,7 +2,7 @@
  * Demo Screenshots
  *
  * Captures screenshots of heroshot editor in action for documentation.
- * Uses heroshot.sh landing page as example of picking elements (meta!).
+ * Uses heroshot.dev landing page as example of picking elements (meta!).
  *
  * This test is NOT part of the regular test suite - it runs separately via
  * the "Update Demo Screenshots" workflow which commits updated snapshots.
@@ -14,15 +14,15 @@
 import { expect, test } from 'playwright/test';
 import { createMockScreenshot, injectToolbar } from '../utils';
 
-const HEROSHOT_URL = 'https://heroshot.sh';
+const HEROSHOT_URL = 'https://heroshot.dev';
 
 // Selector for the second feature card ("Point and Click") on the landing page
 // Each VPFeature is wrapped in a .item div inside .items container
 const FEATURE_SELECTOR = '.items > .item:nth-of-type(2) .VPFeature';
 
-test('demo: pick element on heroshot.sh landing page with padding', async ({ page }) => {
+test('demo: pick element on heroshot.dev landing page with padding', async ({ page }) => {
   test.setTimeout(60000);
-  // Navigate to heroshot.sh and wait for load
+  // Navigate to heroshot.dev and wait for load
   await page.goto(HEROSHOT_URL, { waitUntil: 'networkidle' });
 
   // Scroll to top to ensure consistent positioning

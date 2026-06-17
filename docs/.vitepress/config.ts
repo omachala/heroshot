@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import llmstxt from 'vitepress-plugin-llms';
 import { heroshot } from '../../integrations/shared/vitePlugin';
 
-const SITE_URL = 'https://heroshot.sh';
+const SITE_URL = 'https://heroshot.dev';
 const SITE_NAME = 'Heroshot';
 const SITE_TITLE = 'Heroshot - Screenshot Automation for Documentation';
 const DEFAULT_DESCRIPTION =

@@ -368,7 +368,7 @@ export const HeroDemo: React.FC = () => {
   );
 
   // Address bar states
-  const initialAddress = 'heroshot.sh/welcome';
+  const initialAddress = 'heroshot.dev/welcome';
   const newAddress = 'mysaas.com';
   const addressClicked = frame >= ADDRESS_CLICK_FRAME;
   const addressTyping = frame >= ADDRESS_TYPE_START && frame < PAGE_LOAD_FRAME;

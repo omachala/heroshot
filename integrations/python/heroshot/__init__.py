@@ -8,7 +8,7 @@ This package provides integrations for Python documentation tools:
 To capture screenshots, use the CLI:
     npx heroshot
 
-For more information, visit https://heroshot.sh
+For more information, visit https://heroshot.dev
 """
 
 __version__ = "0.1.0"

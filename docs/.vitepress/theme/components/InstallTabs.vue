@@ -9,8 +9,8 @@ const installCommands = {
     html: '<span class="hl-cmd">npm</span> install -g heroshot',
   },
   curl: {
-    raw: 'curl -fsSL https://heroshot.sh/install.sh | sh',
-    html: '<span class="hl-cmd">curl</span> -fsSL https://heroshot.sh/install.sh | sh',
+    raw: 'curl -fsSL https://heroshot.dev/install.sh | sh',
+    html: '<span class="hl-cmd">curl</span> -fsSL https://heroshot.dev/install.sh | sh',
   },
   brew: {
     raw: 'brew install omachala/heroshot/heroshot',

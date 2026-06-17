@@ -13,7 +13,7 @@ import type { Page } from 'playwright/test';
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const EDITOR_SCRIPT_PATH = resolve(currentDir, '../../dist/editor.js');
 
-export const TEST_PAGE_URL = 'https://heroshot.sh/__tests__/toolbar.html';
+export const TEST_PAGE_URL = 'https://heroshot.dev/__tests__/toolbar.html';
 
 /**
  * Screenshot item for testing
