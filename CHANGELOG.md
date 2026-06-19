@@ -1,5 +1,11 @@
 # heroshot
 
+## 0.18.0
+
+### Minor Changes
+
+- 180291a: Add `--ignore-https-errors` CLI flag and `browser.ignoreHTTPSErrors` config option to capture local HTTPS endpoints with self-signed or untrusted certificates (e.g. Vite `https: true`, mkcert, Docker-proxied dev apps). Maps to Playwright's `ignoreHTTPSErrors` browser context option.
+
 ## 0.17.1
 
 ### Patch Changes
