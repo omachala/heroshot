@@ -3,14 +3,18 @@
  */
 
 import pLimit from 'p-limit';
-import type { BrowserContextOptions } from 'playwright';
 import { launchBrowser } from '../browser/launchBrowser';
 import type { Screenshot } from '../types';
 import type { spinner } from '../ui';
 import { applyLocale } from '../utils/localeUrl';
 import { parseViewport } from '../utils/parseViewport';
 import { captureAndLog } from './capture';
-import type { CaptureOptions, CaptureVariant, ScreenshotResult } from './types';
+import type {
+  BrowserCaptureOptions,
+  CaptureOptions,
+  CaptureVariant,
+  ScreenshotResult,
+} from './types';
 
 /** A single capture job representing one screenshot to take */
 export type CaptureJob = {
@@ -32,15 +36,7 @@ export type ParallelCaptureOptions = {
   jobs: CaptureJob[];
   outputDirectory: string;
   captureOptions: CaptureOptions;
-  browserOptions: {
-    viewport: { width: number; height: number };
-    deviceScaleFactor?: number;
-    storageState?: BrowserContextOptions['storageState'];
-    bypassCSP?: boolean;
-    reducedMotion?: 'reduce' | 'no-preference';
-    userAgent?: string;
-    headed?: boolean;
-  };
+  browserOptions: BrowserCaptureOptions;
   workers: number;
   captureSpinner: ReturnType<typeof spinner>;
   progress: { captured: number; total: number };
@@ -127,6 +123,7 @@ async function executeBatch(
     bypassCSP: browserOptions.bypassCSP,
     reducedMotion: browserOptions.reducedMotion,
     userAgent: browserOptions.userAgent,
+    ignoreHTTPSErrors: browserOptions.ignoreHTTPSErrors,
     locale: jobs[0]?.locale,
   });
 

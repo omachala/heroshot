@@ -5,12 +5,8 @@
  */
 
 import type { z } from 'zod';
-import type {
-  configSchema,
-  screenshotSchema,
-  shotCommandOptionsSchema,
-  viewportSchema,
-} from './schema';
+import type { shotCommandOptionsSchema } from './cliSchema';
+import type { configSchema, screenshotSchema, viewportSchema } from './schema';
 
 /** Browser viewport dimensions */
 export type Viewport = z.infer<typeof viewportSchema>;

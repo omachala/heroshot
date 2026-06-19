@@ -2,29 +2,25 @@
  * Color scheme + locale screenshot capture orchestration.
  */
 
-import type { BrowserContextOptions } from 'playwright';
 import { launchBrowser } from '../browser/launchBrowser';
 import type { Screenshot } from '../types';
 import type { spinner } from '../ui';
 import { applyLocale } from '../utils/localeUrl';
 import { parseViewport } from '../utils/parseViewport';
 import { captureAndLog } from './capture';
-import type { CaptureOptions, CaptureVariant, ScreenshotResult } from './types';
+import type {
+  BrowserCaptureOptions,
+  CaptureOptions,
+  CaptureVariant,
+  ScreenshotResult,
+} from './types';
 
 /** Options for capturing with a specific color scheme and locale */
 export type CaptureSchemeOptions = {
   screenshots: Screenshot[];
   outputDirectory: string;
   captureOptions: CaptureOptions;
-  browserOptions: {
-    viewport: { width: number; height: number };
-    deviceScaleFactor?: number;
-    storageState?: BrowserContextOptions['storageState'];
-    bypassCSP?: boolean;
-    reducedMotion?: 'reduce' | 'no-preference';
-    userAgent?: string;
-    headed?: boolean;
-  };
+  browserOptions: BrowserCaptureOptions;
   colorScheme: 'light' | 'dark' | undefined;
   schemes: ('light' | 'dark')[];
   /** Current locale code (e.g. "de"). Browser locale + Accept-Language are set for all locales. */
@@ -69,6 +65,7 @@ export async function captureWithScheme(
     bypassCSP: browserOptions.bypassCSP,
     reducedMotion: browserOptions.reducedMotion,
     userAgent: browserOptions.userAgent,
+    ignoreHTTPSErrors: browserOptions.ignoreHTTPSErrors,
     locale,
   });
 

@@ -31,6 +31,24 @@ export function getDeviceScaleFactor(
 }
 
 /**
+ * Build browser settings for a oneshot capture from CLI options,
+ * falling back to existing config defaults.
+ */
+export function buildBrowserSettings(
+  options: ShotCommandOptions | undefined,
+  existingConfig: Config | undefined
+): NonNullable<Config['browser']> {
+  return {
+    viewport: getViewport(options, existingConfig),
+    colorScheme: getColorScheme(options, false), // false = oneshot mode, default to light-only
+    deviceScaleFactor: getDeviceScaleFactor(options, existingConfig),
+    reducedMotion: options?.reducedMotion ? 'reduce' : existingConfig?.browser?.reducedMotion,
+    userAgent: options?.userAgent ?? existingConfig?.browser?.userAgent,
+    ignoreHTTPSErrors: options?.ignoreHttpsErrors ?? existingConfig?.browser?.ignoreHTTPSErrors,
+  };
+}
+
+/**
  * Get viewport from CLI options.
  * Checks preset flags (mobile/tablet/desktop), custom dimensions, then existing config.
  */

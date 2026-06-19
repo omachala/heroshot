@@ -16,6 +16,7 @@ Back to [Configuration overview](./config#browser-settings).
 | `bypassCSP`         | boolean                         | -       | Bypass Content-Security-Policy restrictions. Enabled by default for reliable page.evaluate() calls |
 | `reducedMotion`     | `"reduce"` \| `"no-preference"` | -       | Emulate prefers-reduced-motion media feature. Use "reduce" to disable animations                   |
 | `userAgent`         | string                          | -       | Custom user agent string for the browser                                                           |
+| `ignoreHTTPSErrors` | boolean                         | -       | Ignore TLS certificate errors (self-signed certs, custom CA). Dev-only — disables HTTPS validation |
 
 ## Example
 
@@ -26,6 +27,7 @@ Back to [Configuration overview](./config#browser-settings).
   "deviceScaleFactor": 2,
   "bypassCSP": true,
   "reducedMotion": "reduce",
-  "userAgent": "value"
+  "userAgent": "value",
+  "ignoreHTTPSErrors": true
 }
 ```

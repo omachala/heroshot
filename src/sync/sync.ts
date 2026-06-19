@@ -20,21 +20,19 @@ import { showResults } from './results';
 import { captureWithScheme } from './schemeCapture';
 import { loadEncryptedSession } from './sessionLoader';
 import { handleStaleFiles } from './staleFiles';
-import type { CaptureOptions, ScreenshotResult, SyncOptions, SyncResult } from './types';
+import type {
+  BrowserCaptureOptions,
+  CaptureOptions,
+  ScreenshotResult,
+  SyncOptions,
+  SyncResult,
+} from './types';
 
 type CaptureContext = {
   screenshots: Screenshot[];
   outputDirectory: string;
   captureOptions: CaptureOptions;
-  browserOptions: {
-    viewport: { width: number; height: number };
-    deviceScaleFactor?: number;
-    storageState: Awaited<ReturnType<typeof loadEncryptedSession>>;
-    bypassCSP?: boolean;
-    reducedMotion?: 'reduce' | 'no-preference';
-    userAgent?: string;
-    headed?: boolean;
-  };
+  browserOptions: BrowserCaptureOptions;
   schemes: ('light' | 'dark')[];
   locales: string[];
   workers: number;

@@ -81,5 +81,6 @@ export function buildBrowserOptions(config: Config) {
     bypassCSP: config.browser?.bypassCSP,
     reducedMotion: config.browser?.reducedMotion,
     userAgent: config.browser?.userAgent,
+    ignoreHTTPSErrors: config.browser?.ignoreHTTPSErrors,
   };
 }

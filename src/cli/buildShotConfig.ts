@@ -1,6 +1,6 @@
 import type { Config, ShotCommandOptions } from '../types';
 import { buildScreenshotEntry } from './buildScreenshotEntry';
-import { getColorScheme, getDeviceScaleFactor, getViewport } from './optionsParsers';
+import { buildBrowserSettings } from './optionsParsers';
 
 /**
  * Build a Config object from CLI options for URL capture.
@@ -17,13 +17,7 @@ export function buildShotConfig(
     outputDirectory: '.',
     outputFormat,
     jpegQuality: options?.quality ?? existingConfig?.jpegQuality ?? 80,
-    browser: {
-      viewport: getViewport(options, existingConfig),
-      colorScheme: getColorScheme(options, false), // false = oneshot mode, default to light-only
-      deviceScaleFactor: getDeviceScaleFactor(options, existingConfig),
-      reducedMotion: options?.reducedMotion ? 'reduce' : existingConfig?.browser?.reducedMotion,
-      userAgent: options?.userAgent ?? existingConfig?.browser?.userAgent,
-    },
+    browser: buildBrowserSettings(options, existingConfig),
     screenshots: [screenshot],
   };
 }

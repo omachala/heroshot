@@ -14,6 +14,8 @@ export type LaunchOptions = {
   reducedMotion?: 'reduce' | 'no-preference';
   /** Custom user agent string */
   userAgent?: string;
+  /** Ignore TLS certificate errors (self-signed certs, custom CA) */
+  ignoreHTTPSErrors?: boolean;
   /** Browser locale (e.g., "de", "fr"). Sets Accept-Language header too. */
   locale?: string;
 };

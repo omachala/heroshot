@@ -122,6 +122,7 @@ For testing accessibility preferences or mobile user agents.
 | ----------------------- | ------------------------------------------------------------------ |
 | `--reduced-motion`      | Emulate `prefers-reduced-motion: reduce` to disable CSS animations |
 | `--user-agent <string>` | Custom user agent string for mobile or bot testing                 |
+| `--ignore-https-errors` | Ignore TLS certificate errors (self-signed certs, dev only)        |
 
 ::: tip Using Config Defaults
 If you have a `.heroshot/config.json`, one-shot mode automatically uses your saved defaults for output directory, scale factor, and image format. CLI flags override these when specified.
@@ -364,4 +365,7 @@ heroshot https://example.com --reduced-motion
 
 # Capture with custom user agent (mobile testing)
 heroshot https://example.com --user-agent "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)"
+
+# Capture a local HTTPS dev server with a self-signed certificate
+heroshot https://localhost/ --ignore-https-errors
 ```

@@ -1,5 +1,18 @@
-import type { ElementHandle, Page } from 'playwright';
+import type { BrowserContextOptions, ElementHandle, Page } from 'playwright';
 import type { Config } from '../types';
+
+/** Browser context options shared across capture paths (sequential and parallel) */
+export type BrowserCaptureOptions = {
+  viewport: { width: number; height: number };
+  deviceScaleFactor?: number;
+  storageState?: BrowserContextOptions['storageState'];
+  bypassCSP?: boolean;
+  reducedMotion?: 'reduce' | 'no-preference';
+  userAgent?: string;
+  /** Ignore TLS certificate errors (self-signed certs, custom CA) */
+  ignoreHTTPSErrors?: boolean;
+  headed?: boolean;
+};
 
 /** Options for taking a screenshot */
 export type TakeScreenshotOptions = {

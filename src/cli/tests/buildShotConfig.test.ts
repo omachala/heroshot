@@ -84,6 +84,25 @@ describe('buildShotConfig', () => {
     expect(result.browser?.deviceScaleFactor).toBe(1.5);
   });
 
+  it('sets ignoreHTTPSErrors when --ignore-https-errors flag is passed', () => {
+    const result = buildShotConfig('https://localhost/', { ignoreHttpsErrors: true }, undefined);
+    expect(result.browser?.ignoreHTTPSErrors).toBe(true);
+  });
+
+  it('leaves ignoreHTTPSErrors undefined by default', () => {
+    const result = buildShotConfig('https://example.com', undefined, undefined);
+    expect(result.browser?.ignoreHTTPSErrors).toBeUndefined();
+  });
+
+  it('inherits ignoreHTTPSErrors from existing config', () => {
+    const result = buildShotConfig(
+      'https://localhost/',
+      undefined,
+      createConfig({ browser: { ignoreHTTPSErrors: true } })
+    );
+    expect(result.browser?.ignoreHTTPSErrors).toBe(true);
+  });
+
   it('builds screenshot entry with all options', () => {
     const result = buildShotConfig(
       'https://example.com',
