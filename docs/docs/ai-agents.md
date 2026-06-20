@@ -46,6 +46,21 @@ Or with a local installation:
 }
 ```
 
+Or with a standalone binary from [GitHub Releases](https://github.com/omachala/heroshot/releases) (no Node.js required):
+
+```json
+{
+  "mcpServers": {
+    "heroshot": {
+      "command": "/usr/local/bin/heroshot",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Use this for CI runners, Docker images, or any environment where you want to pin to an exact binary version without a package manager. If `heroshot` is on `$PATH`, you can drop the absolute path and use `"command": "heroshot"`.
+
 Restart Claude Code after editing.
 
 ## Cursor

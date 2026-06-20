@@ -49,9 +49,11 @@ program
   .option('-v, --verbose', 'Show detailed output')
   .option('-c, --config <path>', 'Path to config file')
   .option('-s, --session-key <key>', 'Session key for encrypted auth (or set HEROSHOT_SESSION_KEY)')
-  .hook('preAction', () => {
+  .hook('preAction', (_thisCommand, actionCommand) => {
     const options = program.opts<GlobalOptions>();
     setVerbose(options.verbose ?? false);
+    // Skip intro banner for the MCP server — it speaks JSON-RPC over stdio
+    if (actionCommand.name() === 'mcp') return;
     intro(version);
   });
 
@@ -115,6 +117,14 @@ program
     const globalOptions = program.opts<GlobalOptions>();
     const success = snippetAction(pattern, options ?? {}, globalOptions.config);
     if (!success) process.exitCode = 1;
+  });
+
+program
+  .command('mcp')
+  .description('Start the MCP (Model Context Protocol) server over stdio')
+  .action(async () => {
+    const { startMcpServer } = await import('../mcp/server');
+    await startMcpServer();
   });
 
 program
