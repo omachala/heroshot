@@ -14,38 +14,56 @@ import { $ } from 'bun';
 import type { BunPlugin } from 'bun';
 import pkg from '../package.json';
 
-// Playwright version to inline in bundle (avoids runtime package.json reads)
-const PLAYWRIGHT_VERSION = '1.57.0';
-
-// Regex patterns for patching Playwright
-const PATTERNS = {
-  // require("../../../package.json").version -> "1.57.0"
-  pkgVersion: /require\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)\.version/g,
-  // require.resolve("../../../package.json") -> placeholder
-  pkgResolve: /require\.resolve\s*\(\s*["']\.\.\/\.\.\/\.\.\/package\.json["']\s*\)/g,
-  // const coreDir = path.dirname(require.resolve(...)) -> fixed value
-  coreDir: /const coreDir = .*dirname.*package\.json.*/g,
-};
-
 /**
- * Bun plugin to patch Playwright's package.json resolution
- * Replaces require.resolve calls with inline values
+ * Bun plugin to patch Playwright's package.json resolution.
+ *
+ * Playwright reads its own `package.json` at module-load time to get its
+ * version, e.g. `require(path.join(packageRoot, "package.json"))` where
+ * `packageRoot = path.join(__dirname, "..")`. When Bun compiles to a
+ * standalone binary, `__dirname` is frozen to the build machine's absolute
+ * path (e.g. `/home/runner/work/...`). That path does not exist on the end
+ * user's machine, so the binary crashes on startup with:
+ *   "Cannot find module '.../playwright-core/package.json' from '/$bunfs/root/cli.js'"
+ *
+ * Fix: replace those eager `require(...package.json)` calls with the version
+ * inlined at build time. The version is read dynamically from the installed
+ * playwright-core so it can never drift out of sync with the dependency.
+ *
+ * Only `packageJSON.version` is read anywhere in the library, so an object
+ * with just `version` is a safe stand-in.
  */
+
+// Files in playwright-core/lib that resolve package.json from packageRoot.
+const PW_PATCH_FILES = /playwright-core[\\/]lib[\\/](package|serverRegistry|coreBundle)\.js$/;
+
+// Matches: require(<ident>[.default].join(packageRoot, "package.json"))
+const PW_REQUIRE_PKG =
+  /require\(\s*\w+(?:\.default)?\.join\(\s*packageRoot\s*,\s*["']package\.json["']\s*\)\s*\)/g;
+
+/** Read the installed playwright-core version from a lib file's path. */
+async function playwrightVersionFor(libFilePath: string): Promise<string> {
+  // .../playwright-core/lib/<file>.js -> .../playwright-core/package.json
+  const pkgPath = path.resolve(path.dirname(libFilePath), '..', 'package.json');
+  const { version } = JSON.parse(await Bun.file(pkgPath).text());
+  return version;
+}
+
 const playwrightPatchPlugin: BunPlugin = {
   name: 'playwright-patch',
   setup(build) {
-    // Patch nodePlatform.js - coreDir resolution
-    build.onLoad({ filter: /playwright-core.*nodePlatform\.js$/ }, async args => {
-      let contents = await Bun.file(args.path).text();
-      contents = contents.replaceAll(PATTERNS.pkgResolve, '"/playwright-core-pkg"');
-      contents = contents.replaceAll(PATTERNS.coreDir, 'const coreDir = "/@playwright-core";');
-      return { contents, loader: 'js' };
-    });
+    build.onLoad({ filter: PW_PATCH_FILES }, async args => {
+      const original = await Bun.file(args.path).text();
+      const version = await playwrightVersionFor(args.path);
+      const contents = original.replaceAll(PW_REQUIRE_PKG, `({ version: "${version}" })`);
 
-    // Patch files that read package.json version (userAgent.js, dependencies.js)
-    build.onLoad({ filter: /playwright-core.*(userAgent|dependencies)\.js$/ }, async args => {
-      let contents = await Bun.file(args.path).text();
-      contents = contents.replaceAll(PATTERNS.pkgVersion, `"${PLAYWRIGHT_VERSION}"`);
+      // Fail loud if the upstream layout changed and our patch matched nothing.
+      // This is what previously broke silently across a playwright upgrade.
+      if (contents === original) {
+        throw new Error(
+          `playwright-patch: no package.json require found in ${path.basename(args.path)}. ` +
+            `Playwright internals likely changed - update PW_REQUIRE_PKG in build-binary.ts.`
+        );
+      }
       return { contents, loader: 'js' };
     });
   },

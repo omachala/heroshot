@@ -53,6 +53,31 @@ jobs:
           fi
         shell: bash
 
+      # Run the freshly built binary the way an end user would: with the build
+      # machine's node_modules gone, so any absolute path baked in at build time
+      # (e.g. playwright-core's package.json) fails to resolve - exactly the
+      # failure mode of a downloaded release binary. Skipped for cross-compiled
+      # targets, which can't run on the build host.
+      - name: Smoke test binary (simulate end-user machine)
+        if: ${{ matrix.cross_compile != true }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          BINDIR="dist/binaries/heroshot-${{ matrix.target }}/bin"
+          BIN="$BINDIR/heroshot"
+          if [ "${{ matrix.target }}" = "windows-x64" ]; then BIN="$BINDIR/heroshot.exe"; fi
+          mv node_modules ../nm_hidden
+          status=0
+          echo "--- heroshot --version ---"
+          "$BIN" --version || status=1
+          echo "--- heroshot mcp (initialize handshake) ---"
+          OUT=$(printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"ci","version":"1"}}}' | "$BIN" mcp || true)
+          echo "$OUT"
+          echo "$OUT" | grep -q '"serverInfo"' || { echo "ERROR: MCP server did not respond"; status=1; }
+          mv ../nm_hidden node_modules
+          if [ "$status" -ne 0 ]; then echo "Smoke test FAILED"; exit 1; fi
+          echo "Smoke test passed."
+
       - name: Upload binary artifact
         uses: actions/upload-artifact@v7
         with:
