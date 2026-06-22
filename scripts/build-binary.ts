@@ -15,37 +15,51 @@ import type { BunPlugin } from 'bun';
 import pkg from '../package.json';
 
 /**
- * Bun plugin to patch Playwright's package.json resolution.
+ * Bun plugin to patch Playwright's resolution of its own bundled JSON files.
  *
- * Playwright reads its own `package.json` at module-load time to get its
- * version, e.g. `require(path.join(packageRoot, "package.json"))` where
- * `packageRoot = path.join(__dirname, "..")`. When Bun compiles to a
- * standalone binary, `__dirname` is frozen to the build machine's absolute
- * path (e.g. `/home/runner/work/...`). That path does not exist on the end
- * user's machine, so the binary crashes on startup with:
- *   "Cannot find module '.../playwright-core/package.json' from '/$bunfs/root/cli.js'"
+ * Playwright reads files relative to its install dir at module-load time:
+ *   const packageRoot = path.join(__dirname, "..");
+ *   require(path.join(packageRoot, "package.json"))   // its version
+ *   new Registry(require(path.join(packageRoot, "browsers.json")))  // browser registry
+ * When Bun compiles to a standalone binary, `__dirname` is frozen to the build
+ * machine's absolute path (e.g. `/home/runner/work/...`). That path does not
+ * exist on the end user's machine, so the binary crashes on startup with:
+ *   "Cannot find module '.../playwright-core/<file>' from '/$bunfs/root/cli.js'"
  *
- * Fix: replace those eager `require(...package.json)` calls with the version
- * inlined at build time. The version is read dynamically from the installed
- * playwright-core so it can never drift out of sync with the dependency.
+ * Fix: replace those eager requires with the file contents inlined at build
+ * time, read dynamically from the installed playwright-core so they can never
+ * drift out of sync with the dependency. Only `packageJSON.version` is read
+ * anywhere in the library, so a `{ version }` stub is enough for package.json;
+ * browsers.json needs its full content (it drives browser downloads).
  *
- * Only `packageJSON.version` is read anywhere in the library, so an object
- * with just `version` is a safe stand-in.
+ * Note: `api.json` is also resolved this way (lib/coreBundle.js printApiJson),
+ * but only from an internal debug command that never runs at startup and the
+ * file isn't even shipped - so it's intentionally left alone.
  */
 
-// Files in playwright-core/lib that resolve package.json from packageRoot.
+// Files in playwright-core/lib that resolve bundled JSON from packageRoot.
 const PW_PATCH_FILES = /playwright-core[\\/]lib[\\/](package|serverRegistry|coreBundle)\.js$/;
 
-// Matches: require(<ident>[.default].join(packageRoot, "package.json"))
-const PW_REQUIRE_PKG =
-  /require\(\s*\w+(?:\.default)?\.join\(\s*packageRoot\s*,\s*["']package\.json["']\s*\)\s*\)/g;
+// Matches: require(<ident>[.default].join(packageRoot, "<name>.json"))
+// Anchored on `packageRoot` so runtime paths (linkTarget, referenceDir) are untouched.
+const pwRequireFromRoot = (jsonName: string): RegExp =>
+  new RegExp(
+    `require\\(\\s*\\w+(?:\\.default)?\\.join\\(\\s*packageRoot\\s*,\\s*["']${jsonName}\\.json["']\\s*\\)\\s*\\)`,
+    'g'
+  );
 
-/** Read the installed playwright-core version from a lib file's path. */
-async function playwrightVersionFor(libFilePath: string): Promise<string> {
-  // .../playwright-core/lib/<file>.js -> .../playwright-core/package.json
-  const pkgPath = path.resolve(path.dirname(libFilePath), '..', 'package.json');
-  const { version } = JSON.parse(await Bun.file(pkgPath).text());
-  return version;
+const PW_REQUIRE_PACKAGE = pwRequireFromRoot('package');
+const PW_REQUIRE_BROWSERS = pwRequireFromRoot('browsers');
+
+/** Read a bundled JSON file from playwright-core's root, given a lib file's path. */
+async function readPlaywrightJson(libFilePath: string, name: string): Promise<unknown> {
+  // .../playwright-core/lib/<file>.js -> .../playwright-core/<name>
+  const jsonPath = path.resolve(path.dirname(libFilePath), '..', name);
+  return JSON.parse(await Bun.file(jsonPath).text());
+}
+
+function isRecord(value: unknown): value is { version: unknown } {
+  return typeof value === 'object' && value !== null;
 }
 
 const playwrightPatchPlugin: BunPlugin = {
@@ -53,15 +67,25 @@ const playwrightPatchPlugin: BunPlugin = {
   setup(build) {
     build.onLoad({ filter: PW_PATCH_FILES }, async args => {
       const original = await Bun.file(args.path).text();
-      const version = await playwrightVersionFor(args.path);
-      const contents = original.replaceAll(PW_REQUIRE_PKG, `({ version: "${version}" })`);
+      const pkg = await readPlaywrightJson(args.path, 'package.json');
+      const version = isRecord(pkg) ? pkg.version : undefined;
+
+      let contents = original.replaceAll(PW_REQUIRE_PACKAGE, `({ version: "${version}" })`);
+
+      // browsers.json only appears in coreBundle.js; inline its full content there.
+      // Plain substring gate (no stateful regex .test()) - the replaceAll regex is
+      // anchored on packageRoot, so the runtime linkTarget read is left untouched.
+      if (original.includes('browsers.json')) {
+        const browsers = await readPlaywrightJson(args.path, 'browsers.json');
+        contents = contents.replaceAll(PW_REQUIRE_BROWSERS, `(${JSON.stringify(browsers)})`);
+      }
 
       // Fail loud if the upstream layout changed and our patch matched nothing.
       // This is what previously broke silently across a playwright upgrade.
       if (contents === original) {
         throw new Error(
-          `playwright-patch: no package.json require found in ${path.basename(args.path)}. ` +
-            `Playwright internals likely changed - update PW_REQUIRE_PKG in build-binary.ts.`
+          `playwright-patch: no packageRoot JSON require found in ${path.basename(args.path)}. ` +
+            `Playwright internals likely changed - update the patterns in build-binary.ts.`
         );
       }
       return { contents, loader: 'js' };
