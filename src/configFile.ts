@@ -1,13 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { parseConfig } from './config';
+import { HEROSHOT_README } from './templates/heroshotReadme';
 import type { Config } from './types';
 
 const HEROSHOT_DIRECTORY_NAME = '.heroshot';
 const CONFIG_FILENAME = 'config.json';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const README_TEMPLATE_PATH = path.join(__dirname, 'templates', 'heroshotReadme.txt');
 
 /**
  * Get the .heroshot directory path for a project
@@ -25,11 +23,9 @@ export function ensureHeroshotDirectory(directory: string = process.cwd()): stri
 
   if (!existsSync(heroshotPath)) {
     mkdirSync(heroshotPath, { recursive: true });
-    const readmeContent = readFileSync(README_TEMPLATE_PATH, 'utf8');
-    writeFileSync(readmePath, readmeContent, 'utf8');
+    writeFileSync(readmePath, HEROSHOT_README, 'utf8');
   } else if (!existsSync(readmePath)) {
-    const readmeContent = readFileSync(README_TEMPLATE_PATH, 'utf8');
-    writeFileSync(readmePath, readmeContent, 'utf8');
+    writeFileSync(readmePath, HEROSHOT_README, 'utf8');
   }
 
   return heroshotPath;
