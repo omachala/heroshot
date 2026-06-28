@@ -3,11 +3,41 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import type { ShotCommandOptions } from '../types';
-import { intro, setVerbose } from '../ui';
+import { intro, isVerbose, setVerbose } from '../ui';
 import { configAction, sessionKeyAction, shotAction } from './handlers';
 import { type ListOptions, listAction } from './list';
 import { type SnippetOptions, snippetAction } from './snippet';
 import type { ConfigActionOptions, GlobalOptions } from './types';
+
+/**
+ * Print an error so the user sees the real cause instead of clack's generic
+ * "Something went wrong" (which is what they get if a rejection is left
+ * unhandled while a spinner is running). Always exits with code 1.
+ */
+function reportFatal(error: unknown): never {
+  const message = error instanceof Error ? error.message : String(error);
+  // Plain stderr — clack's logger may have a partial line open.
+  process.stderr.write(`\nError: ${message}\n`);
+  if (isVerbose() && error instanceof Error && error.stack) {
+    process.stderr.write(`${error.stack}\n`);
+  } else {
+    process.stderr.write('Run with --verbose to see the stack trace.\n');
+  }
+  // eslint-disable-next-line unicorn/no-process-exit -- CLI top-level error reporter; we intentionally bypass clack's exit hook to surface real errors
+  process.exit(1);
+}
+
+process.on('unhandledRejection', reportFatal);
+process.on('uncaughtException', reportFatal);
+
+async function runAction(action: () => Promise<boolean> | boolean): Promise<void> {
+  try {
+    const success = await action();
+    if (!success) process.exitCode = 1;
+  } catch (error) {
+    reportFatal(error);
+  }
+}
 
 // Version is injected at build time for standalone binaries, or read from package.json for development
 declare const HEROSHOT_VERSION: string | undefined;
@@ -84,8 +114,7 @@ program
   .option('--headed', 'Run browser in headed mode (visible window) for debugging')
   .action(async (url?: string, options?: ShotCommandOptions) => {
     const globalOptions = program.opts<GlobalOptions>();
-    const success = await shotAction(url, options, globalOptions);
-    if (!success) process.exitCode = 1;
+    await runAction(async () => shotAction(url, options, globalOptions));
   });
 
 program
@@ -97,26 +126,23 @@ program
   .option('--dark', 'Force dark mode (prefers-color-scheme: dark)')
   .action(async (options: ConfigActionOptions) => {
     const globalOptions = program.opts<GlobalOptions>();
-    const success = await configAction(options, globalOptions);
-    if (!success) process.exitCode = 1;
+    await runAction(async () => configAction(options, globalOptions));
   });
 
 program
   .command('session-key')
   .description('Print the session key for this project (for CI setup)')
-  .action(() => {
-    const success = sessionKeyAction();
-    if (!success) process.exitCode = 1;
+  .action(async () => {
+    await runAction(() => sessionKeyAction());
   });
 
 program
   .command('snippet [pattern]')
   .description('Generate markdown/HTML snippets for GitHub README and Wiki')
   .option('--path-prefix <prefix>', 'Image path prefix (default: ./heroshots/)')
-  .action((pattern?: string, options?: SnippetOptions) => {
+  .action(async (pattern?: string, options?: SnippetOptions) => {
     const globalOptions = program.opts<GlobalOptions>();
-    const success = snippetAction(pattern, options ?? {}, globalOptions.config);
-    if (!success) process.exitCode = 1;
+    await runAction(() => snippetAction(pattern, options ?? {}, globalOptions.config));
   });
 
 program
@@ -131,10 +157,9 @@ program
   .command('list')
   .description('List all configured screenshots')
   .option('--json', 'Output as JSON')
-  .action((options: ListOptions) => {
+  .action(async (options: ListOptions) => {
     const globalOptions = program.opts<GlobalOptions>();
-    const success = listAction(options, globalOptions);
-    if (!success) process.exitCode = 1;
+    await runAction(() => listAction(options, globalOptions));
   });
 
 program.parse();

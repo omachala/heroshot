@@ -26,7 +26,8 @@ export type ToolResult = {
 export type ToolDefinition = {
   name: string;
   description: string;
-  inputSchema: z.ZodType;
+  // Must be a ZodObject so its `.shape` (ZodRawShape) can be passed to the MCP SDK.
+  inputSchema: z.ZodObject<z.ZodRawShape>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- MCP SDK uses any for handler inputs
   handler: (input: any) => Promise<ToolResult>;
 };
